@@ -1,0 +1,20 @@
+Password for the certifcate is 'password'
+In order for SSL to work, you must import the cert and then bind the certificate to the port using the certificate's thumbprint.
+
+Gather the thumbprint by right-clicking the certificate, going to Open, Details, Thumprint.
+
+b53ce1aa57a09174cbc778290b3ad7a1e00034b4
+
+Import the certificate:
+
+> certutil -importPFX certname.pfx
+
+Then associate the certificate by thumprint to the IP:port.
+
+> netsh http add sslcert ipport=0.0.0.0:8000 certstorename=My certhash=b53ce1aa57a09174cbc778290b3ad7a1e00034b4 appid={00112233-4455-6677-8899-AABBCCDDEEFF}
+
+(note: self-signed certificates cannot be added to the Root certificate store)
+
+To list the installed SSL certs for a given port:
+
+> netsh http show sslcert ipport=0.0.0.0:8000
