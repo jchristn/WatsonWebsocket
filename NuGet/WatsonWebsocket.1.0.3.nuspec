@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>WatsonWebsocket</id>
+        <version>1.0.3</version>
+        <title>WatsonWebsocket</title>
+        <authors>jchristn</authors>
+        <owners>jchristn</owners>
+        <licenseUrl>https://github.com/jchristn/WatsonWebsocket/blob/master/LICENSE.TXT</licenseUrl>
+        <projectUrl>https://github.com/jchristn/WatsonWebsocket</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A simple C# async websocket server and client with integrated framing for reliable transmission and receipt of data</description>
+        <summary>A simple C# async websocket server and client with integrated framing for reliable transmission and receipt of data</summary>
+        <releaseNotes>Bugfix</releaseNotes>
+        <copyright>(c) 2017 Marauder Software Inc.</copyright>
+    </metadata>
+    <files>
+        <file src="..\WatsonWebsocket\bin\Release\WatsonWebsocket.dll" target="lib\WatsonWebsocket.dll" />
+        <file src="..\WatsonWebsocket\bin\Release\WatsonWebsocket.pdb" target="lib\WatsonWebsocket.pdb" />
+    </files>
+</package>
