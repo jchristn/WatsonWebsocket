@@ -168,43 +168,37 @@ namespace WatsonWebsocket
                 while (true)
                 {
                     cancelToken?.ThrowIfCancellationRequested();
-
-                    try
+                     
+                    byte[] data = await MessageReadAsync();
+                    if (data == null)
                     {
-                        byte[] data = await MessageReadAsync();
-                        if (data == null)
+                        // no message available
+                        await Task.Delay(30);
+                        continue;
+                    }
+                    else
+                    {
+                        if (data.Length == 1 && data[0] == 0x00)
                         {
-                            // no message available
-                            await Task.Delay(30);
-                            continue;
-                        }
-                        else
-                        {
-                            if (data.Length == 1 && data[0] == 0x00)
-                            {
-                                break;
-                            }
-                        }
-
-                        if (MessageReceived != null)
-                        {
-                            var unawaited = Task.Run(() => MessageReceived(data));
+                            break;
                         }
                     }
-                    catch (Exception)
+
+                    if (MessageReceived != null)
                     {
-                        break;
-                    }
+                        var unawaited = Task.Run(() => MessageReceived(data));
+                    } 
                 }
 
                 #endregion
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException oce)
             {
-                throw; //normal cancellation
+                Log("*** DataReceiver server disconnected (canceled): " + oce.Message);
             }
-            catch (WebSocketException)
+            catch (WebSocketException wse)
             {
+                Log("*** DataReceiver server disconnected (websocket exception): " + wse.Message);
             }
             catch (Exception)
             {
