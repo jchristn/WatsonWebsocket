@@ -78,7 +78,7 @@ namespace WatsonWebsocket
 
             if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             ClientWs = new ClientWebSocket();
-            ClientWs.ConnectAsync(new Uri(Url), CancellationToken.None);
+            ClientWs.ConnectAsync(new Uri(Url), CancellationToken.None).Wait();
 
             Connected = true;
             if (ServerConnected != null) Task.Run(() => ServerConnected());
