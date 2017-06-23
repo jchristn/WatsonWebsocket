@@ -12,6 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.IPAddress;
 
 namespace WatsonWebsocket
 {    
@@ -26,20 +27,20 @@ namespace WatsonWebsocket
 
         #region Private-Members
 
-        private bool Debug;
-        private string ListenerIp;
-        private int ListenerPort;
-        private IPAddress ListenerIpAddress;
-        private string ListenerPrefix;
-        private HttpListener Listener;
-        private int ActiveClients;
-        private ConcurrentDictionary<string, ClientMetadata> Clients;
-        private List<string> PermittedIps;
-        private CancellationTokenSource TokenSource;
-        private CancellationToken Token;
-        private Func<string, bool> ClientConnected;
-        private Func<string, bool> ClientDisconnected;
-        private Func<string, byte[], bool> MessageReceived;
+        private readonly bool Debug;
+        private readonly string ListenerIp;
+        private readonly int ListenerPort;
+        private readonly IPAddress ListenerIpAddress;
+        private readonly string ListenerPrefix;
+        private readonly HttpListener Listener;
+        private int _activeClients;
+        private readonly ConcurrentDictionary<string, ClientMetadata> Clients;
+        private readonly List<string> PermittedIps;
+        private readonly CancellationTokenSource TokenSource;
+        private CancellationToken _token;
+        private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
+        private readonly Func<string, bool> ClientDisconnected;
+        private readonly Func<string, byte[], bool> MessageReceived;
 
         #endregion
 
@@ -54,35 +55,32 @@ namespace WatsonWebsocket
             bool ssl,
             bool acceptInvalidCerts,
             IEnumerable<string> permittedIps,
-            Func<string, bool> clientConnected,
+            Func<string, IDictionary<string, string>, bool> clientConnected,
             Func<string, bool> clientDisconnected,
             Func<string, byte[], bool> messageReceived,
             bool debug)
         {
             if (listenerPort < 1) throw new ArgumentOutOfRangeException(nameof(listenerPort));
-            if (messageReceived == null) throw new ArgumentNullException(nameof(MessageReceived));
 
-            if (clientConnected == null) ClientConnected = null;
-            else ClientConnected = clientConnected;
+            ClientConnected = clientConnected ?? null;
 
-            if (clientDisconnected == null) ClientDisconnected = null;
-            else ClientDisconnected = clientDisconnected;
+            ClientDisconnected = clientDisconnected ?? null;
 
             PermittedIps = null;
 
-            MessageReceived = messageReceived;
+            MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(MessageReceived));
             Debug = debug;
 
-            if (permittedIps != null && permittedIps.Count() > 0) PermittedIps = new List<string>(permittedIps);
+            if (permittedIps != null && permittedIps.Any()) PermittedIps = new List<string>(permittedIps);
 
             if (String.IsNullOrEmpty(listenerIp))
             {
-                ListenerIpAddress = System.Net.IPAddress.Loopback;
+                ListenerIpAddress = Loopback;
                 ListenerIp = ListenerIpAddress.ToString();
             }
             else
             {
-                ListenerIpAddress = IPAddress.Parse(listenerIp);
+                ListenerIpAddress = Parse(listenerIp);
                 ListenerIp = listenerIp;
             }
 
@@ -98,10 +96,10 @@ namespace WatsonWebsocket
             Log("WatsonWsServer starting on " + ListenerPrefix);
 
             TokenSource = new CancellationTokenSource();
-            Token = TokenSource.Token;
-            ActiveClients = 0;
+            _token = TokenSource.Token;
+            _activeClients = 0;
             Clients = new ConcurrentDictionary<string, ClientMetadata>();
-            Task.Run(() => AcceptConnections(), Token);
+            Task.Run(AcceptConnections, _token);
         }
 
         #endregion
@@ -167,7 +165,7 @@ namespace WatsonWebsocket
         {
             if (disposing)
             {
-                if (Listener != null) Listener.Stop();
+                Listener?.Stop();
                 TokenSource.Cancel();
             }
         }
@@ -207,7 +205,7 @@ namespace WatsonWebsocket
 
                 Listener.Start();
                 
-                while (!Token.IsCancellationRequested)
+                while (!_token.IsCancellationRequested)
                 { 
                     #region Accept-Connection
 
@@ -217,76 +215,86 @@ namespace WatsonWebsocket
 
                     #region Get-Tuple-and-Check-IP
 
-                    string clientIp = httpContext.Request.RemoteEndPoint.Address.ToString();
-                    int clientPort = httpContext.Request.RemoteEndPoint.Port;
-
-                    if (PermittedIps != null && PermittedIps.Count > 0)
+                    if (httpContext.Request.RemoteEndPoint != null)
                     {
-                        if (!PermittedIps.Contains(clientIp))
+                        string clientIp = httpContext.Request.RemoteEndPoint.Address.ToString();
+                        int clientPort = httpContext.Request.RemoteEndPoint.Port;
+
+                        var query = new Dictionary<string, string>();
+                        var requestQuery = httpContext.Request.QueryString;
+                        foreach (var key in requestQuery.AllKeys)
                         {
-                            Log("*** AcceptConnections rejecting connection from " + clientIp + " (not permitted)");
-                            httpContext.Response.StatusCode = 401;
-                            httpContext.Response.Close();
-                            return;
+                            query[key] = requestQuery[key];
                         }
-                    }
 
-                    Log("AcceptConnections accepted connection from " + clientIp + ":" + clientPort);
-
-                    #endregion
-
-                    #region Get-Websocket-Context
-
-                    WebSocketContext wsContext = null;
-                    try
-                    {
-                        wsContext = httpContext.AcceptWebSocketAsync(subProtocol: null).Result;
-                    }
-                    catch (Exception)
-                    {
-                        Log("*** AcceptConnections unable to retrieve websocket content for client " + clientIp + ":" + clientPort);
-                        httpContext.Response.StatusCode = 500;
-                        httpContext.Response.Close();
-                        return;
-                    }
-
-                    WebSocket ws = wsContext.WebSocket;
-
-                    #endregion
-
-                    var unawaited = Task.Run(() =>
-                    { 
-                        #region Add-to-Client-List
-
-                        ActiveClients++;
-                        // Do not decrement in this block, decrement is done by the connection reader
-
-                        ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext);
-                        if (!AddClient(currClient))
+                        if (PermittedIps != null && PermittedIps.Count > 0)
                         {
-                            Log("*** AcceptConnections unable to add client " + clientIp + ":" + clientPort);
+                            if (!PermittedIps.Contains(clientIp))
+                            {
+                                Log("*** AcceptConnections rejecting connection from " + clientIp + " (not permitted)");
+                                httpContext.Response.StatusCode = 401;
+                                httpContext.Response.Close();
+                                return;
+                            }
+                        }
+
+                        Log("AcceptConnections accepted connection from " + clientIp + ":" + clientPort);
+
+                        #endregion
+
+                        #region Get-Websocket-Context
+
+                        WebSocketContext wsContext = null;
+                        try
+                        {
+                            wsContext = httpContext.AcceptWebSocketAsync(subProtocol: null).Result;
+                        }
+                        catch (Exception)
+                        {
+                            Log("*** AcceptConnections unable to retrieve websocket content for client " + clientIp + ":" + clientPort);
                             httpContext.Response.StatusCode = 500;
                             httpContext.Response.Close();
                             return;
                         }
 
+                        WebSocket ws = wsContext.WebSocket;
+
                         #endregion
 
-                        #region Start-Data-Receiver
+                        var unawaited = Task.Run(() =>
+                        { 
+                            #region Add-to-Client-List
 
-                        CancellationToken dataReceiverToken = default(CancellationToken);
+                            _activeClients++;
+                            // Do not decrement in this block, decrement is done by the connection reader
 
-                        Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + ActiveClients + " clients)");
-                        if (ClientConnected != null)
-                        {
-                            Task.Run(() => ClientConnected(clientIp + ":" + clientPort));
-                        }
+                            ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext);
+                            if (!AddClient(currClient))
+                            {
+                                Log("*** AcceptConnections unable to add client " + clientIp + ":" + clientPort);
+                                httpContext.Response.StatusCode = 500;
+                                httpContext.Response.Close();
+                                return;
+                            }
 
-                        Task.Run(async () => await DataReceiver(currClient, dataReceiverToken), dataReceiverToken);
+                            #endregion
 
-                        #endregion 
+                            #region Start-Data-Receiver
 
-                    }, Token);
+                            CancellationToken dataReceiverToken = default(CancellationToken);
+
+                            Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + _activeClients + " clients)");
+                            if (ClientConnected != null)
+                            {
+                                Task.Run(() => ClientConnected(clientIp + ":" + clientPort, query), dataReceiverToken);
+                            }
+
+                            Task.Run(async () => await DataReceiver(currClient, dataReceiverToken), dataReceiverToken);
+
+                            #endregion 
+
+                        }, _token);
+                    }
                 }
 
                 #endregion
@@ -341,13 +349,13 @@ namespace WatsonWebsocket
             }
             finally
             {
-                ActiveClients--;
+                _activeClients--;
                 RemoveClient(client);
                 if (ClientDisconnected != null)
                 {
-                    var unawaited = Task.Run(() => ClientDisconnected(client.IpPort()));
+                    var unawaited = Task.Run(() => ClientDisconnected(client.IpPort()), _token);
                 }
-                Log("DataReceiver client " + client.IpPort() + " disconnected (now " + ActiveClients + " clients active)");
+                Log("DataReceiver client " + client.IpPort() + " disconnected (now " + _activeClients + " clients active)");
             }
         }
 
