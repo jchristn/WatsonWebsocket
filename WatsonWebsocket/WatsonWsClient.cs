@@ -81,7 +81,7 @@ namespace WatsonWebsocket
             ClientWs.ConnectAsync(new Uri(Url), CancellationToken.None).Wait();
 
             Connected = true;
-            if (ServerConnected != null) Task.Run(() => ServerConnected());
+            Task.Run(() => ServerConnected?.Invoke());
             
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;

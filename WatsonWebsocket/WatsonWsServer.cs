@@ -41,6 +41,7 @@ namespace WatsonWebsocket
         private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
         private readonly Func<string, bool> ClientDisconnected;
         private readonly Func<string, byte[], bool> MessageReceived;
+        private readonly SemaphoreSlim _sendAsyncLock = new SemaphoreSlim(1);
 
         #endregion
 
@@ -319,7 +320,7 @@ namespace WatsonWebsocket
                     if (data == null)
                     {
                         // no message available
-                        await Task.Delay(30);
+                        await Task.Delay(30, _token);
                         continue;
                     }
                     else
@@ -586,7 +587,21 @@ namespace WatsonWebsocket
 
                 #region Send-Message
 
-                await client.Ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
+                // can't have two simultaneous SendAsync calls so use a semaphore to block the second until the first has completed
+                await _sendAsyncLock.WaitAsync(_token);
+                if (_token.IsCancellationRequested)
+                {
+                    return false;
+                }
+                try
+                {
+                    await client.Ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length),
+                        WebSocketMessageType.Binary, true, CancellationToken.None);
+                }
+                finally
+                {
+                    _sendAsyncLock.Release();
+                }
                 return true;
 
                 #endregion
