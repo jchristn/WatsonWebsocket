@@ -422,7 +422,7 @@ namespace WatsonWebsocket
 
                 #region Send-Message
 
-                await SendLock.WaitAsync();
+                await SendLock.WaitAsync(Token);
                 try
                 {
                     await ClientWs.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Binary, true, CancellationToken.None);

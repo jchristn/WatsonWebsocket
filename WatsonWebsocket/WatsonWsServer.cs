@@ -37,7 +37,6 @@ namespace WatsonWebsocket
         private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
         private readonly Func<string, bool> ClientDisconnected;
         private readonly Func<string, byte[], bool> MessageReceived;
-        private readonly SemaphoreSlim _sendAsyncLock = new SemaphoreSlim(1);
 
         #endregion
 
@@ -334,7 +333,7 @@ namespace WatsonWebsocket
 
                     if (MessageReceived != null)
                     {
-                        var unawaited = Task.Run(() => MessageReceived(client.IpPort(), data));
+                        var unawaited = Task.Run(() => MessageReceived(client.IpPort(), data), _token);
                     }
                 }
 
@@ -458,7 +457,7 @@ namespace WatsonWebsocket
                         else
                         {
                             currentTimeout += sleepInterval;
-                            Task.Delay(sleepInterval).Wait();
+                            Task.Delay(sleepInterval, _token).Wait();
                         }
                     }
                 }
@@ -470,7 +469,7 @@ namespace WatsonWebsocket
                 }
 
                 headerBytes = headerMs.ToArray();
-                if (headerBytes == null || headerBytes.Length < 1)
+                if (headerBytes.Length < 1)
                 {
                     return null;
                 }
@@ -507,18 +506,13 @@ namespace WatsonWebsocket
             using (MemoryStream dataMs = new MemoryStream())
             {
                 long bytesRemaining = contentLength;
-                timeout = false;
-                currentTimeout = 0;
 
                 int read = 0;
-                byte[] buffer;
-                long bufferSize = 2048;
+                long bufferSize = 16*1024;
 
+                var buffer = new byte[bufferSize];
                 while (client.Ws.State == WebSocketState.Open)
                 {
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
                     WebSocketReceiveResult receiveResult = await client.Ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
@@ -528,9 +522,10 @@ namespace WatsonWebsocket
                     }
                     else
                     {
-                        dataMs.Write(buffer, 0, buffer.Length);
-                        read += buffer.Length;
-                        bytesRemaining -= buffer.Length;
+                        var bytesThisTime = receiveResult.Count;
+                        dataMs.Write(buffer, 0, bytesThisTime);
+                        read += bytesThisTime;
+                        bytesRemaining -= bytesThisTime;
 
                         // check if read fully
                         if (bytesRemaining == 0) break;
@@ -545,7 +540,7 @@ namespace WatsonWebsocket
 
             #region Check-Content-Bytes
 
-            if (contentBytes == null || contentBytes.Length < 1)
+            if (contentBytes.Length < 1)
             {
                 Log("*** MessageReadAsync " + client.IpPort() + " no content read");
                 return null;
@@ -589,7 +584,7 @@ namespace WatsonWebsocket
                 #region Send-Message
 
                 // can't have two simultaneous SendAsync calls so use a semaphore to block the second until the first has completed
-                await _sendAsyncLock.WaitAsync(_token);
+                await client.SendAsyncLock.WaitAsync(_token);
                 if (_token.IsCancellationRequested)
                 {
                     return false;
@@ -601,7 +596,7 @@ namespace WatsonWebsocket
                 }
                 finally
                 {
-                    _sendAsyncLock.Release();
+                    client.SendAsyncLock.Release();
                 }
                 return true;
 

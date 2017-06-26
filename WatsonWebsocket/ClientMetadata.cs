@@ -15,6 +15,8 @@ namespace WatsonWebsocket
         public WebSocket Ws;
         public WebSocketContext WsContext;
 
+        public readonly SemaphoreSlim SendAsyncLock = new SemaphoreSlim(1);
+
         #endregion
 
         #region Private-Members
