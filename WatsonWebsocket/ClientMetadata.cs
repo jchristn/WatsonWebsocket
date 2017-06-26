@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Net.Security;
-using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace WatsonWebsocket
 {
@@ -19,6 +14,8 @@ namespace WatsonWebsocket
         public HttpListenerContext HttpContext;
         public WebSocket Ws;
         public WebSocketContext WsContext;
+
+        public readonly SemaphoreSlim SendAsyncLock = new SemaphoreSlim(1);
 
         #endregion
 

@@ -81,7 +81,7 @@ namespace WatsonWebsocket
             ClientWs.ConnectAsync(new Uri(Url), CancellationToken.None).Wait();
 
             Connected = true;
-            if (ServerConnected != null) Task.Run(() => ServerConnected());
+            Task.Run(() => ServerConnected?.Invoke());
             
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
@@ -127,7 +127,7 @@ namespace WatsonWebsocket
         {
             if (disposing)
             {
-                if (ClientWs != null) ClientWs.Abort();
+                ClientWs?.Abort();
                 TokenSource.Cancel();
             }
         }
@@ -173,7 +173,7 @@ namespace WatsonWebsocket
                     if (data == null)
                     {
                         // no message available
-                        await Task.Delay(30);
+                        await Task.Delay(30, Token);
                         continue;
                     }
                     else
@@ -186,7 +186,7 @@ namespace WatsonWebsocket
 
                     if (MessageReceived != null)
                     {
-                        var unawaited = Task.Run(() => MessageReceived(data));
+                        var unawaited = Task.Run(() => MessageReceived(data), Token);
                     } 
                 }
 
@@ -207,7 +207,7 @@ namespace WatsonWebsocket
             finally
             {
                 Connected = false;
-                if (ServerDisconnected != null) ServerDisconnected();
+                ServerDisconnected?.Invoke();
             }
         }
          
@@ -422,7 +422,7 @@ namespace WatsonWebsocket
 
                 #region Send-Message
 
-                await SendLock.WaitAsync();
+                await SendLock.WaitAsync(Token);
                 try
                 {
                     await ClientWs.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Binary, true, CancellationToken.None);

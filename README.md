@@ -16,7 +16,7 @@ Two classes for each server and client are supplied, one without SSL support and
 ## Running under Mono
 Watson works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
 
-NOTE: Windows accepts '0.0.0.0' as an IP address representing any interface.  On Mac and Linux you must be specified ('127.0.0.1' is also acceptable, but '0.0.0.0' is NOT).
+NOTE: To bind to all interfaces specify '*' as an IP address representing any interface. Using '0.0.0.0' instead only works on Windows.
 
 ```
 mono --aot=nrgctx-trampolines=8096,nimt-trampolines=8096,ntrampolines=4048 --server myapp.exe

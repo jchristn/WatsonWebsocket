@@ -87,9 +87,13 @@ namespace TestServer
             }
         }
 
-        static bool ClientConnected(string ipPort)
+        static bool ClientConnected(string ipPort, IDictionary<string, string> queryString)
         {
             Console.WriteLine("Client connected: " + ipPort);
+            foreach (var kvp in queryString)
+            {
+                Console.WriteLine(kvp.Key+": "+kvp.Value);
+            }
             return true;
         }
 
