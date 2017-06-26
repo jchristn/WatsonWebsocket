@@ -90,9 +90,13 @@ namespace TestServer
         static bool ClientConnected(string ipPort, IDictionary<string, string> queryString)
         {
             Console.WriteLine("Client connected: " + ipPort);
-            foreach (var kvp in queryString)
+            if (queryString != null && queryString.Count > 0)
             {
-                Console.WriteLine(kvp.Key+": "+kvp.Value);
+                Console.WriteLine("Querystring: ");
+                foreach (KeyValuePair<string, string> kvp in queryString)
+                {
+                    Console.WriteLine("- " + kvp.Key + ": " + kvp.Value);
+                }
             }
             return true;
         }

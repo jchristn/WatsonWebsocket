@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -29,11 +30,11 @@ namespace WatsonWebsocket
         private readonly IPAddress ListenerIpAddress;
         private readonly string ListenerPrefix;
         private readonly HttpListener Listener;
-        private int _activeClients;
+        private int ActiveClients;
         private readonly ConcurrentDictionary<string, ClientMetadata> Clients;
         private readonly List<string> PermittedIps;
         private readonly CancellationTokenSource TokenSource;
-        private CancellationToken _token;
+        private CancellationToken Token;
         private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
         private readonly Func<string, bool> ClientDisconnected;
         private readonly Func<string, byte[], bool> MessageReceived;
@@ -97,10 +98,10 @@ namespace WatsonWebsocket
             Log("WatsonWsServer starting on " + ListenerPrefix);
 
             TokenSource = new CancellationTokenSource();
-            _token = TokenSource.Token;
-            _activeClients = 0;
+            Token = TokenSource.Token;
+            ActiveClients = 0;
             Clients = new ConcurrentDictionary<string, ClientMetadata>();
-            Task.Run(AcceptConnections, _token);
+            Task.Run(AcceptConnections, Token);
         }
 
         #endregion
@@ -206,24 +207,24 @@ namespace WatsonWebsocket
 
                 Listener.Start();
                 
-                while (!_token.IsCancellationRequested)
+                while (!Token.IsCancellationRequested)
                 { 
                     #region Accept-Connection
 
                     HttpListenerContext httpContext = await Listener.GetContextAsync();
 
                     #endregion
-
-                    #region Get-Tuple-and-Check-IP
-
+                     
                     if (httpContext.Request.RemoteEndPoint != null)
                     {
+                        #region Check-IP-Address
+
                         string clientIp = httpContext.Request.RemoteEndPoint.Address.ToString();
                         int clientPort = httpContext.Request.RemoteEndPoint.Port;
 
-                        var query = new Dictionary<string, string>();
-                        var requestQuery = httpContext.Request.QueryString;
-                        foreach (var key in requestQuery.AllKeys)
+                        Dictionary<string, string> query = new Dictionary<string, string>();
+                        NameValueCollection requestQuery = httpContext.Request.QueryString;
+                        foreach (string key in requestQuery.AllKeys)
                         {
                             query[key] = requestQuery[key];
                         }
@@ -262,11 +263,11 @@ namespace WatsonWebsocket
 
                         #endregion
 
-                        var unawaited = Task.Run(() =>
+                        Task unawaited = Task.Run(() =>
                         { 
                             #region Add-to-Client-List
 
-                            _activeClients++;
+                            ActiveClients++;
                             // Do not decrement in this block, decrement is done by the connection reader
 
                             ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext);
@@ -284,7 +285,7 @@ namespace WatsonWebsocket
 
                             CancellationToken dataReceiverToken = default(CancellationToken);
 
-                            Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + _activeClients + " clients)");
+                            Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + ActiveClients + " clients)");
                             if (ClientConnected != null)
                             {
                                 Task.Run(() => ClientConnected(clientIp + ":" + clientPort, query), dataReceiverToken);
@@ -294,7 +295,7 @@ namespace WatsonWebsocket
 
                             #endregion 
 
-                        }, _token);
+                        }, Token);
                     }
                 }
 
@@ -320,7 +321,7 @@ namespace WatsonWebsocket
                     if (data == null)
                     {
                         // no message available
-                        await Task.Delay(30, _token);
+                        await Task.Delay(30, Token);
                         continue;
                     }
                     else
@@ -333,7 +334,7 @@ namespace WatsonWebsocket
 
                     if (MessageReceived != null)
                     {
-                        var unawaited = Task.Run(() => MessageReceived(client.IpPort(), data), _token);
+                        Task unawaited = Task.Run(() => MessageReceived(client.IpPort(), data), Token);
                     }
                 }
 
@@ -350,13 +351,13 @@ namespace WatsonWebsocket
             }
             finally
             {
-                _activeClients--;
+                ActiveClients--;
                 RemoveClient(client);
                 if (ClientDisconnected != null)
                 {
-                    var unawaited = Task.Run(() => ClientDisconnected(client.IpPort()), _token);
+                    Task unawaited = Task.Run(() => ClientDisconnected(client.IpPort()), Token);
                 }
-                Log("DataReceiver client " + client.IpPort() + " disconnected (now " + _activeClients + " clients active)");
+                Log("DataReceiver client " + client.IpPort() + " disconnected (now " + ActiveClients + " clients active)");
             }
         }
 
@@ -457,7 +458,7 @@ namespace WatsonWebsocket
                         else
                         {
                             currentTimeout += sleepInterval;
-                            Task.Delay(sleepInterval, _token).Wait();
+                            Task.Delay(sleepInterval, Token).Wait();
                         }
                     }
                 }
@@ -509,8 +510,8 @@ namespace WatsonWebsocket
 
                 int read = 0;
                 long bufferSize = 16*1024;
+                byte[] buffer = new byte[bufferSize];
 
-                var buffer = new byte[bufferSize];
                 while (client.Ws.State == WebSocketState.Open)
                 {
                     WebSocketReceiveResult receiveResult = await client.Ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
@@ -522,7 +523,7 @@ namespace WatsonWebsocket
                     }
                     else
                     {
-                        var bytesThisTime = receiveResult.Count;
+                        int bytesThisTime = receiveResult.Count;
                         dataMs.Write(buffer, 0, bytesThisTime);
                         read += bytesThisTime;
                         bytesRemaining -= bytesThisTime;
@@ -583,9 +584,11 @@ namespace WatsonWebsocket
 
                 #region Send-Message
 
-                // can't have two simultaneous SendAsync calls so use a semaphore to block the second until the first has completed
-                await client.SendAsyncLock.WaitAsync(_token);
-                if (_token.IsCancellationRequested)
+                // Cannot have two simultaneous SendAsync calls so use a 
+                // semaphore to block the second until the first has completed
+
+                await client.SendAsyncLock.WaitAsync(Token);
+                if (Token.IsCancellationRequested)
                 {
                     return false;
                 }

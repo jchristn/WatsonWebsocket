@@ -186,7 +186,7 @@ namespace WatsonWebsocket
 
                     if (MessageReceived != null)
                     {
-                        var unawaited = Task.Run(() => MessageReceived(data), Token);
+                        Task unawaited = Task.Run(() => MessageReceived(data), Token);
                     } 
                 }
 
@@ -478,7 +478,7 @@ namespace WatsonWebsocket
                     Dispose();
                     if (ServerDisconnected != null)
                     {
-                        var unawaited = Task.Run(() => ServerDisconnected());
+                        Task unawaited = Task.Run(() => ServerDisconnected());
                     }
                 }
             }
