@@ -79,6 +79,11 @@ namespace WatsonWebsocket
                 ListenerIpAddress = Loopback;
                 ListenerIp = ListenerIpAddress.ToString();
             }
+            else if (listenerIp == "*")
+            {
+                ListenerIp = "*";
+                ListenerIpAddress = Any;
+            }
             else
             {
                 ListenerIpAddress = Parse(listenerIp);
