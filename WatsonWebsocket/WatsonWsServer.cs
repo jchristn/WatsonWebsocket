@@ -389,7 +389,7 @@ namespace WatsonWebsocket
         }
 
         private async Task<byte[]> MessageReadAsync(ClientMetadata client)
-        { 
+        {
             /*
              *
              * Do not catch exceptions, let them get caught by the data reader
@@ -397,107 +397,12 @@ namespace WatsonWebsocket
              *
              */
 
-            #region Variables
-
-            int bytesRead = 0;
-            int sleepInterval = 25;
-            int maxTimeout = 500;
-            int currentTimeout = 0;
-            bool timeout = false;
-
-            byte[] headerBytes;
-            string header = "";
-            long contentLength;
-            byte[] contentBytes;
-
             if (client.HttpContext == null) return null;
             if (client.WsContext == null) return null;
 
-            #endregion
+            #region Variables
 
-            #region Read-Header
-
-            using (MemoryStream headerMs = new MemoryStream())
-            {
-                #region Read-Header-Bytes
-
-                byte[] headerBuffer = new byte[1];
-                timeout = false;
-                currentTimeout = 0;
-                int read = 0;
-
-                while (client.Ws.State == WebSocketState.Open)
-                {
-                    WebSocketReceiveResult receiveResult = await client.Ws.ReceiveAsync(new ArraySegment<byte>(headerBuffer), CancellationToken.None);
-                    if (receiveResult.MessageType == WebSocketMessageType.Close)
-                    {
-                        await client.Ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
-                    }
-
-                    headerMs.Write(headerBuffer, 0, 1);
-                    read++;
-
-                    if (read > 0)
-                    {
-                        bytesRead += read;
-
-                        if (bytesRead > 1)
-                        {
-                            // check if end of headers reached
-                            if ((int)headerBuffer[0] == 58) break;
-                        }
-                    }
-                    else
-                    {
-                        if (currentTimeout >= maxTimeout)
-                        {
-                            timeout = true;
-                            break;
-                        }
-                        else
-                        {
-                            currentTimeout += sleepInterval;
-                            Task.Delay(sleepInterval, _token).Wait();
-                        }
-                    }
-                }
-
-                if (timeout)
-                {
-                    Log("*** MessageReadAsync from " + client.IpPort() + " timeout " + currentTimeout + "ms/" + maxTimeout + "ms exceeded while reading header after reading " + bytesRead + " bytes");
-                    return null;
-                }
-
-                headerBytes = headerMs.ToArray();
-                if (headerBytes.Length < 1)
-                {
-                    return null;
-                }
-
-                #endregion
-
-                #region Process-Header
-
-                header = Encoding.UTF8.GetString(headerBytes);
-                header = header.Replace(":", "");
-
-                if (header.Length == 1)
-                {
-                    if (header[0] == 0x00)
-                    {
-                        Log("MessageReadAsync received termination notice from client " + client.IpPort());
-                        return headerBytes;
-                    }
-                }
-
-                if (!Int64.TryParse(header, out contentLength))
-                {
-                    Log("*** MessageReadAsync malformed message from " + client.IpPort() + " (message header not an integer): " + BytesToHex(headerBytes));
-                    return null;
-                }
-
-                #endregion
-            }
+            byte[] contentBytes;
 
             #endregion
 
@@ -505,31 +410,26 @@ namespace WatsonWebsocket
 
             using (MemoryStream dataMs = new MemoryStream())
             {
-                long bytesRemaining = contentLength;
-
-                int read = 0;
-                long bufferSize = 16*1024;
+                const long bufferSize = 16*1024;
 
                 var buffer = new byte[bufferSize];
+                var bufferSegment = new ArraySegment<byte>(buffer);
                 while (client.Ws.State == WebSocketState.Open)
                 {
-                    WebSocketReceiveResult receiveResult = await client.Ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    WebSocketReceiveResult receiveResult = await client.Ws.ReceiveAsync(bufferSegment, CancellationToken.None);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
                         //
                         // end of message
                         //
+                        break;
                     }
                     else
                     {
-                        var bytesThisTime = receiveResult.Count;
-                        dataMs.Write(buffer, 0, bytesThisTime);
-                        read += bytesThisTime;
-                        bytesRemaining -= bytesThisTime;
+                        dataMs.Write(buffer, 0, receiveResult.Count);
 
                         // check if read fully
-                        if (bytesRemaining == 0) break;
-                        if (read == contentLength) break;
+                        if (receiveResult.EndOfMessage) break;
                     }
                 }
 
@@ -546,12 +446,6 @@ namespace WatsonWebsocket
                 return null;
             }
 
-            if (contentBytes.Length != contentLength)
-            {
-                Log("*** MessageReadAsync " + client.IpPort() + " content length " + contentBytes.Length + " bytes does not match header value " + contentLength + ", discarding");
-                return null;
-            }
-
             #endregion
 
             return contentBytes;
@@ -561,26 +455,6 @@ namespace WatsonWebsocket
         { 
             try
             {
-                #region Format-Message
-
-                string header = "";
-                byte[] headerBytes;
-                byte[] message;
-
-                if (data == null || data.Length < 1) header += "0:";
-                else header += data.Length + ":";
-
-                headerBytes = Encoding.UTF8.GetBytes(header);
-                int messageLen = headerBytes.Length;
-                if (data != null && data.Length > 0) messageLen += data.Length;
-
-                message = new byte[messageLen];
-                Buffer.BlockCopy(headerBytes, 0, message, 0, headerBytes.Length);
-
-                if (data != null && data.Length > 0) Buffer.BlockCopy(data, 0, message, headerBytes.Length, data.Length);
-
-                #endregion
-
                 #region Send-Message
 
                 // can't have two simultaneous SendAsync calls so use a semaphore to block the second until the first has completed
@@ -591,7 +465,7 @@ namespace WatsonWebsocket
                 }
                 try
                 {
-                    await client.Ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length),
+                    await client.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length),
                         WebSocketMessageType.Binary, true, CancellationToken.None);
                 }
                 finally

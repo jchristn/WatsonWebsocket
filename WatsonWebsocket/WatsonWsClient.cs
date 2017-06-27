@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -402,18 +396,13 @@ namespace WatsonWebsocket
 
                 #region Format-Message
 
-                string header = "";
-                byte[] headerBytes;
-                byte[] message;
+                string header = (data == null || data.Length < 1) ? "0:" : data.Length + ":";
 
-                if (data == null || data.Length < 1) header += "0:";
-                else header += data.Length + ":";
-
-                headerBytes = Encoding.UTF8.GetBytes(header);
+                var headerBytes = Encoding.UTF8.GetBytes(header);
                 int messageLen = headerBytes.Length;
                 if (data != null && data.Length > 0) messageLen += data.Length;
 
-                message = new byte[messageLen];
+                var message = new byte[messageLen];
                 Buffer.BlockCopy(headerBytes, 0, message, 0, headerBytes.Length);
 
                 if (data != null && data.Length > 0) Buffer.BlockCopy(data, 0, message, headerBytes.Length, data.Length);
