@@ -307,7 +307,8 @@ namespace WatsonWebsocket
         }
         
         private async Task DataReceiver(ClientMetadata client, CancellationToken? cancelToken = null)
-        { 
+        {
+            var clientId = client.IpPort();
             try
             {
                 #region Wait-for-Data
@@ -320,20 +321,14 @@ namespace WatsonWebsocket
                     if (data == null)
                     {
                         // no message available
+                        Task.Run(() => MessageReceived?.Invoke(clientId, data), _token);
                         await Task.Delay(30, _token);
                         continue;
-                    }
-                    else
-                    {
-                        if (data.Length == 1 && data[0] == 0x00)
-                        {
-                            break;
-                        }
                     }
 
                     if (MessageReceived != null)
                     {
-                        var unawaited = Task.Run(() => MessageReceived(client.IpPort(), data), _token);
+                        var unawaited = Task.Run(() => MessageReceived?.Invoke(client.IpPort(), data), _token);
                     }
                 }
 
@@ -341,12 +336,12 @@ namespace WatsonWebsocket
             }
             catch (OperationCanceledException oce)
             {
-                Log("DataReceiver client " + client.IpPort() + " disconnected (canceled): " + oce.Message);
+                Log("DataReceiver client " + clientId + " disconnected (canceled): " + oce.Message);
                 throw; //normal cancellation
             }
             catch (WebSocketException wse)
             {
-                Log("DataReceiver client " + client.IpPort() + " disconnected (websocket exception): " + wse.Message);
+                Log("DataReceiver client " + clientId + " disconnected (websocket exception): " + wse.Message);
             }
             finally
             {
@@ -354,9 +349,9 @@ namespace WatsonWebsocket
                 RemoveClient(client);
                 if (ClientDisconnected != null)
                 {
-                    var unawaited = Task.Run(() => ClientDisconnected(client.IpPort()), _token);
+                    var unawaited = Task.Run(() => ClientDisconnected(clientId), _token);
                 }
-                Log("DataReceiver client " + client.IpPort() + " disconnected (now " + _activeClients + " clients active)");
+                Log("DataReceiver client " + clientId + " disconnected (now " + _activeClients + " clients active)");
             }
         }
 
@@ -408,7 +403,7 @@ namespace WatsonWebsocket
 
             #region Read-Data
 
-            using (MemoryStream dataMs = new MemoryStream())
+            using (var dataStream = new MemoryStream())
             {
                 const long bufferSize = 16*1024;
 
@@ -416,39 +411,27 @@ namespace WatsonWebsocket
                 var bufferSegment = new ArraySegment<byte>(buffer);
                 while (client.Ws.State == WebSocketState.Open)
                 {
-                    WebSocketReceiveResult receiveResult = await client.Ws.ReceiveAsync(bufferSegment, CancellationToken.None);
+                    var receiveResult = await client.Ws.ReceiveAsync(bufferSegment, CancellationToken.None);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
-                        //
-                        // end of message
-                        //
-                        break;
+                        throw new WebSocketException("Socket closed");
                     }
-                    else
-                    {
-                        dataMs.Write(buffer, 0, receiveResult.Count);
 
-                        // check if read fully
-                        if (receiveResult.EndOfMessage) break;
+                    // write this chunk to the data stream
+                    dataStream.Write(buffer, 0, receiveResult.Count);
+                    if (receiveResult.EndOfMessage)
+                    {
+                        // end of message so return the buffer
+                        break;
                     }
                 }
 
-                contentBytes = dataMs.ToArray();
+                contentBytes = dataStream.ToArray();
             }
 
             #endregion
 
-            #region Check-Content-Bytes
-
-            if (contentBytes.Length < 1)
-            {
-                Log("*** MessageReadAsync " + client.IpPort() + " no content read");
-                return null;
-            }
-
-            #endregion
-
-            return contentBytes;
+            return contentBytes.Length == 0 ? null : contentBytes;
         }
 
         private async Task<bool> MessageWriteAsync(ClientMetadata client, byte[] data)
