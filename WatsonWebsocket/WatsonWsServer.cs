@@ -449,7 +449,7 @@ namespace WatsonWebsocket
                 try
                 {
                     await client.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length),
-                        WebSocketMessageType.Binary, true, CancellationToken.None);
+                        WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 finally
                 {
