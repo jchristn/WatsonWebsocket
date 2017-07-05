@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -29,11 +30,11 @@ namespace WatsonWebsocket
         private readonly IPAddress ListenerIpAddress;
         private readonly string ListenerPrefix;
         private readonly HttpListener Listener;
-        private int _activeClients;
+        private int ActiveClients;
         private readonly ConcurrentDictionary<string, ClientMetadata> Clients;
         private readonly List<string> PermittedIps;
         private readonly CancellationTokenSource TokenSource;
-        private CancellationToken _token;
+        private CancellationToken Token;
         private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
         private readonly Func<string, bool> ClientDisconnected;
         private readonly Func<string, byte[], bool> MessageReceived;
@@ -97,10 +98,10 @@ namespace WatsonWebsocket
             Log("WatsonWsServer starting on " + ListenerPrefix);
 
             TokenSource = new CancellationTokenSource();
-            _token = TokenSource.Token;
-            _activeClients = 0;
+            Token = TokenSource.Token;
+            ActiveClients = 0;
             Clients = new ConcurrentDictionary<string, ClientMetadata>();
-            Task.Run(AcceptConnections, _token);
+            Task.Run(AcceptConnections, Token);
         }
 
         #endregion
@@ -120,8 +121,9 @@ namespace WatsonWebsocket
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
         /// <param name="data">Byte array containing data.</param>
+        /// <param name="messageType"></param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public async Task<bool> SendAsync(string ipPort, byte[] data)
+        public async Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType messageType = WebSocketMessageType.Binary)
         {
             ClientMetadata client;
             if (!Clients.TryGetValue(ipPort, out client))
@@ -130,7 +132,7 @@ namespace WatsonWebsocket
                 return false;
             }
 
-            return await MessageWriteAsync(client, data);
+            return await MessageWriteAsync(client, data, messageType);
         }
 
         /// <summary>
@@ -206,24 +208,24 @@ namespace WatsonWebsocket
 
                 Listener.Start();
                 
-                while (!_token.IsCancellationRequested)
+                while (!Token.IsCancellationRequested)
                 { 
                     #region Accept-Connection
 
                     HttpListenerContext httpContext = await Listener.GetContextAsync();
 
                     #endregion
-
-                    #region Get-Tuple-and-Check-IP
-
+                     
                     if (httpContext.Request.RemoteEndPoint != null)
                     {
+                        #region Check-IP-Address
+
                         string clientIp = httpContext.Request.RemoteEndPoint.Address.ToString();
                         int clientPort = httpContext.Request.RemoteEndPoint.Port;
 
-                        var query = new Dictionary<string, string>();
-                        var requestQuery = httpContext.Request.QueryString;
-                        foreach (var key in requestQuery.AllKeys)
+                        Dictionary<string, string> query = new Dictionary<string, string>();
+                        NameValueCollection requestQuery = httpContext.Request.QueryString;
+                        foreach (string key in requestQuery.AllKeys)
                         {
                             query[key] = requestQuery[key];
                         }
@@ -262,11 +264,11 @@ namespace WatsonWebsocket
 
                         #endregion
 
-                        var unawaited = Task.Run(() =>
+                        Task unawaited = Task.Run(() =>
                         { 
                             #region Add-to-Client-List
 
-                            _activeClients++;
+                            ActiveClients++;
                             // Do not decrement in this block, decrement is done by the connection reader
 
                             ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext);
@@ -284,7 +286,7 @@ namespace WatsonWebsocket
 
                             CancellationToken dataReceiverToken = default(CancellationToken);
 
-                            Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + _activeClients + " clients)");
+                            Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + ActiveClients + " clients)");
                             if (ClientConnected != null)
                             {
                                 Task.Run(() => ClientConnected(clientIp + ":" + clientPort, query), dataReceiverToken);
@@ -294,7 +296,7 @@ namespace WatsonWebsocket
 
                             #endregion 
 
-                        }, _token);
+                        }, Token);
                     }
                 }
 
@@ -317,19 +319,21 @@ namespace WatsonWebsocket
                 {
                     cancelToken?.ThrowIfCancellationRequested();
                     
-                    byte[] data = await MessageReadAsync(client);
-                    if (data == null)
+                    byte[] data = await MessageReadAsync(client, cancelToken ?? CancellationToken.None);
+                    if (data != null)
+                    {
+                        if (MessageReceived != null)
+                        {
+                            var unawaited = Task.Run(() => MessageReceived?.Invoke(client.IpPort(), data),
+                                CancellationToken.None);
+                        }
+                    }
+                    else
                     {
                         // no message available
-                        Task.Run(() => MessageReceived?.Invoke(clientId, data), _token);
-                        await Task.Delay(30, _token);
-                        continue;
+                        await Task.Delay(30, cancelToken.GetValueOrDefault());
                     }
 
-                    if (MessageReceived != null)
-                    {
-                        var unawaited = Task.Run(() => MessageReceived?.Invoke(client.IpPort(), data), _token);
-                    }
                 }
 
                 #endregion
@@ -345,13 +349,13 @@ namespace WatsonWebsocket
             }
             finally
             {
-                _activeClients--;
+                ActiveClients--;
                 RemoveClient(client);
                 if (ClientDisconnected != null)
                 {
-                    var unawaited = Task.Run(() => ClientDisconnected(clientId), _token);
+                    var unawaited = Task.Run(() => ClientDisconnected?.Invoke(clientId), cancelToken ?? CancellationToken.None);
                 }
-                Log("DataReceiver client " + clientId + " disconnected (now " + _activeClients + " clients active)");
+                Log("DataReceiver client " + clientId + " disconnected (now " + ActiveClients + " clients active)");
             }
         }
 
@@ -383,7 +387,7 @@ namespace WatsonWebsocket
             }
         }
 
-        private async Task<byte[]> MessageReadAsync(ClientMetadata client)
+        private async Task<byte[]> MessageReadAsync(ClientMetadata client, CancellationToken cancelToken)
         {
             /*
              *
@@ -392,15 +396,19 @@ namespace WatsonWebsocket
              *
              */
 
+            #region Check-for-Null-Values
+
             if (client.HttpContext == null) return null;
             if (client.WsContext == null) return null;
+
+            #endregion
 
             #region Variables
 
             byte[] contentBytes;
 
             #endregion
-
+             
             #region Read-Data
 
             using (var dataStream = new MemoryStream())
@@ -411,7 +419,7 @@ namespace WatsonWebsocket
                 var bufferSegment = new ArraySegment<byte>(buffer);
                 while (client.Ws.State == WebSocketState.Open)
                 {
-                    var receiveResult = await client.Ws.ReceiveAsync(bufferSegment, CancellationToken.None);
+                    var receiveResult = await client.Ws.ReceiveAsync(bufferSegment, cancelToken);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
                         throw new WebSocketException("Socket closed");
@@ -434,27 +442,30 @@ namespace WatsonWebsocket
             return contentBytes.Length == 0 ? null : contentBytes;
         }
 
-        private async Task<bool> MessageWriteAsync(ClientMetadata client, byte[] data)
+        private async Task<bool> MessageWriteAsync(ClientMetadata client, byte[] data, WebSocketMessageType messageType)
         { 
             try
             {
                 #region Send-Message
 
-                // can't have two simultaneous SendAsync calls so use a semaphore to block the second until the first has completed
-                await client.SendAsyncLock.WaitAsync(_token);
-                if (_token.IsCancellationRequested)
+                // Cannot have two simultaneous SendAsync calls so use a 
+                // semaphore to block the second until the first has completed
+
+                await client.SendAsyncLock.WaitAsync(Token);
+                if (Token.IsCancellationRequested)
                 {
                     return false;
                 }
                 try
                 {
                     await client.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length),
-                        WebSocketMessageType.Text, true, CancellationToken.None);
+                        messageType, true, CancellationToken.None);
                 }
                 finally
                 {
                     client.SendAsyncLock.Release();
                 }
+
                 return true;
 
                 #endregion

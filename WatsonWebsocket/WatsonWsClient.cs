@@ -180,7 +180,7 @@ namespace WatsonWebsocket
 
                     if (MessageReceived != null)
                     {
-                        var unawaited = Task.Run(() => MessageReceived(data), Token);
+                        Task unawaited = Task.Run(() => MessageReceived(data), Token);
                     } 
                 }
 
@@ -206,7 +206,7 @@ namespace WatsonWebsocket
         }
          
         private async Task<byte[]> MessageReadAsync()
-        { 
+        {
             /*
              *
              * Do not catch exceptions, let them get caught by the data reader
@@ -214,106 +214,15 @@ namespace WatsonWebsocket
              *
              */
 
-            #region Variables
-
-            int bytesRead = 0;
-            int sleepInterval = 25;
-            int maxTimeout = 500;
-            int currentTimeout = 0;
-            bool timeout = false;
-
-            byte[] headerBytes;
-            string header = "";
-            long contentLength;
-            byte[] contentBytes;
+            #region Check-for-Null-Values
 
             if (ClientWs == null) return null;
 
             #endregion
 
-            #region Read-Header
+            #region Variables
 
-            using (MemoryStream headerMs = new MemoryStream())
-            {
-                #region Read-Header-Bytes
-
-                byte[] headerBuffer = new byte[1];
-                timeout = false;
-                currentTimeout = 0;
-                int read = 0;
-
-                while (ClientWs.State == WebSocketState.Open)
-                {
-                    WebSocketReceiveResult receiveResult = await ClientWs.ReceiveAsync(new ArraySegment<byte>(headerBuffer), CancellationToken.None);
-                    if (receiveResult.MessageType == WebSocketMessageType.Close)
-                    {
-                        await ClientWs.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
-                    }
-
-                    headerMs.Write(headerBuffer, 0, 1);
-                    read++;
-
-                    if (read > 0)
-                    {
-                        bytesRead += read;
-
-                        if (bytesRead > 1)
-                        {
-                            // check if end of headers reached
-                            if ((int)headerBuffer[0] == 58) break;
-                        }
-                    }
-                    else
-                    {
-                        if (currentTimeout >= maxTimeout)
-                        {
-                            timeout = true;
-                            break;
-                        }
-                        else
-                        {
-                            currentTimeout += sleepInterval;
-                            Task.Delay(sleepInterval).Wait();
-                        }
-                    }
-                }
-
-                if (timeout)
-                {
-                    Log("*** MessageReadAsync timeout " + currentTimeout + "ms/" + maxTimeout + "ms exceeded while reading header after reading " + bytesRead + " bytes");
-                    return null;
-                }
-
-                headerBytes = headerMs.ToArray();
-                if (headerBytes == null || headerBytes.Length < 1)
-                {
-                    return null;
-                }
-
-                #endregion
-
-                #region Process-Header
-
-                header = Encoding.UTF8.GetString(headerBytes);
-                header = header.Replace(":", "");
-
-                if (header.Length == 1)
-                {
-                    if (header[0] == 0x00)
-                    {
-                        Log("MessageReadAsync received termination notice from server");
-                        return headerBytes;
-                    }
-                }
-
-                if (!Int64.TryParse(header, out contentLength))
-                {
-                    Log("*** MessageReadAsync malformed message from server (message header not an integer): " + BytesToHex(headerBytes));
-                    return null;
-                }
-
-                #endregion
-            }
+            byte[] contentBytes;
 
             #endregion
 
@@ -321,35 +230,21 @@ namespace WatsonWebsocket
 
             using (MemoryStream dataMs = new MemoryStream())
             {
-                long bytesRemaining = contentLength;
-                timeout = false;
-                currentTimeout = 0;
-
-                int read = 0;
-                byte[] buffer;
-                long bufferSize = 2048;
+                long bufferSize = 16 * 1024;
+                byte[] buffer = new byte[bufferSize];
+                ArraySegment<byte> bufferSegment = new ArraySegment<byte>(buffer);
 
                 while (ClientWs.State == WebSocketState.Open)
                 {
-                    if (bufferSize > bytesRemaining) bufferSize = bytesRemaining;
-                    buffer = new byte[bufferSize];
-
-                    WebSocketReceiveResult receiveResult = await ClientWs.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    WebSocketReceiveResult receiveResult = await ClientWs.ReceiveAsync(bufferSegment, CancellationToken.None);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
-                        //
-                        // end of message
-                        //
+                        break;
                     }
                     else
                     {
-                        dataMs.Write(buffer, 0, buffer.Length);
-                        read += buffer.Length;
-                        bytesRemaining -= buffer.Length;
-
-                        // check if read fully
-                        if (bytesRemaining == 0) break;
-                        if (read == contentLength) break;
+                        dataMs.Write(buffer, 0, receiveResult.Count);
+                        if (receiveResult.EndOfMessage) break;
                     }
                 }
 
@@ -365,13 +260,7 @@ namespace WatsonWebsocket
                 Log("*** MessageReadAsync no content read");
                 return null;
             }
-
-            if (contentBytes.Length != contentLength)
-            {
-                Log("*** MessageReadAsync content length " + contentBytes.Length + " bytes does not match header value " + contentLength + ", discarding");
-                return null;
-            }
-
+             
             #endregion
 
             return contentBytes; 
@@ -393,28 +282,12 @@ namespace WatsonWebsocket
                 }
 
                 #endregion
-
-                #region Format-Message
-
-                string header = (data == null || data.Length < 1) ? "0:" : data.Length + ":";
-
-                var headerBytes = Encoding.UTF8.GetBytes(header);
-                int messageLen = headerBytes.Length;
-                if (data != null && data.Length > 0) messageLen += data.Length;
-
-                var message = new byte[messageLen];
-                Buffer.BlockCopy(headerBytes, 0, message, 0, headerBytes.Length);
-
-                if (data != null && data.Length > 0) Buffer.BlockCopy(data, 0, message, headerBytes.Length, data.Length);
-
-                #endregion
-
                 #region Send-Message
 
                 await SendLock.WaitAsync(Token);
                 try
                 {
-                    await ClientWs.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    await ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
                 }
                 catch (Exception eInner)
                 {
@@ -467,7 +340,7 @@ namespace WatsonWebsocket
                     Dispose();
                     if (ServerDisconnected != null)
                     {
-                        var unawaited = Task.Run(() => ServerDisconnected());
+                        Task unawaited = Task.Run(() => ServerDisconnected());
                     }
                 }
             }
