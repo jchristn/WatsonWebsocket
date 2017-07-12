@@ -15,6 +15,7 @@ namespace WatsonWebsocket
         public WebSocket Ws;
         public WebSocketContext WsContext;
         public readonly SemaphoreSlim SendAsyncLock = new SemaphoreSlim(1);
+        public readonly CancellationTokenSource KillToken = new CancellationTokenSource();
 
         #endregion
 
