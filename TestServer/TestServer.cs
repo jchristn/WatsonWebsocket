@@ -46,6 +46,7 @@ namespace TestServer
                         Console.WriteLine("  cls     clear screen");
                         Console.WriteLine("  list    list clients");
                         Console.WriteLine("  send    send message to client");
+                        Console.WriteLine("  kill    disconnect a client");
                         break;
 
                     case "q":
@@ -79,6 +80,12 @@ namespace TestServer
                         userInput = Console.ReadLine();
                         if (String.IsNullOrEmpty(userInput)) break;
                         server.SendAsync(ipPort, Encoding.UTF8.GetBytes(userInput));
+                        break;
+
+                    case "kill":
+                        Console.Write("IP:Port: ");
+                        ipPort = Console.ReadLine();
+                        server.KillClient(ipPort);
                         break;
 
                     default:

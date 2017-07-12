@@ -13,8 +13,8 @@ A test project for both client and server are included which will help you under
 ## SSL
 Two classes for each server and client are supplied, one without SSL support and one with.  An example certificate can be found in the TestSslClient and TestSslServer projects, which has a password of 'password'.  Refer to 'test-certificate.txt' in the TestSslServer project for instructions.  Use of SSL requires installation of a certificate and binding to a port using the certificate thumbprint.
 
-## New in v1.1.1
-- Removed unnecessary framing
+## New in v1.2.0
+- Bugfixes, client kill API (thank you @BryanCrotaz!)
 
 ## Running under Mono
 Watson works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
@@ -29,6 +29,7 @@ mono --server myapp.exe
 ## Version History
 v1.1.x
 - threading fixes, code cleanup, client connected signature change (thank you @BryanCrotaz!)
+- Remove unnecessary framing
 
 v1.0.x 
 - initial release, bugfixes
