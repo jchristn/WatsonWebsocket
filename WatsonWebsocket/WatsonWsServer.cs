@@ -7,8 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
-using System.Threading.Tasks;
-using static System.Net.IPAddress;
+using System.Threading.Tasks; 
 
 namespace WatsonWebsocket
 {    
@@ -71,17 +70,17 @@ namespace WatsonWebsocket
 
             if (String.IsNullOrEmpty(listenerIp))
             {
-                ListenerIpAddress = Loopback;
+                ListenerIpAddress = IPAddress.Loopback;
                 ListenerIp = ListenerIpAddress.ToString();
             }
             else if (listenerIp == "*")
             {
                 ListenerIp = "*";
-                ListenerIpAddress = Any;
+                ListenerIpAddress = IPAddress.Any;
             }
             else
             {
-                ListenerIpAddress = Parse(listenerIp);
+                ListenerIpAddress = IPAddress.Parse(listenerIp);
                 ListenerIp = listenerIp;
             }
 
@@ -119,11 +118,22 @@ namespace WatsonWebsocket
         /// Send data to the specified client, asynchronously.
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
-        /// <param name="data">Byte array containing data.</param>
-        /// <param name="messageType"></param>
+        /// <param name="data">Byte array containing data.</param> 
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public async Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType messageType = WebSocketMessageType.Binary)
+        public async Task<bool> SendAsync(string ipPort, byte[] data)
         {
+            return await SendAsync(ipPort, data, WebSocketMessageType.Binary);
+        }
+
+        /// <summary>
+        /// Send data to the specified client, asynchronously.
+        /// </summary>
+        /// <param name="ipPort">IP:port of the recipient client.</param>
+        /// <param name="data">Byte array containing data.</param>
+        /// <param name="messageType">The type of websocket message.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public async Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType messageType)
+        { 
             ClientMetadata client;
             if (!Clients.TryGetValue(ipPort, out client))
             {
@@ -137,6 +147,7 @@ namespace WatsonWebsocket
         /// <summary>
         /// Determine whether or not the specified client is connected to the server.
         /// </summary>
+        /// <param name="ipPort">IP:port of the recipient client.</param>
         /// <returns>Boolean indicating if the client is connected to the server.</returns>
         public bool IsClientConnected(string ipPort)
         {
@@ -157,6 +168,19 @@ namespace WatsonWebsocket
                 ret.Add(curr.Key);
             }
             return ret;
+        }
+
+        /// <summary>
+        /// Forcefully disconnect a client.
+        /// </summary>
+        /// <param name="ipPort">IP:port of the client.</param>
+        public void KillClient(string ipPort)
+        {
+            // force disconnect of client
+            if (Clients.TryGetValue(ipPort, out var client))
+            {
+                client.KillToken.Cancel();
+            }
         }
 
         #endregion
@@ -337,8 +361,7 @@ namespace WatsonWebsocket
             }
             catch (OperationCanceledException oce)
             {
-                Log("DataReceiver client " + clientId + " disconnected (canceled): " + oce.Message);
-                throw; //normal cancellation
+                Log("DataReceiver client " + clientId + " disconnected (canceled): " + oce.Message); 
             }
             catch (WebSocketException wse)
             {
@@ -468,15 +491,5 @@ namespace WatsonWebsocket
         }
          
         #endregion
-
-        public void KillClient(string clientId)
-        {
-            // force disconnect of client
-            if (Clients.TryGetValue(clientId, out var client))
-            {
-                Console.WriteLine("Killing " + clientId);
-                client.KillToken.Cancel();
-            }
-        }
     }
 }
