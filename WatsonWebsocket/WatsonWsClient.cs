@@ -282,6 +282,7 @@ namespace WatsonWebsocket
                 }
 
                 #endregion
+
                 #region Send-Message
 
                 await SendLock.WaitAsync(Token);
