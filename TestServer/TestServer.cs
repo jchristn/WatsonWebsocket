@@ -58,7 +58,7 @@ namespace TestServer
                         break;
 
                     case "list":
-                        clients = server.ListClients();
+                        clients = new List<string>(server.ListClients());
                         if (clients != null && clients.Count > 0)
                         {
                             Console.WriteLine("Clients");
