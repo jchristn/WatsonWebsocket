@@ -30,7 +30,7 @@ namespace WatsonWebsocket
         private readonly HttpListener Listener;
         private int ActiveClients;
         private readonly ConcurrentDictionary<string, ClientMetadata> Clients;
-        private readonly List<string> PermittedIps;
+        private readonly ConcurrentDictionary<string, bool> PermittedIps;
         private readonly CancellationTokenSource TokenSource;
         private CancellationToken Token;
         private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
@@ -66,7 +66,14 @@ namespace WatsonWebsocket
             MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(MessageReceived));
             Debug = debug;
 
-            if (permittedIps != null && permittedIps.Any()) PermittedIps = new List<string>(permittedIps);
+            if (permittedIps != null && permittedIps.Any())
+            {
+                PermittedIps = new ConcurrentDictionary<string, bool>();
+                foreach (var ip in permittedIps)
+                {
+                    PermittedIps[ip] = true;
+                }
+            }
 
             if (String.IsNullOrEmpty(listenerIp))
             {
@@ -255,7 +262,7 @@ namespace WatsonWebsocket
 
                         if (PermittedIps != null && PermittedIps.Count > 0)
                         {
-                            if (!PermittedIps.Contains(clientIp))
+                            if (!PermittedIps.ContainsKey(clientIp))
                             {
                                 Log("*** AcceptConnections rejecting connection from " + clientIp + " (not permitted)");
                                 httpContext.Response.StatusCode = 401;
