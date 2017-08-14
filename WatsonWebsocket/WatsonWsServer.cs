@@ -369,6 +369,8 @@ namespace WatsonWebsocket
             {
                 if (RemoveClient(client))
                 {
+                    // must only fire disconnected event if the client was previously connected. Note that
+                    // multithreading gives multiple disconnection events from the socket, the reader and the writer
                     ClientDisconnected?.Invoke(clientId);
                     Log("DataReceiver client " + clientId + " disconnected (now " + Clients.Count + " clients active)");
                 }
