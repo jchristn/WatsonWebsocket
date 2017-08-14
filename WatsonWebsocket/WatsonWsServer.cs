@@ -28,7 +28,6 @@ namespace WatsonWebsocket
         private readonly IPAddress ListenerIpAddress;
         private readonly string ListenerPrefix;
         private readonly HttpListener Listener;
-        private int ActiveClients;
         private readonly ConcurrentDictionary<string, ClientMetadata> Clients;
         private readonly ConcurrentDictionary<string, bool> PermittedIps;
         private readonly CancellationTokenSource TokenSource;
@@ -104,7 +103,6 @@ namespace WatsonWebsocket
 
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
-            ActiveClients = 0;
             Clients = new ConcurrentDictionary<string, ClientMetadata>();
             Task.Run(AcceptConnections, Token);
         }
@@ -159,22 +157,16 @@ namespace WatsonWebsocket
         public bool IsClientConnected(string ipPort)
         {
             ClientMetadata client;
-            return (Clients.TryGetValue(ipPort, out client));
+            return Clients.TryGetValue(ipPort, out client);
         }
 
         /// <summary>
         /// List the IP:port of each connected client.
         /// </summary>
         /// <returns>A string list containing each client IP:port.</returns>
-        public List<string> ListClients()
+        public IEnumerable<string> ListClients()
         {
-            Dictionary<string, ClientMetadata> clients = Clients.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            List<string> ret = new List<string>();
-            foreach (KeyValuePair<string, ClientMetadata> curr in clients)
-            {
-                ret.Add(curr.Key);
-            }
-            return ret;
+            return Clients.Keys.ToArray();
         }
 
         /// <summary>
@@ -297,8 +289,7 @@ namespace WatsonWebsocket
                         Task unawaited = Task.Run(() =>
                         { 
                             #region Add-to-Client-List
-
-                            ActiveClients++;
+                            
                             // Do not decrement in this block, decrement is done by the connection reader
 
                             ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext);
@@ -315,7 +306,7 @@ namespace WatsonWebsocket
                             #region Start-Data-Receiver
                             CancellationToken killToken = currClient.KillToken.Token;
 
-                            Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + ActiveClients + " clients)");
+                            Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + Clients.Count + " clients)");
                             if (ClientConnected != null)
                             {
                                 Task.Run(() => ClientConnected(clientIp + ":" + clientPort, query), killToken);
@@ -376,39 +367,23 @@ namespace WatsonWebsocket
             }
             finally
             {
-                ActiveClients--;
-                RemoveClient(client);
-                ClientDisconnected?.Invoke(clientId);
-                Log("DataReceiver client " + clientId + " disconnected (now " + ActiveClients + " clients active)");
+                if (RemoveClient(client))
+                {
+                    ClientDisconnected?.Invoke(clientId);
+                    Log("DataReceiver client " + clientId + " disconnected (now " + Clients.Count + " clients active)");
+                }
             }
         }
 
         private bool AddClient(ClientMetadata client)
         { 
-            ClientMetadata removedClient;
-            if (!Clients.TryRemove(client.IpPort(), out removedClient))
-            {
-                // do nothing, it probably did not exist anyway
-            }
-
-            Clients.TryAdd(client.IpPort(), client);
-            Log("AddClient added client " + client.IpPort());
-            return true;
+            Clients.TryRemove(client.IpPort(), out var removedClient);
+            return Clients.TryAdd(client.IpPort(), client);
         }
 
         private bool RemoveClient(ClientMetadata client)
         { 
-            ClientMetadata removedClient;
-            if (!Clients.TryRemove(client.IpPort(), out removedClient))
-            {
-                Log("RemoveClient unable to remove client " + client.IpPort());
-                return false;
-            }
-            else
-            {
-                Log("RemoveClient removed client " + client.IpPort());
-                return true;
-            }
+            return Clients.TryRemove(client.IpPort(), out var removedClient);
         }
 
         private async Task<byte[]> MessageReadAsync(ClientMetadata client)
