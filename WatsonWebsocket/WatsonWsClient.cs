@@ -81,7 +81,38 @@ namespace WatsonWebsocket
             Token = TokenSource.Token;
             Task.Run(async () => await DataReceiver(Token), Token);
         }
-        
+
+        public WatsonWsClient(
+            Uri uri,
+            bool acceptInvalidCerts,
+            Func<bool> serverConnected,
+            Func<bool> serverDisconnected,
+            Func<byte[], bool> messageReceived,
+            bool debug)
+        {
+            ServerUri = uri;
+            ServerConnected = serverConnected ?? null;
+
+            ServerDisconnected = serverDisconnected ?? null;
+
+            Debug = debug;
+            MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(messageReceived));
+            SendLock = new SemaphoreSlim(1);
+
+            if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            ClientWs = new ClientWebSocket();
+            ClientWs.ConnectAsync(ServerUri, CancellationToken.None).Wait();
+
+            Connected = true;
+            Task.Run(() => ServerConnected?.Invoke());
+
+            TokenSource = new CancellationTokenSource();
+            Token = TokenSource.Token;
+            Task.Run(async () => await DataReceiver(Token), Token);
+        }
+
+        public Uri ServerUri { get; private set; }
+
         #endregion
 
         #region Public-Methods
