@@ -53,6 +53,14 @@ namespace WatsonWebsocket
         {
             if (String.IsNullOrEmpty(serverIp)) throw new ArgumentNullException(nameof(serverIp));
             if (serverPort < 1) throw new ArgumentOutOfRangeException(nameof(serverPort));
+
+            ServerIp = serverIp;
+            ServerPort = serverPort;
+
+            if (ssl) Url = "wss://" + ServerIp + ":" + ServerPort;
+            else Url = "ws://" + ServerIp + ":" + ServerPort;
+            ServerUri = new Uri(Url);
+
             if (messageReceived == null) throw new ArgumentNullException(nameof(messageReceived));
 
             if (serverConnected != null) ServerConnected = serverConnected;
@@ -61,25 +69,14 @@ namespace WatsonWebsocket
             if (serverDisconnected != null) ServerDisconnected = serverDisconnected;
             else ServerDisconnected = null;
 
-            ServerIp = serverIp;
-            ServerPort = serverPort;
             Debug = debug;
             MessageReceived = messageReceived;
             SendLock = new SemaphoreSlim(1);
 
-            if (ssl) Url = "wss://" + ServerIp + ":" + ServerPort;
-            else Url = "ws://" + ServerIp + ":" + ServerPort;
-
             if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             ClientWs = new ClientWebSocket();
-            ClientWs.ConnectAsync(new Uri(Url), CancellationToken.None).Wait();
-
-            Connected = true;
-            Task.Run(() => ServerConnected?.Invoke());
-            
-            TokenSource = new CancellationTokenSource();
-            Token = TokenSource.Token;
-            Task.Run(async () => await DataReceiver(Token), Token);
+            ClientWs.ConnectAsync(ServerUri, CancellationToken.None)
+                .ContinueWith(AfterConnect);
         }
 
         public WatsonWsClient(
