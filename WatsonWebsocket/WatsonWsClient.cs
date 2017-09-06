@@ -100,15 +100,34 @@ namespace WatsonWebsocket
             SendLock = new SemaphoreSlim(1);
 
             if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-            ClientWs = new ClientWebSocket();
-            ClientWs.ConnectAsync(ServerUri, CancellationToken.None).Wait();
-
-            Connected = true;
-            Task.Run(() => ServerConnected?.Invoke());
 
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
-            Task.Run(async () => await DataReceiver(Token), Token);
+
+            ClientWs = new ClientWebSocket();
+            ClientWs.ConnectAsync(ServerUri, CancellationToken.None)
+                    .ContinueWith(AfterConnect);
+        }
+
+        private void AfterConnect(Task connectTask)
+        {
+            Console.WriteLine("Connect task status "+connectTask.Status);
+            if (connectTask.IsCompleted)
+            {
+                Console.WriteLine("Connect task IsCompleted");
+                Task.Run(async () =>
+                {
+                    Connected = true;
+                    ServerConnected?.Invoke();
+                    await DataReceiver(Token);
+                }, Token);
+            }
+            else
+            {
+                Console.WriteLine("Connect task Is not Completed");
+                Connected = false;
+                ServerDisconnected?.Invoke();
+            }
         }
 
         public Uri ServerUri { get; private set; }
@@ -152,8 +171,9 @@ namespace WatsonWebsocket
         {
             if (disposing)
             {
-                ClientWs?.Abort();
                 TokenSource.Cancel();
+                ClientWs.CloseAsync(WebSocketCloseStatus.NormalClosure, "closing", new CancellationToken(false));
+//                ClientWs?.Abort();
             }
         }
 
@@ -186,15 +206,15 @@ namespace WatsonWebsocket
 
         private async Task DataReceiver(CancellationToken? cancelToken = null)
         {
+            cancelToken = cancelToken ?? CancellationToken.None;
             try
             {
                 #region Wait-for-Data
-
                 while (true)
                 {
                     cancelToken?.ThrowIfCancellationRequested();
-                     
-                    byte[] data = await MessageReadAsync();
+
+                    byte[] data = await MessageReadAsync(cancelToken.Value);
                     if (data == null)
                     {
                         // no message available
@@ -236,7 +256,7 @@ namespace WatsonWebsocket
             }
         }
          
-        private async Task<byte[]> MessageReadAsync()
+        private async Task<byte[]> MessageReadAsync(CancellationToken token)
         {
             /*
              *
@@ -244,7 +264,6 @@ namespace WatsonWebsocket
              * to destroy the connection
              *
              */
-
             #region Check-for-Null-Values
 
             if (ClientWs == null) return null;
@@ -267,7 +286,7 @@ namespace WatsonWebsocket
 
                 while (ClientWs.State == WebSocketState.Open)
                 {
-                    WebSocketReceiveResult receiveResult = await ClientWs.ReceiveAsync(bufferSegment, CancellationToken.None);
+                    WebSocketReceiveResult receiveResult = await ClientWs.ReceiveAsync(bufferSegment, token);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
                         break;
