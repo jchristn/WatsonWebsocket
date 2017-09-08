@@ -43,6 +43,15 @@ namespace WatsonWebsocket
         /// <summary>
         /// Initializes the Watson websocket server.
         /// </summary>
+        /// <param name="listenerIp">The IP address upon which to listen.</param>
+        /// <param name="listenerPort">The TCP port upon which to listen.</param>
+        /// <param name="ssl">Enable or disable SSL.</param>
+        /// <param name="acceptInvalidCerts">Enable or disable acceptance of certificates that cannot be validated.</param>
+        /// <param name="permittedIps">List of strings containing permitted client IP addresses.</param>
+        /// <param name="clientConnected">Function to call when a client connects.</param>
+        /// <param name="clientDisconnected">Function to call when a client disconnects.</param>
+        /// <param name="messageReceived">Function to call when a message is received from a client.</param>
+        /// <param name="debug">Enable or disable verbose console logging.</param>
         public WatsonWsServer(
             string listenerIp,
             int listenerPort,

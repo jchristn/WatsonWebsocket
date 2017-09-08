@@ -20,6 +20,7 @@ namespace WatsonWebsocket
 
         #region Private-Members
 
+        private Uri ServerUri;
         private string ServerIp;
         private int ServerPort;
         private bool Debug;
@@ -41,6 +42,14 @@ namespace WatsonWebsocket
         /// <summary>
         /// Initializes the Watson websocket client.
         /// </summary>
+        /// <param name="serverIp">IP address of the server.</param>
+        /// <param name="serverPort">TCP port of the server.</param>
+        /// <param name="ssl">Enable or disable SSL.</param>
+        /// <param name="acceptInvalidCerts">Enable or disable acceptance of certificates that cannot be validated.</param>
+        /// <param name="serverConnected">Function to call when the connection to the server is connected.</param>
+        /// <param name="serverDisconnected">Function to call when the connection to the server is disconnected.</param>
+        /// <param name="messageReceived">Function to call when a message is received from the server.</param>
+        /// <param name="debug">Enable or disable verbose console logging.</param>
         public WatsonWsClient(
             string serverIp,
             int serverPort,
@@ -79,6 +88,15 @@ namespace WatsonWebsocket
                 .ContinueWith(AfterConnect);
         }
 
+        /// <summary>
+        /// Initializes the Watson websocket client.
+        /// </summary>
+        /// <param name="uri">The URI of the server endpoint.</param>
+        /// <param name="acceptInvalidCerts">Enable or disable acceptance of certificates that cannot be validated.</param>
+        /// <param name="serverConnected">Function to call when the connection to the server is connected.</param>
+        /// <param name="serverDisconnected">Function to call when the connection to the server is disconnected.</param>
+        /// <param name="messageReceived">Function to call when a message is received from the server.</param>
+        /// <param name="debug">Enable or disable verbose console logging.</param>
         public WatsonWsClient(
             Uri uri,
             bool acceptInvalidCerts,
@@ -105,29 +123,6 @@ namespace WatsonWebsocket
             ClientWs.ConnectAsync(ServerUri, CancellationToken.None)
                     .ContinueWith(AfterConnect);
         }
-
-        private void AfterConnect(Task connectTask)
-        {
-            Console.WriteLine("Connect task status "+connectTask.Status);
-            if (connectTask.IsCompleted)
-            {
-                Console.WriteLine("Connect task IsCompleted");
-                Task.Run(async () =>
-                {
-                    Connected = true;
-                    ServerConnected?.Invoke();
-                    await DataReceiver(Token);
-                }, Token);
-            }
-            else
-            {
-                Console.WriteLine("Connect task Is not Completed");
-                Connected = false;
-                ServerDisconnected?.Invoke();
-            }
-        }
-
-        public Uri ServerUri { get; private set; }
 
         #endregion
 
@@ -193,6 +188,24 @@ namespace WatsonWebsocket
             Log(" = Exception Source: " + e.Source);
             Log(" = Exception StackTrace: " + e.StackTrace);
             Log("================================================================================");
+        }
+
+        private void AfterConnect(Task connectTask)
+        { 
+            if (connectTask.IsCompleted)
+            { 
+                Task.Run(async () =>
+                {
+                    Connected = true;
+                    ServerConnected?.Invoke();
+                    await DataReceiver(Token);
+                }, Token);
+            }
+            else
+            { 
+                Connected = false;
+                ServerDisconnected?.Invoke();
+            }
         }
 
         private string BytesToHex(byte[] data)
