@@ -69,17 +69,12 @@ namespace WatsonWebsocket
             if (ssl) Url = "wss://" + ServerIp + ":" + ServerPort;
             else Url = "ws://" + ServerIp + ":" + ServerPort;
             ServerUri = new Uri(Url);
+            ServerConnected = serverConnected ?? null;
 
-            if (messageReceived == null) throw new ArgumentNullException(nameof(messageReceived));
-
-            if (serverConnected != null) ServerConnected = serverConnected;
-            else ServerConnected = null;
-
-            if (serverDisconnected != null) ServerDisconnected = serverDisconnected;
-            else ServerDisconnected = null;
+            ServerDisconnected = serverDisconnected ?? null;
 
             Debug = debug;
-            MessageReceived = messageReceived;
+            MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(messageReceived));
             SendLock = new SemaphoreSlim(1);
 
             if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
@@ -121,7 +116,7 @@ namespace WatsonWebsocket
 
             ClientWs = new ClientWebSocket();
             ClientWs.ConnectAsync(ServerUri, CancellationToken.None)
-                    .ContinueWith(AfterConnect);
+                .ContinueWith(AfterConnect);
         }
 
         #endregion
@@ -165,7 +160,6 @@ namespace WatsonWebsocket
             {
                 TokenSource.Cancel();
                 ClientWs.CloseAsync(WebSocketCloseStatus.NormalClosure, "closing", new CancellationToken(false));
-//                ClientWs?.Abort();
             }
         }
 
@@ -220,24 +214,29 @@ namespace WatsonWebsocket
             try
             {
                 #region Wait-for-Data
+
+                const int maxEmptyMessages = 10;
+                int emptyMessages = 0;
                 while (true)
                 {
                     cancelToken?.ThrowIfCancellationRequested();
 
                     byte[] data = await MessageReadAsync(cancelToken.Value);
-                    if (data == null)
+                    if (data == null || (data.Length == 1 && data[0] == 0x00))
                     {
                         // no message available
+                        if (++emptyMessages > maxEmptyMessages)
+                        {
+                            // 10 empty messages in a row, so treat this as disconnect
+                            Log("*** MessageReadAsync no content available " + maxEmptyMessages + " times in a row. Socket disconnected.");
+                            break;
+                        }
                         await Task.Delay(30, Token);
                         continue;
                     }
-                    else
-                    {
-                        if (data.Length == 1 && data[0] == 0x00)
-                        {
-                            break;
-                        }
-                    }
+
+                    // reset counter
+                    emptyMessages = 0;
 
                     if (MessageReceived != null)
                     {
@@ -401,7 +400,7 @@ namespace WatsonWebsocket
                     Dispose();
                     if (ServerDisconnected != null)
                     {
-                        Task unawaited = Task.Run(() => ServerDisconnected());
+                        Task unawaited = Task.Run(() => ServerDisconnected(), CancellationToken.None);
                     }
                 }
             }
