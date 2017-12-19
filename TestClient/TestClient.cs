@@ -24,7 +24,7 @@ namespace TestClient
             Console.Write("SSL (true/false) : ");
             ssl = Convert.ToBoolean(Console.ReadLine());
 
-            WatsonWsClient client = new WatsonWsClient(serverIp, serverPort, ssl, true, ServerConnected, ServerDisconnected, MessageReceived, true);
+            WatsonWsClient client = new WatsonWsClient(serverIp, serverPort, ssl, true, ServerConnected, ServerDisconnected, MessageReceived, true); 
 
             bool runForever = true;
             while (runForever)

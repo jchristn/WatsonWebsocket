@@ -16,6 +16,18 @@ namespace WatsonWebsocket
     {
         #region Public-Members
 
+        public int MaxEmptyMessages
+        {
+            get
+            {
+                return MaxEmptyMessages;
+            }
+            set
+            {
+                if (value < 1) throw new ArgumentException("MaxEmptyMessages must be one or greater");
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -70,12 +82,11 @@ namespace WatsonWebsocket
             else Url = "ws://" + ServerIp + ":" + ServerPort;
             ServerUri = new Uri(Url);
             ServerConnected = serverConnected ?? null;
-
             ServerDisconnected = serverDisconnected ?? null;
-
-            Debug = debug;
             MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(messageReceived));
+            Debug = debug;
             SendLock = new SemaphoreSlim(1);
+            MaxEmptyMessages = 10;
 
             if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             ClientWs = new ClientWebSocket();
@@ -214,8 +225,7 @@ namespace WatsonWebsocket
             try
             {
                 #region Wait-for-Data
-
-                const int maxEmptyMessages = 10;
+                
                 int emptyMessages = 0;
                 while (true)
                 {
@@ -225,18 +235,20 @@ namespace WatsonWebsocket
                     if (data == null || (data.Length == 1 && data[0] == 0x00))
                     {
                         // no message available
-                        if (++emptyMessages > maxEmptyMessages)
+                        emptyMessages++;
+                        if (emptyMessages >= MaxEmptyMessages)
                         {
                             // 10 empty messages in a row, so treat this as disconnect
-                            Log("*** MessageReadAsync no content available " + maxEmptyMessages + " times in a row. Socket disconnected.");
+                            Log("*** MessageReadAsync no content available in " + MaxEmptyMessages + " messages, disconnect assumed");
                             break;
                         }
                         await Task.Delay(30, Token);
                         continue;
                     }
-
-                    // reset counter
-                    emptyMessages = 0;
+                    else
+                    {
+                        emptyMessages = 0;
+                    }
 
                     if (MessageReceived != null)
                     {
