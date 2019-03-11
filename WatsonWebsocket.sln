@@ -1,13 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatsonWebsocket", "WatsonWebsocket\WatsonWebsocket.csproj", "{ABD9DC05-4819-4423-935A-FD5090F4C7EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServerNetFramework", "TestServerNetFramework\TestServerNetFramework.csproj", "{AFB244E1-5BDF-404E-B3F6-161382BFC0B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServer", "TestServer\TestServer.csproj", "{AFB244E1-5BDF-404E-B3F6-161382BFC0B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClientNetFramework", "TestClientNetFramework\TestClientNetFramework.csproj", "{0A15F516-44BB-42DE-9A9F-A712BE1A0351}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClient", "TestClient\TestClient.csproj", "{0A15F516-44BB-42DE-9A9F-A712BE1A0351}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatsonWebsocket", "WatsonWebsocket\WatsonWebsocket.csproj", "{93E69566-69CA-48A6-AA8C-52D23C5A1E2C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClientNetCore", "TestClientNetCore\TestClientNetCore.csproj", "{77571E2F-DC94-41D3-8C4D-78D50D2D7E9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServerNetCore", "TestServerNetCore\TestServerNetCore.csproj", "{0EFEFCFF-B671-40BC-B13A-9455F5BC287E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{ABD9DC05-4819-4423-935A-FD5090F4C7EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ABD9DC05-4819-4423-935A-FD5090F4C7EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ABD9DC05-4819-4423-935A-FD5090F4C7EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ABD9DC05-4819-4423-935A-FD5090F4C7EC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AFB244E1-5BDF-404E-B3F6-161382BFC0B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AFB244E1-5BDF-404E-B3F6-161382BFC0B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFB244E1-5BDF-404E-B3F6-161382BFC0B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,8 +27,23 @@ Global
 		{0A15F516-44BB-42DE-9A9F-A712BE1A0351}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A15F516-44BB-42DE-9A9F-A712BE1A0351}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A15F516-44BB-42DE-9A9F-A712BE1A0351}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93E69566-69CA-48A6-AA8C-52D23C5A1E2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93E69566-69CA-48A6-AA8C-52D23C5A1E2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93E69566-69CA-48A6-AA8C-52D23C5A1E2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93E69566-69CA-48A6-AA8C-52D23C5A1E2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77571E2F-DC94-41D3-8C4D-78D50D2D7E9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77571E2F-DC94-41D3-8C4D-78D50D2D7E9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77571E2F-DC94-41D3-8C4D-78D50D2D7E9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77571E2F-DC94-41D3-8C4D-78D50D2D7E9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EFEFCFF-B671-40BC-B13A-9455F5BC287E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EFEFCFF-B671-40BC-B13A-9455F5BC287E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EFEFCFF-B671-40BC-B13A-9455F5BC287E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EFEFCFF-B671-40BC-B13A-9455F5BC287E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6A20FEDC-0312-4E40-A3EC-33E847FF2642}
 	EndGlobalSection
 EndGlobal
