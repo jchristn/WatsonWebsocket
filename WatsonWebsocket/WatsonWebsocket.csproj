@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
-    <Version>1.2.4</Version>
+    <Version>1.2.5</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>A simple C# async websocket server and client for reliable transmission and receipt of data</Description>
@@ -11,8 +11,9 @@
     <RepositoryUrl>https://github.com/jchristn/WatsonWebsocket</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageLicenseUrl>https://github.com/jchristn/WatsonWebsocket/blob/master/LICENSE.TXT</PackageLicenseUrl>
-    <PackageTags>websocket message messaging frame framing</PackageTags>
-    <PackageReleaseNotes>Retarget .NET Core 2.0 and .NET Framework 4.5.2</PackageReleaseNotes>
+    <PackageTags>websocket message messaging frame framing web</PackageTags>
+    <PackageReleaseNotes>Reduce test apps, add icon</PackageReleaseNotes>
+    <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebsocket/master/assets/watson.ico</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
