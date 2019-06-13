@@ -1,3 +1,5 @@
+![alt tag](https://github.com/jchristn/watsonwebsocket/blob/master/assets/watson.ico)
+
 # Watson Websocket
 
 [![][nuget-img]][nuget]
@@ -25,7 +27,7 @@ Two classes for each server and client are supplied, one without SSL support and
 
 Watson works well in Mono environments to the extent that we have tested it. It is recommended that when running under Mono, you execute the containing EXE using --server and after using the Mono Ahead-of-Time Compiler (AOT).
 
-NOTE: To bind to all interfaces specify '*' as an IP address representing any interface. Using '0.0.0.0' instead only works on Windows.
+NOTE: To bind to all interfaces specify ```*``` as an IP address representing any interface. Using ```0.0.0.0``` only works on Windows.
 
 ```
 mono --aot=nrgctx-trampolines=8096,nimt-trampolines=8096,ntrampolines=4048 --server myapp.exe
