@@ -13,11 +13,11 @@ As of v1.2.4, WatsonWebsocket now targets both .NET Core 2.0 and .NET Framework 
 
 ## Test App
 
-A test project for both client and server are included which will help you understand and exercise the class library.
+A test project for both client (```TestClient```) and server (```TestServer```) are included which will help you understand and exercise the class library.
 
 ## SSL
 
-Two classes for each server and client are supplied, one without SSL support and one with.  An example certificate can be found in the TestSslClient and TestSslServer projects, which has a password of 'password'.  Refer to 'test-certificate.txt' in the TestSslServer project for instructions.  Use of SSL requires installation of a certificate and binding to a port using the certificate thumbprint.
+SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` and ```WatsonWsClient``` accept a ```bool``` indicating whether or not SSL should be enabled.  Since websockets, and as a byproduct WatsonWebsocket, use HTTPS, they rely on certificates within the certificate store of your operating system.  A test certificate is provided in both the ```TestClient``` and ```TestServer``` projects which can be used for testing purposes.  These should NOT be used in production.
 
 ## New in v1.2.4
 
