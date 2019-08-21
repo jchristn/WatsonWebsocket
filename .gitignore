@@ -6,6 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.lock
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -193,8 +194,7 @@ ClientBin/
 *~
 *.dbmdl
 *.dbproj.schemaview
-*.jfm
-*.pfx
+*.jfm 
 *.publishsettings
 node_modules/
 orleans.codegen.cs
