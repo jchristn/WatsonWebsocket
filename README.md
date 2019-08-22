@@ -19,8 +19,9 @@ A test project for both client (```TestClient```) and server (```TestServer```) 
 
 SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` and ```WatsonWsClient``` accept a ```bool``` indicating whether or not SSL should be enabled.  Since websockets, and as a byproduct WatsonWebsocket, use HTTPS, they rely on certificates within the certificate store of your operating system.  A test certificate is provided in both the ```TestClient``` and ```TestServer``` projects which can be used for testing purposes.  These should NOT be used in production.
 
-## New in v1.2.4
+## New in v1.2.x
 
+- Integrated pull requests from @FodderMK (thank you!) for fixes and GetAwaiter() 
 - Retarget to support both .NET Core 2.0 and .NET Framework 4.5.2
 
 ## Running under Mono

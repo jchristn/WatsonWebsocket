@@ -191,6 +191,10 @@ namespace WatsonWebsocket
             }
         }
 
+        /// <summary>
+        /// Retrieve the awaiter.
+        /// </summary>
+        /// <returns>TaskAwaiter.</returns>
         public TaskAwaiter GetAwaiter()
         {
             return AsyncTask.GetAwaiter();
