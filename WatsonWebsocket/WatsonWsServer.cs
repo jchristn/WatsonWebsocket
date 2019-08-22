@@ -65,10 +65,8 @@ namespace WatsonWebsocket
         {
             if (listenerPort < 1) throw new ArgumentOutOfRangeException(nameof(listenerPort));
 
-            ClientConnected = clientConnected ?? null;
-
-            ClientDisconnected = clientDisconnected ?? null;
-
+            ClientConnected = clientConnected;
+            ClientDisconnected = clientDisconnected;
             PermittedIps = null;
 
             MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(MessageReceived));
@@ -268,7 +266,7 @@ namespace WatsonWebsocket
                                 Log("*** AcceptConnections rejecting connection from " + clientIp + " (not permitted)");
                                 httpContext.Response.StatusCode = 401;
                                 httpContext.Response.Close();
-                                return;
+                                continue;
                             }
                         }
 
@@ -288,7 +286,7 @@ namespace WatsonWebsocket
                             Log("*** AcceptConnections unable to retrieve websocket content for client " + clientIp + ":" + clientPort);
                             httpContext.Response.StatusCode = 500;
                             httpContext.Response.Close();
-                            return;
+                            continue;
                         }
 
                         WebSocket ws = wsContext.WebSocket;
