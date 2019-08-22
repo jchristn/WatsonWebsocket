@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks; 
 
@@ -35,6 +36,7 @@ namespace WatsonWebsocket
         private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
         private readonly Func<string, bool> ClientDisconnected;
         private readonly Func<string, byte[], bool> MessageReceived;
+        private readonly Task AsyncTask;
 
         #endregion
 
@@ -113,7 +115,7 @@ namespace WatsonWebsocket
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
             Clients = new ConcurrentDictionary<string, ClientMetadata>();
-            Task.Run(AcceptConnections, Token);
+            AsyncTask = Task.Run(AcceptConnections, Token);
         }
 
         #endregion
@@ -189,6 +191,11 @@ namespace WatsonWebsocket
             {
                 client.KillToken.Cancel();
             }
+        }
+
+        public TaskAwaiter GetAwaiter()
+        {
+            return AsyncTask.GetAwaiter();
         }
 
         #endregion
