@@ -89,6 +89,10 @@ namespace WatsonWebsocket
             MaxEmptyMessages = 10;
 
             if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+            TokenSource = new CancellationTokenSource();
+            Token = TokenSource.Token;
+
             ClientWs = new ClientWebSocket();
             ClientWs.ConnectAsync(ServerUri, CancellationToken.None)
                 .ContinueWith(AfterConnect);
@@ -113,9 +117,7 @@ namespace WatsonWebsocket
         {
             ServerUri = uri;
             ServerConnected = serverConnected ?? null;
-
             ServerDisconnected = serverDisconnected ?? null;
-
             Debug = debug;
             MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(messageReceived));
             SendLock = new SemaphoreSlim(1);
@@ -141,7 +143,7 @@ namespace WatsonWebsocket
         {
             Dispose(true);
         }
-         
+
         /// <summary>
         /// Send data to the server asynchronously
         /// </summary>
