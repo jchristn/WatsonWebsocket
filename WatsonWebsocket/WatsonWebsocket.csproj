@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
-    <Version>1.2.6</Version>
+    <Version>1.2.7</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>A simple C# async websocket server and client for reliable transmission and receipt of data</Description>
@@ -12,7 +12,7 @@
     <RepositoryType>Github</RepositoryType>
     <PackageLicenseUrl>https://github.com/jchristn/WatsonWebsocket/blob/master/LICENSE.TXT</PackageLicenseUrl>
     <PackageTags>websocket message messaging frame framing web</PackageTags>
-    <PackageReleaseNotes>Merged PRs with bugfixes and GetAwaiter() - thanks @FodderMK!</PackageReleaseNotes>
+    <PackageReleaseNotes>Return value to ClientConnected now acts as permit/deny for the connection, bugfix for disconnection.  Thanks @FodderMK!</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebsocket/master/assets/watson.ico</PackageIconUrl>
   </PropertyGroup>
 

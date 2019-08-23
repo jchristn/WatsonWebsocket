@@ -21,6 +21,8 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 ## New in v1.2.x
 
+- Return value from ```ClientConnected``` now acts as permit/deny for the connection - thank you @FodderMK!
+- Bugfixes to client disconnect handling - thank you @FodderMK!
 - Integrated pull requests from @FodderMK (thank you!) for fixes and GetAwaiter() 
 - Retarget to support both .NET Core 2.0 and .NET Framework 4.5.2
 
