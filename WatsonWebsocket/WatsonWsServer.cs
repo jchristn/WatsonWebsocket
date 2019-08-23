@@ -67,7 +67,7 @@ namespace WatsonWebsocket
         {
             if (listenerPort < 1) throw new ArgumentOutOfRangeException(nameof(listenerPort));
 
-            ClientConnected = clientConnected;
+            ClientConnected = clientConnected ?? delegate { return true; };
             ClientDisconnected = clientDisconnected;
             PermittedIps = null;
 
@@ -306,33 +306,31 @@ namespace WatsonWebsocket
 
                         Task unawaited = Task.Run(() =>
                         { 
-                            #region Add-to-Client-List
-                            
-                            // Do not decrement in this block, decrement is done by the connection reader
-
                             ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext);
-                            if (!AddClient(currClient))
-                            {
-                                Log("*** AcceptConnections unable to add client " + clientIp + ":" + clientPort);
-                                httpContext.Response.StatusCode = 500;
-                                httpContext.Response.Close();
-                                return;
-                            }
-
-                            #endregion
-
-                            #region Start-Data-Receiver
                             CancellationToken killToken = currClient.KillToken.Token;
 
                             Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + Clients.Count + " clients)");
-                            if (ClientConnected != null)
-                            {
-                                Task.Run(() => ClientConnected(clientIp + ":" + clientPort, query), killToken);
-                            }
+                            Task.Run(async () => {
+                                bool successfullyConnected = this.ClientConnected(clientIp + ":" + clientPort, query);
 
-                            Task.Run(async () => await DataReceiver(currClient, killToken), killToken);
+                                if (!successfullyConnected)
+                                {
+                                    Log("*** AcceptConnections unable to validate client " + clientIp + ":" + clientPort);
+                                    httpContext.Response.StatusCode = 500;
+                                    httpContext.Response.Close();
+                                    return;
+                                }
 
-                            #endregion 
+                                if (!AddClient(currClient))
+                                {
+                                    Log("*** AcceptConnections unable to add client " + clientIp + ":" + clientPort);
+                                    httpContext.Response.StatusCode = 500;
+                                    httpContext.Response.Close();
+                                    return;
+                                }
+
+                                await DataReceiver(currClient, killToken);
+                            }, killToken);
 
                         }, Token);
                     }
@@ -345,7 +343,7 @@ namespace WatsonWebsocket
                 LogException("AcceptConnections", e);
             }
         }
-        
+
         private async Task DataReceiver(ClientMetadata client, CancellationToken? cancelToken = null)
         {
             var clientId = client.IpPort();
