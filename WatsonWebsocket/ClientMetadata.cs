@@ -14,8 +14,8 @@ namespace WatsonWebsocket
         public HttpListenerContext HttpContext;
         public WebSocket Ws;
         public WebSocketContext WsContext;
+        public readonly CancellationTokenSource KillToken;
         public readonly SemaphoreSlim SendAsyncLock = new SemaphoreSlim(1);
-        public readonly CancellationTokenSource KillToken = new CancellationTokenSource();
 
         #endregion
 
@@ -30,15 +30,12 @@ namespace WatsonWebsocket
 
         }
          
-        public ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext)
+        public ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext, CancellationTokenSource killTokenSource)
         {
-            if (httpContext == null) throw new ArgumentNullException(nameof(httpContext));
-            if (ws == null) throw new ArgumentNullException(nameof(ws));
-            if (wsContext == null) throw new ArgumentNullException(nameof(wsContext));
-
-            HttpContext = httpContext;
-            Ws = ws;
-            WsContext = wsContext;
+            HttpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
+            Ws = ws ?? throw new ArgumentNullException(nameof(ws));
+            WsContext = wsContext ?? throw new ArgumentNullException(nameof(wsContext));
+            KillToken = killTokenSource ?? throw new ArgumentNullException(nameof(killTokenSource));
              
             Ip = HttpContext.Request.RemoteEndPoint.Address.ToString();
             Port = HttpContext.Request.RemoteEndPoint.Port;

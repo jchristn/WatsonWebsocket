@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using WatsonWebsocket;
@@ -13,16 +13,20 @@ namespace TestServerNetCore
         static int serverPort = 0;
         static bool ssl = false;
 
-        static void Main(string[] args)
+        static void Main(string[] _)
         {
-            Console.Write("Server IP        : ");
-            serverIp = Console.ReadLine();
+            string userInput;
+            Console.Write("Server IP [127.0.0.1]    : ");
+            userInput = Console.ReadLine()?.Trim();
+            serverIp = string.IsNullOrEmpty(userInput) ? "127.0.0.1" : userInput;
 
-            Console.Write("Server Port      : ");
-            serverPort = Convert.ToInt32(Console.ReadLine());
+            Console.Write("Server Port [8080]       : ");
+            userInput = Console.ReadLine()?.Trim();
+            if (!int.TryParse(userInput, out serverPort)) serverPort = 8080;
 
-            Console.Write("SSL (true/false) : ");
-            ssl = Convert.ToBoolean(Console.ReadLine());
+            Console.Write("SSL (true/false) [false] : ");
+            userInput = Console.ReadLine()?.Trim();
+            if (!bool.TryParse(userInput, out ssl)) ssl = false;
 
             WatsonWsServer server = new WatsonWsServer(serverIp, serverPort, ssl, true, null, ClientConnected, ClientDisconnected, MessageReceived, true);
 
@@ -30,23 +34,22 @@ namespace TestServerNetCore
             while (runForever)
             {
                 Console.Write("Command [? for help]: ");
-                string userInput = Console.ReadLine();
+                userInput = Console.ReadLine()?.Trim();
+                if (string.IsNullOrEmpty(userInput)) continue;
+                string[] splitInput = userInput.Split(" ", 2);
 
-                List<string> clients;
                 string ipPort;
 
-                if (String.IsNullOrEmpty(userInput)) continue;
-
-                switch (userInput)
+                switch (splitInput[0])
                 {
                     case "?":
                         Console.WriteLine("Available commands:");
-                        Console.WriteLine("  ?       help (this menu)");
-                        Console.WriteLine("  q       quit");
-                        Console.WriteLine("  cls     clear screen");
-                        Console.WriteLine("  list    list clients");
-                        Console.WriteLine("  send    send message to client");
-                        Console.WriteLine("  kill    disconnect a client");
+                        Console.WriteLine("  ?                     help (this menu)");
+                        Console.WriteLine("  q                     quit");
+                        Console.WriteLine("  cls                   clear screen");
+                        Console.WriteLine("  list                  list clients");
+                        Console.WriteLine("  send IP:PORT MESSAGE  send message to client");
+                        Console.WriteLine("  kill IP:PORT          disconnect a client");
                         break;
 
                     case "q":
@@ -58,8 +61,8 @@ namespace TestServerNetCore
                         break;
 
                     case "list":
-                        clients = new List<string>(server.ListClients());
-                        if (clients != null && clients.Count > 0)
+                        var clients = new List<string>(server.ListClients());
+                        if (clients.Count > 0)
                         {
                             Console.WriteLine("Clients");
                             foreach (string curr in clients)
@@ -69,43 +72,38 @@ namespace TestServerNetCore
                         }
                         else
                         {
-                            Console.WriteLine("None");
+                            Console.WriteLine("[No clients connected]");
                         }
+
                         break;
 
                     case "send":
-                        Console.Write("IP:Port: ");
-                        ipPort = Console.ReadLine();
-                        Console.Write("Data: ");
-                        userInput = Console.ReadLine();
-                        if (String.IsNullOrEmpty(userInput)) break;
-                        server.SendAsync(ipPort, Encoding.UTF8.GetBytes(userInput));
+                        if (splitInput.Length != 2) break;
+                        splitInput = splitInput[1].Split(" ", 2);
+                        if (splitInput.Length != 2) break;
+                        ipPort = splitInput[0];
+                        string data = splitInput[1];
+
+                        if (string.IsNullOrEmpty(data)) break;
+                        server.SendAsync(ipPort, data);
                         break;
 
                     case "kill":
-                        Console.Write("IP:Port: ");
-                        ipPort = Console.ReadLine();
-                        server.KillClient(ipPort);
+                        if (splitInput.Length != 2) break;
+                        server.KillClient(splitInput[1]);
                         break;
 
                     default:
+                        Console.WriteLine("Unknown command: " + userInput);
                         break;
                 }
             }
         }
 
-        static bool ClientConnected(string ipPort, IDictionary<string, string> queryString)
+        static Task<bool> ClientConnected(HttpListenerRequest request)
         {
-            Console.WriteLine("Client connected: " + ipPort);
-            if (queryString != null && queryString.Count > 0)
-            {
-                Console.WriteLine("Querystring: ");
-                foreach (KeyValuePair<string, string> kvp in queryString)
-                {
-                    Console.WriteLine("- " + kvp.Key + ": " + kvp.Value);
-                }
-            }
-            return true;
+            Console.WriteLine("Client connected: " + request.RemoteEndPoint);
+            return Task.FromResult(true);
         }
 
         static bool ClientDisconnected(string ipPort)
