@@ -132,6 +132,17 @@ namespace WatsonWebsocket
         /// Send data to the specified client, asynchronously.
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
+        /// <param name="data">String containing data.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public async Task<bool> SendAsync(string ipPort, string data)
+        {
+            return await SendAsync(ipPort, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text);
+        }
+
+        /// <summary>
+        /// Send data to the specified client, asynchronously.
+        /// </summary>
+        /// <param name="ipPort">IP:port of the recipient client.</param>
         /// <param name="data">Byte array containing data.</param> 
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(string ipPort, byte[] data)
