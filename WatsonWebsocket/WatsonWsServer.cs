@@ -309,7 +309,7 @@ namespace WatsonWebsocket
                                 if (!successfullyConnected)
                                 {
                                     Log("*** AcceptConnections unable to validate client " + clientIp + ":" + clientPort);
-                                    httpContext.Response.StatusCode = 500;
+                                    httpContext.Response.StatusCode = 401;
                                     httpContext.Response.Close();
                                     return;
                                 }
