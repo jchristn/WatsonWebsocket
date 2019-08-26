@@ -319,7 +319,7 @@ namespace WatsonWebsocket
                                 WebSocketContext wsContext;
                                 try
                                 {
-                                    wsContext = httpContext.AcceptWebSocketAsync(subProtocol: null).Result;
+                                    wsContext = await httpContext.AcceptWebSocketAsync(subProtocol: null);
                                 }
                                 catch (Exception)
                                 {
