@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks; 
 
@@ -33,7 +33,7 @@ namespace WatsonWebsocket
         private readonly ConcurrentDictionary<string, bool> PermittedIps;
         private readonly CancellationTokenSource TokenSource;
         private CancellationToken Token;
-        private readonly Func<string, IDictionary<string, string>, bool> ClientConnected;
+        private readonly Func<HttpListenerRequest, Task<bool>> ClientConnected;
         private readonly Func<string, bool> ClientDisconnected;
         private readonly Func<string, byte[], bool> MessageReceived;
         private readonly Task AsyncTask;
@@ -50,7 +50,7 @@ namespace WatsonWebsocket
         /// <param name="ssl">Enable or disable SSL.</param>
         /// <param name="acceptInvalidCerts">Enable or disable acceptance of certificates that cannot be validated.</param>
         /// <param name="permittedIps">List of strings containing permitted client IP addresses.</param>
-        /// <param name="clientConnected">Function to call when a client connects.</param>
+        /// <param name="clientConnected">Function to call when a client connects.  Return true to indicate client is valid.</param>
         /// <param name="clientDisconnected">Function to call when a client disconnects.</param>
         /// <param name="messageReceived">Function to call when a message is received from a client.</param>
         /// <param name="debug">Enable or disable verbose console logging.</param>
@@ -60,14 +60,14 @@ namespace WatsonWebsocket
             bool ssl,
             bool acceptInvalidCerts,
             IEnumerable<string> permittedIps,
-            Func<string, IDictionary<string, string>, bool> clientConnected,
+            Func<HttpListenerRequest, Task<bool>> clientConnected,
             Func<string, bool> clientDisconnected,
             Func<string, byte[], bool> messageReceived,
             bool debug)
         {
             if (listenerPort < 1) throw new ArgumentOutOfRangeException(nameof(listenerPort));
 
-            ClientConnected = clientConnected ?? delegate { return true; };
+            ClientConnected = clientConnected ?? delegate { return Task.FromResult(true); };
             ClientDisconnected = clientDisconnected;
             PermittedIps = null;
 
@@ -126,6 +126,17 @@ namespace WatsonWebsocket
         public void Dispose()
         {
             Dispose(true);
+        }
+
+        /// <summary>
+        /// Send data to the specified client, asynchronously.
+        /// </summary>
+        /// <param name="ipPort">IP:port of the recipient client.</param>
+        /// <param name="data">String containing data.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public async Task<bool> SendAsync(string ipPort, string data)
+        {
+            return await SendAsync(ipPort, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text);
         }
 
         /// <summary>
@@ -225,7 +236,7 @@ namespace WatsonWebsocket
         {
             Log("================================================================================");
             Log(" = Method: " + method);
-            Log(" = Exception Type: " + e.GetType().ToString());
+            Log(" = Exception Type: " + e.GetType());
             Log(" = Exception Data: " + e.Data);
             Log(" = Inner Exception: " + e.InnerException);
             Log(" = Exception Message: " + e.Message);
@@ -263,13 +274,6 @@ namespace WatsonWebsocket
                         string clientIp = httpContext.Request.RemoteEndPoint.Address.ToString();
                         int clientPort = httpContext.Request.RemoteEndPoint.Port;
 
-                        Dictionary<string, string> query = new Dictionary<string, string>();
-                        NameValueCollection requestQuery = httpContext.Request.QueryString;
-                        foreach (string key in requestQuery.AllKeys)
-                        {
-                            query[key] = requestQuery[key];
-                        }
-
                         if (PermittedIps != null && PermittedIps.Count > 0)
                         {
                             if (!PermittedIps.ContainsKey(clientIp))
@@ -285,41 +289,50 @@ namespace WatsonWebsocket
 
                         #endregion
 
-                        #region Get-Websocket-Context
-
-                        WebSocketContext wsContext = null;
-                        try
+                        if (!httpContext.Request.IsWebSocketRequest)
                         {
-                            wsContext = httpContext.AcceptWebSocketAsync(subProtocol: null).Result;
-                        }
-                        catch (Exception)
-                        {
-                            Log("*** AcceptConnections unable to retrieve websocket content for client " + clientIp + ":" + clientPort);
-                            httpContext.Response.StatusCode = 500;
+                            Log("*** AcceptConnections rejecting connection from " + clientIp + " (not a websocket request)");
+                            httpContext.Response.StatusCode = 400;
                             httpContext.Response.Close();
                             continue;
                         }
 
-                        WebSocket ws = wsContext.WebSocket;
+                        CancellationTokenSource killTokenSource = new CancellationTokenSource();
+                        CancellationToken killToken = killTokenSource.Token;
 
-                        #endregion
-
-                        Task unawaited = Task.Run(() =>
-                        { 
-                            ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext);
-                            CancellationToken killToken = currClient.KillToken.Token;
-
+                        Task _ = Task.Run(() =>
+                        {
                             Log("AcceptConnections starting data receiver for " + clientIp + ":" + clientPort + " (now " + Clients.Count + " clients)");
                             Task.Run(async () => {
-                                bool successfullyConnected = this.ClientConnected(clientIp + ":" + clientPort, query);
+                                bool successfullyConnected = await this.ClientConnected(httpContext.Request);
 
                                 if (!successfullyConnected)
                                 {
                                     Log("*** AcceptConnections unable to validate client " + clientIp + ":" + clientPort);
+                                    httpContext.Response.StatusCode = 401;
+                                    httpContext.Response.Close();
+                                    return;
+                                }
+
+                                #region Get-Websocket-Context
+
+                                WebSocketContext wsContext;
+                                try
+                                {
+                                    wsContext = await httpContext.AcceptWebSocketAsync(subProtocol: null);
+                                }
+                                catch (Exception)
+                                {
+                                    Log("*** AcceptConnections unable to retrieve websocket content for client " + clientIp + ":" + clientPort);
                                     httpContext.Response.StatusCode = 500;
                                     httpContext.Response.Close();
                                     return;
                                 }
+
+                                WebSocket ws = wsContext.WebSocket;
+                                ClientMetadata currClient = new ClientMetadata(httpContext, ws, wsContext, killTokenSource);
+
+                                #endregion
 
                                 if (!AddClient(currClient))
                                 {
@@ -360,8 +373,7 @@ namespace WatsonWebsocket
                     {
                         if (MessageReceived != null)
                         {
-                            var unawaited = Task.Run(() => MessageReceived?.Invoke(client.IpPort(), data),
-                                CancellationToken.None);
+                            var _ = Task.Run(() => MessageReceived?.Invoke(client.IpPort(), data), CancellationToken.None);
                         }
                     }
                     else
