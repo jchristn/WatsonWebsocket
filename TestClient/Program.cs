@@ -15,22 +15,34 @@ namespace TestClientNetCore
 
         static void Main(string[] args)
         {
-            Console.Write("Server IP        : ");
-            serverIp = Console.ReadLine();
+            string userInput;
+            Console.Write("Server IP [127.0.0.1]    : ");
+            userInput = Console.ReadLine();
+            serverIp = string.IsNullOrEmpty(userInput) ? "127.0.0.1" : userInput;
 
-            Console.Write("Server Port      : ");
-            serverPort = Convert.ToInt32(Console.ReadLine());
+            Console.Write("Server Port [8080]       : ");
+            userInput = Console.ReadLine()?.Trim();
+            if (!int.TryParse(userInput, out serverPort)) serverPort = 8080;
 
-            Console.Write("SSL (true/false) : ");
-            ssl = Convert.ToBoolean(Console.ReadLine());
+            Console.Write("SSL (true/false) [false] : ");
+            userInput = Console.ReadLine()?.Trim();
+            if (!bool.TryParse(userInput, out ssl)) ssl = false;
 
-            WatsonWsClient client = new WatsonWsClient(serverIp, serverPort, ssl, true, ServerConnected, ServerDisconnected, MessageReceived, true);
+            WatsonWsClient client = new WatsonWsClient(
+                serverIp, 
+                serverPort, 
+                ssl, 
+                true, 
+                ServerConnected, 
+                ServerDisconnected, 
+                MessageReceived, 
+                true);
 
             bool runForever = true;
             while (runForever)
             {
                 Console.Write("Command [? for help]: ");
-                string userInput = Console.ReadLine();
+                userInput = Console.ReadLine();
                 if (String.IsNullOrEmpty(userInput)) continue;
 
                 switch (userInput)

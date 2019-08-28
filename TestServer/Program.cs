@@ -13,7 +13,7 @@ namespace TestServerNetCore
         static int serverPort = 0;
         static bool ssl = false;
 
-        static void Main(string[] _)
+        static void Main(string[] args)
         {
             string userInput;
             Console.Write("Server IP [127.0.0.1]    : ");
@@ -28,7 +28,16 @@ namespace TestServerNetCore
             userInput = Console.ReadLine()?.Trim();
             if (!bool.TryParse(userInput, out ssl)) ssl = false;
 
-            WatsonWsServer server = new WatsonWsServer(serverIp, serverPort, ssl, true, null, ClientConnected, ClientDisconnected, MessageReceived, true);
+            WatsonWsServer server = new WatsonWsServer(
+                serverIp, 
+                serverPort, 
+                ssl, 
+                true, 
+                null, 
+                ClientConnected, 
+                ClientDisconnected, 
+                MessageReceived, 
+                true);
 
             bool runForever = true;
             while (runForever)
@@ -36,9 +45,9 @@ namespace TestServerNetCore
                 Console.Write("Command [? for help]: ");
                 userInput = Console.ReadLine()?.Trim();
                 if (string.IsNullOrEmpty(userInput)) continue;
-                string[] splitInput = userInput.Split(" ", 2);
-
-                string ipPort;
+                string[] splitInput = userInput.Split(new string[] { " " }, 2, StringSplitOptions.None);
+                string ipPort = null;
+                bool success = false;
 
                 switch (splitInput[0])
                 {
@@ -79,13 +88,13 @@ namespace TestServerNetCore
 
                     case "send":
                         if (splitInput.Length != 2) break;
-                        splitInput = splitInput[1].Split(" ", 2);
+                        splitInput = splitInput[1].Split(new string[] { " " }, 2, StringSplitOptions.None);
                         if (splitInput.Length != 2) break;
                         ipPort = splitInput[0];
                         string data = splitInput[1];
 
                         if (string.IsNullOrEmpty(data)) break;
-                        server.SendAsync(ipPort, data);
+                        success = server.SendAsync(ipPort, data).Result;
                         break;
 
                     case "kill":
