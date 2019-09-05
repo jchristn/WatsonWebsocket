@@ -5,44 +5,28 @@ using System.Text;
 using System.Threading.Tasks;
 using WatsonWebsocket;
 
-namespace TestClientNetCore
+namespace TestClient
 {
-    class TestClient
+    class Program
     {
         static string serverIp = "";
         static int serverPort = 0;
         static bool ssl = false;
+        static WatsonWsClient client = null;
 
         static void Main(string[] args)
         {
-            string userInput;
-            Console.Write("Server IP [127.0.0.1]    : ");
-            userInput = Console.ReadLine();
-            serverIp = string.IsNullOrEmpty(userInput) ? "127.0.0.1" : userInput;
+            serverIp = InputString("Server IP:", "127.0.0.1", true);
+            serverPort = InputInteger("Server port:", 9000, true, true);
+            ssl = InputBoolean("Use SSL:", false);
 
-            Console.Write("Server Port [8080]       : ");
-            userInput = Console.ReadLine()?.Trim();
-            if (!int.TryParse(userInput, out serverPort)) serverPort = 8080;
-
-            Console.Write("SSL (true/false) [false] : ");
-            userInput = Console.ReadLine()?.Trim();
-            if (!bool.TryParse(userInput, out ssl)) ssl = false;
-
-            WatsonWsClient client = new WatsonWsClient(
-                serverIp, 
-                serverPort, 
-                ssl, 
-                true, 
-                ServerConnected, 
-                ServerDisconnected, 
-                MessageReceived, 
-                true);
+            InitializeClient();
 
             bool runForever = true;
             while (runForever)
             {
                 Console.Write("Command [? for help]: ");
-                userInput = Console.ReadLine();
+                string userInput = Console.ReadLine();
                 if (String.IsNullOrEmpty(userInput)) continue;
 
                 switch (userInput)
@@ -71,12 +55,12 @@ namespace TestClientNetCore
                         Console.Write("Data: ");
                         userInput = Console.ReadLine();
                         if (String.IsNullOrEmpty(userInput)) break;
-                        client.SendAsync(Encoding.UTF8.GetBytes(userInput));
+                        if (!client.SendAsync(Encoding.UTF8.GetBytes(userInput)).Result) Console.WriteLine("Failed");
                         break;
 
                     case "status":
                         if (client == null) Console.WriteLine("Connected: False (null)");
-                        else Console.WriteLine("Connected: " + client.IsConnected());
+                        else Console.WriteLine("Connected: " + client.Connected);
                         break;
 
                     case "dispose":
@@ -84,19 +68,18 @@ namespace TestClientNetCore
                         break;
 
                     case "connect":
-                        if (client != null && client.IsConnected())
+                        if (client != null && client.Connected)
                         {
                             Console.WriteLine("Already connected");
                         }
                         else
                         {
-                            client = new WatsonWsClient(serverIp, serverPort, ssl, true, ServerConnected, ServerDisconnected, MessageReceived, true);
+                            InitializeClient();
                         }
                         break;
 
                     case "reconnect":
-                        if (client != null) client.Dispose();
-                        client = new WatsonWsClient(serverIp, serverPort, ssl, true, ServerConnected, ServerDisconnected, MessageReceived, true);
+                        InitializeClient();
                         break;
 
                     default:
@@ -105,22 +88,152 @@ namespace TestClientNetCore
             }
         }
 
-        static bool MessageReceived(byte[] data)
+        static void InitializeClient()
+        {
+            if (client != null) client.Dispose();
+
+            client = new WatsonWsClient(
+                serverIp,
+                serverPort,
+                ssl);
+
+            client.ServerConnected = ServerConnected;
+            client.ServerDisconnected = ServerDisconnected;
+            client.MessageReceived = MessageReceived; 
+
+            client.Start(); 
+        }
+
+        static bool InputBoolean(string question, bool yesDefault)
+        {
+            Console.Write(question);
+
+            if (yesDefault) Console.Write(" [Y/n]? ");
+            else Console.Write(" [y/N]? ");
+
+            string userInput = Console.ReadLine();
+
+            if (String.IsNullOrEmpty(userInput))
+            {
+                if (yesDefault) return true;
+                return false;
+            }
+
+            userInput = userInput.ToLower();
+
+            if (yesDefault)
+            {
+                if (
+                    (String.Compare(userInput, "n") == 0)
+                    || (String.Compare(userInput, "no") == 0)
+                   )
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            else
+            {
+                if (
+                    (String.Compare(userInput, "y") == 0)
+                    || (String.Compare(userInput, "yes") == 0)
+                   )
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        static string InputString(string question, string defaultAnswer, bool allowNull)
+        {
+            while (true)
+            {
+                Console.Write(question);
+
+                if (!String.IsNullOrEmpty(defaultAnswer))
+                {
+                    Console.Write(" [" + defaultAnswer + "]");
+                }
+
+                Console.Write(" ");
+
+                string userInput = Console.ReadLine();
+
+                if (String.IsNullOrEmpty(userInput))
+                {
+                    if (!String.IsNullOrEmpty(defaultAnswer)) return defaultAnswer;
+                    if (allowNull) return null;
+                    else continue;
+                }
+
+                return userInput;
+            }
+        }
+
+        static int InputInteger(string question, int defaultAnswer, bool positiveOnly, bool allowZero)
+        {
+            while (true)
+            {
+                Console.Write(question);
+                Console.Write(" [" + defaultAnswer + "] ");
+
+                string userInput = Console.ReadLine();
+
+                if (String.IsNullOrEmpty(userInput))
+                {
+                    return defaultAnswer;
+                }
+
+                int ret = 0;
+                if (!Int32.TryParse(userInput, out ret))
+                {
+                    Console.WriteLine("Please enter a valid integer.");
+                    continue;
+                }
+
+                if (ret == 0)
+                {
+                    if (allowZero)
+                    {
+                        return 0;
+                    }
+                }
+
+                if (ret < 0)
+                {
+                    if (positiveOnly)
+                    {
+                        Console.WriteLine("Please enter a value greater than zero.");
+                        continue;
+                    }
+                }
+
+                return ret;
+            }
+        }
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        static async Task MessageReceived(byte[] data)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(data));
-            return true;
         }
 
-        static bool ServerConnected()
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        static async Task ServerConnected()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             Console.WriteLine("Server connected");
-            return true;
         }
 
-        static bool ServerDisconnected()
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        static async Task ServerDisconnected()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             Console.WriteLine("Server disconnected");
-            return true;
         }
     }
 }

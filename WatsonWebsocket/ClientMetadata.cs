@@ -5,17 +5,17 @@ using System.Threading;
 
 namespace WatsonWebsocket
 {
-    public class ClientMetadata
+    internal class ClientMetadata
     {
-        #region Public-Members
+        #region Internal-Members
 
-        public string Ip;
-        public int Port;
-        public HttpListenerContext HttpContext;
-        public WebSocket Ws;
-        public WebSocketContext WsContext;
-        public readonly CancellationTokenSource KillToken;
-        public readonly SemaphoreSlim SendAsyncLock = new SemaphoreSlim(1);
+        internal string Ip;
+        internal int Port;
+        internal HttpListenerContext HttpContext;
+        internal WebSocket Ws;
+        internal WebSocketContext WsContext;
+        internal readonly CancellationTokenSource KillToken;
+        internal readonly SemaphoreSlim SendAsyncLock = new SemaphoreSlim(1);
 
         #endregion
 
@@ -24,13 +24,8 @@ namespace WatsonWebsocket
         #endregion
 
         #region Constructors-and-Factories
-
-        public ClientMetadata()
-        {
-
-        }
          
-        public ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext, CancellationTokenSource killTokenSource)
+        internal ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext, CancellationTokenSource killTokenSource)
         {
             HttpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
             Ws = ws ?? throw new ArgumentNullException(nameof(ws));
@@ -43,9 +38,9 @@ namespace WatsonWebsocket
 
         #endregion
 
-        #region Public-Methods
+        #region Internal-Methods
 
-        public string IpPort()
+        internal string IpPort()
         {
             return Ip + ":" + Port;
         }

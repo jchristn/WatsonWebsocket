@@ -16,35 +16,67 @@ namespace WatsonWebsocket
     {
         #region Public-Members
 
-        public int MaxEmptyMessages
+        /// <summary>
+        /// Indicate whether or not invalid or otherwise unverifiable certificates should be accepted.  Default is true.
+        /// </summary>
+        public bool AcceptInvalidCertificates
         {
             get
             {
-                return MaxEmptyMessages;
+                return _AcceptInvalidCertificates;
             }
             set
             {
-                if (value < 1) throw new ArgumentException("MaxEmptyMessages must be one or greater");
+                _AcceptInvalidCertificates = value;
             }
         }
+
+        /// <summary>
+        /// Enable or disable console debugging.
+        /// </summary>
+        public bool Debug = false;
+
+        /// <summary>
+        /// Indicates whether or not the client is connected to the server.
+        /// </summary>
+        public bool Connected
+        {
+            get
+            {
+                return _Connected;
+            }
+        }
+
+        /// <summary>
+        /// Callback called when a message is received.
+        /// Parameter 1: byte array containing the data.
+        /// </summary>
+        public Func<byte[], Task> MessageReceived = null;
+
+        /// <summary>
+        /// Callback called when the client connects successfully to the server. 
+        /// </summary>
+        public Func<Task> ServerConnected = null;
+
+        /// <summary>
+        /// Callback called when the client disconnects from the server.
+        /// </summary>
+        public Func<Task> ServerDisconnected = null;
 
         #endregion
 
         #region Private-Members
 
-        private Uri ServerUri;
-        private string ServerIp;
-        private int ServerPort;
-        private bool Debug;
-        private string Url;
-        private ClientWebSocket ClientWs;
-        private bool Connected;
-        private Func<byte[], bool> MessageReceived;
-        private Func<bool> ServerConnected;
-        private Func<bool> ServerDisconnected;
+        private bool _AcceptInvalidCertificates = true;
+        private Uri _ServerUri;
+        private string _ServerIp;
+        private int _ServerPort;
+        private string _Url;
+        private ClientWebSocket _ClientWs;
+        private bool _Connected = false; 
 
-        private readonly SemaphoreSlim SendLock;
-        private CancellationTokenSource TokenSource;
+        private readonly SemaphoreSlim SendLock = new SemaphoreSlim(1);
+        private CancellationTokenSource TokenSource = new CancellationTokenSource();
         private CancellationToken Token;
 
         #endregion
@@ -53,83 +85,42 @@ namespace WatsonWebsocket
 
         /// <summary>
         /// Initializes the Watson websocket client.
+        /// Be sure to call 'Start()' to start the client and connect to the server.
         /// </summary>
         /// <param name="serverIp">IP address of the server.</param>
         /// <param name="serverPort">TCP port of the server.</param>
-        /// <param name="ssl">Enable or disable SSL.</param>
-        /// <param name="acceptInvalidCerts">Enable or disable acceptance of certificates that cannot be validated.</param>
-        /// <param name="serverConnected">Function to call when the connection to the server is connected.</param>
-        /// <param name="serverDisconnected">Function to call when the connection to the server is disconnected.</param>
-        /// <param name="messageReceived">Function to call when a message is received from the server.</param>
-        /// <param name="debug">Enable or disable verbose console logging.</param>
+        /// <param name="ssl">Enable or disable SSL.</param> 
         public WatsonWsClient(
             string serverIp,
             int serverPort,
-            bool ssl,
-            bool acceptInvalidCerts,
-            Func<bool> serverConnected,
-            Func<bool> serverDisconnected,
-            Func<byte[], bool> messageReceived,
-            bool debug)
+            bool ssl)
         {
             if (String.IsNullOrEmpty(serverIp)) throw new ArgumentNullException(nameof(serverIp));
             if (serverPort < 1) throw new ArgumentOutOfRangeException(nameof(serverPort));
 
-            ServerIp = serverIp;
-            ServerPort = serverPort;
+            _ServerIp = serverIp;
+            _ServerPort = serverPort;
 
-            if (ssl) Url = "wss://" + ServerIp + ":" + ServerPort;
-            else Url = "ws://" + ServerIp + ":" + ServerPort;
-            ServerUri = new Uri(Url);
-            ServerConnected = serverConnected ?? null;
-            ServerDisconnected = serverDisconnected ?? null;
-            MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(messageReceived));
-            Debug = debug;
-            SendLock = new SemaphoreSlim(1);
-            MaxEmptyMessages = 10;
-
-            if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-
-            TokenSource = new CancellationTokenSource();
+            if (ssl) _Url = "wss://" + _ServerIp + ":" + _ServerPort;
+            else _Url = "ws://" + _ServerIp + ":" + _ServerPort;
+            _ServerUri = new Uri(_Url); 
+              
             Token = TokenSource.Token;
 
-            ClientWs = new ClientWebSocket();
-            ClientWs.ConnectAsync(ServerUri, CancellationToken.None)
-                .ContinueWith(AfterConnect);
+            _ClientWs = new ClientWebSocket(); 
         }
 
         /// <summary>
         /// Initializes the Watson websocket client.
+        /// Be sure to call 'Start()' to start the client and connect to the server.
         /// </summary>
-        /// <param name="uri">The URI of the server endpoint.</param>
-        /// <param name="acceptInvalidCerts">Enable or disable acceptance of certificates that cannot be validated.</param>
-        /// <param name="serverConnected">Function to call when the connection to the server is connected.</param>
-        /// <param name="serverDisconnected">Function to call when the connection to the server is disconnected.</param>
-        /// <param name="messageReceived">Function to call when a message is received from the server.</param>
-        /// <param name="debug">Enable or disable verbose console logging.</param>
-        public WatsonWsClient(
-            Uri uri,
-            bool acceptInvalidCerts,
-            Func<bool> serverConnected,
-            Func<bool> serverDisconnected,
-            Func<byte[], bool> messageReceived,
-            bool debug)
+        /// <param name="uri">The URI of the server endpoint.</param> 
+        public WatsonWsClient(Uri uri)
         {
-            ServerUri = uri;
-            ServerConnected = serverConnected ?? null;
-            ServerDisconnected = serverDisconnected ?? null;
-            Debug = debug;
-            MessageReceived = messageReceived ?? throw new ArgumentNullException(nameof(messageReceived));
-            SendLock = new SemaphoreSlim(1);
-
-            if (acceptInvalidCerts) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-
-            TokenSource = new CancellationTokenSource();
+            _ServerUri = uri;  
             Token = TokenSource.Token;
 
-            ClientWs = new ClientWebSocket();
-            ClientWs.ConnectAsync(ServerUri, CancellationToken.None)
-                .ContinueWith(AfterConnect);
+            _ClientWs = new ClientWebSocket();
         }
 
         #endregion
@@ -145,6 +136,17 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
+        /// Start the client and connect to the server.
+        /// </summary>
+        public void Start()
+        {
+            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+            _ClientWs.ConnectAsync(_ServerUri, CancellationToken.None)
+                .ContinueWith(AfterConnect);
+        }
+
+        /// <summary>
         /// Send data to the server asynchronously
         /// </summary>
         /// <param name="data">Byte array containing data.</param>
@@ -153,16 +155,7 @@ namespace WatsonWebsocket
         {
             return await MessageWriteAsync(data);
         }
-
-        /// <summary>
-        /// Determine whether or not the client is connected to the server.
-        /// </summary>
-        /// <returns>Boolean indicating if the client is connected to the server.</returns>
-        public bool IsConnected()
-        {
-            return Connected;
-        }
-
+         
         #endregion
 
         #region Private-Methods
@@ -172,7 +165,7 @@ namespace WatsonWebsocket
             if (disposing)
             {
                 TokenSource.Cancel();
-                ClientWs.CloseAsync(WebSocketCloseStatus.NormalClosure, "closing", new CancellationToken(false));
+                _ClientWs.CloseAsync(WebSocketCloseStatus.NormalClosure, "closing", new CancellationToken(false));
             }
         }
 
@@ -186,15 +179,16 @@ namespace WatsonWebsocket
 
         private void LogException(string method, Exception e)
         {
-            Log("================================================================================");
-            Log(" = Method: " + method);
-            Log(" = Exception Type: " + e.GetType().ToString());
-            Log(" = Exception Data: " + e.Data);
-            Log(" = Inner Exception: " + e.InnerException);
-            Log(" = Exception Message: " + e.Message);
-            Log(" = Exception Source: " + e.Source);
-            Log(" = Exception StackTrace: " + e.StackTrace);
-            Log("================================================================================");
+            Log("");
+            Log("An exception was encountered.");
+            Log("   Method      : " + method);
+            Log("   Type        : " + e.GetType().ToString());
+            Log("   Data        : " + e.Data);
+            Log("   Inner       : " + e.InnerException);
+            Log("   Message     : " + e.Message);
+            Log("   Source      : " + e.Source);
+            Log("   StackTrace  : " + e.StackTrace);
+            Log("");
         }
 
         private void AfterConnect(Task connectTask)
@@ -203,14 +197,14 @@ namespace WatsonWebsocket
             { 
                 Task.Run(async () =>
                 {
-                    Connected = true;
+                    _Connected = true;
                     ServerConnected?.Invoke();
                     await DataReceiver(Token);
                 }, Token);
             }
             else
             { 
-                Connected = false;
+                _Connected = false;
                 ServerDisconnected?.Invoke();
             }
         }
@@ -227,30 +221,12 @@ namespace WatsonWebsocket
             try
             {
                 #region Wait-for-Data
-                
-                int emptyMessages = 0;
+                 
                 while (true)
                 {
                     cancelToken?.ThrowIfCancellationRequested();
 
-                    byte[] data = await MessageReadAsync(cancelToken.Value);
-                    if (data == null || (data.Length == 1 && data[0] == 0x00))
-                    {
-                        // no message available
-                        emptyMessages++;
-                        if (emptyMessages >= MaxEmptyMessages)
-                        {
-                            // 10 empty messages in a row, so treat this as disconnect
-                            Log("*** MessageReadAsync no content available in " + MaxEmptyMessages + " messages, disconnect assumed");
-                            break;
-                        }
-                        await Task.Delay(30, Token);
-                        continue;
-                    }
-                    else
-                    {
-                        emptyMessages = 0;
-                    }
+                    byte[] data = await MessageReadAsync(cancelToken.Value); 
 
                     if (MessageReceived != null)
                     {
@@ -260,21 +236,20 @@ namespace WatsonWebsocket
 
                 #endregion
             }
-            catch (OperationCanceledException oce)
-            {
-                Log("*** DataReceiver server disconnected (canceled): " + oce.Message);
+            catch (OperationCanceledException)
+            { 
             }
-            catch (WebSocketException wse)
-            {
-                Log("*** DataReceiver server disconnected (websocket exception): " + wse.Message);
+            catch (WebSocketException)
+            { 
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Log("*** DataReceiver server " + ServerIp + ":" + ServerPort + " disconnected");
+                Log("*** DataReceiver server " + _ServerIp + ":" + _ServerPort + " disconnected");
+                LogException("DataReceiver", e);
             }
             finally
             {
-                Connected = false;
+                _Connected = false;
                 ServerDisconnected?.Invoke();
             }
         }
@@ -287,56 +262,36 @@ namespace WatsonWebsocket
              * to destroy the connection
              *
              */
-            #region Check-for-Null-Values
 
-            if (ClientWs == null) return null;
-
-            #endregion
-
-            #region Variables
-
-            byte[] contentBytes;
-
-            #endregion
-
-            #region Read-Data
+            if (_ClientWs == null) return null;
+            byte[] buffer = new byte[65536];
+            byte[] data = null;
+            WebSocketReceiveResult receiveResult = null;
 
             using (MemoryStream dataMs = new MemoryStream())
             {
-                long bufferSize = 16 * 1024;
-                byte[] buffer = new byte[bufferSize];
+                buffer = new byte[65536];
                 ArraySegment<byte> bufferSegment = new ArraySegment<byte>(buffer);
 
-                while (ClientWs.State == WebSocketState.Open)
+                while (_ClientWs.State == WebSocketState.Open)
                 {
-                    WebSocketReceiveResult receiveResult = await ClientWs.ReceiveAsync(bufferSegment, token);
-                    if (receiveResult.MessageType == WebSocketMessageType.Close)
+                    receiveResult = await _ClientWs.ReceiveAsync(bufferSegment, token);
+                    if (receiveResult.Count > 0)
                     {
+                        await dataMs.WriteAsync(buffer, 0, receiveResult.Count);
+                    }
+
+                    if (receiveResult.EndOfMessage
+                        || receiveResult.CloseStatus == WebSocketCloseStatus.Empty
+                        || receiveResult.MessageType == WebSocketMessageType.Close)
+                    {
+                        data = dataMs.ToArray();
                         break;
                     }
-                    else
-                    {
-                        dataMs.Write(buffer, 0, receiveResult.Count);
-                        if (receiveResult.EndOfMessage) break;
-                    }
                 }
-
-                contentBytes = dataMs.ToArray();
             }
-
-            #endregion
-
-            #region Check-Content-Bytes
-
-            if (contentBytes == null || contentBytes.Length < 1)
-            {
-                Log("*** MessageReadAsync no content read");
-                return null;
-            }
-             
-            #endregion
-
-            return contentBytes; 
+              
+            return data; 
         }
          
         private async Task<bool> MessageWriteAsync(byte[] data)
@@ -347,9 +302,10 @@ namespace WatsonWebsocket
             {
                 #region Check-if-Connected
 
-                if (ClientWs == null)
+                if (!_Connected
+                    || _ClientWs == null)
                 {
-                    Log("MessageWriteAsync client is null");
+                    Log("MessageWriteAsync not connected");
                     disconnectDetected = true;
                     return false;
                 }
@@ -361,7 +317,7 @@ namespace WatsonWebsocket
                 await SendLock.WaitAsync(Token);
                 try
                 {
-                    await ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
                 }
                 catch (Exception eInner)
                 {
@@ -410,7 +366,7 @@ namespace WatsonWebsocket
             {
                 if (disconnectDetected)
                 {
-                    Connected = false;
+                    _Connected = false;
                     Dispose();
                     if (ServerDisconnected != null)
                     {

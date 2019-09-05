@@ -7,9 +7,7 @@
 [nuget]:     https://www.nuget.org/packages/WatsonWebsocket/
 [nuget-img]: https://badge.fury.io/nu/Object.svg
 
-A simple C# async websocket server and client for reliable transmission and receipt of data.  
-
-As of v1.2.4, WatsonWebsocket now targets both .NET Core 2.0 and .NET Framework 4.5.2.
+A simple C# async websocket server and client for reliable transmission and receipt of data, targeting both .NET Core and .NET Framework. 
 
 ## Test App
 
@@ -19,14 +17,74 @@ A test project for both client (```TestClient```) and server (```TestServer```) 
 
 SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` and ```WatsonWsClient``` accept a ```bool``` indicating whether or not SSL should be enabled.  Since websockets, and as a byproduct WatsonWebsocket, use HTTPS, they rely on certificates within the certificate store of your operating system.  A test certificate is provided in both the ```TestClient``` and ```TestServer``` projects which can be used for testing purposes.  These should NOT be used in production.
 
-## New in v1.3.x
+For more information on using SSL certificates, please refer to the wiki.
+
+## New in v2.0.x
+
+- Breaking changes!  Task-based callbacks, simplified constructors, and ```.Start()``` methods for both client and server
+- Bugfixes and improvements around callbacks and SSL
+
+## Server Example
+```
+using WatsonWebsocket;
+
+WatsonWsServer server = new WatsonWsServer("[ip]", port, true|false);
+server.ClientConnected = ClientConnected;
+server.ClientDisconnected = ClientDisconnected;
+server.MessageReceived = MessageReceived; 
+server.Start();
+
+static async Task<bool> ClientConnected(string ipPort, HttpListenerRequest request) 
+{
+    Console.WriteLine("Client connected: " + ipPort);
+    return true;
+}
+
+static async Task ClientDisconnected(string ipPort) 
+{
+    Console.WriteLine("Client disconnected: " + ipPort);
+}
+
+static async Task MessageReceived(string ipPort, byte[] data) 
+{ 
+    Console.WriteLine("Message received from " + ipPort + ": " + Encoding.UTF8.GetString(data));
+}
+```
+
+## Client Example
+```
+using WatsonWebsocket;
+
+WatsonWsClient client = new WatsonWsClient("[server ip]", [server port], true|false);
+client.ServerConnected = ServerConnected;
+client.ServerDisconnected = ServerDisconnected;
+client.MessageReceived = MessageReceived; 
+client.Start(); 
+
+static async Task MessageReceived(byte[] data) 
+{
+    Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(data));
+}
+
+static async Task ServerConnected() 
+{
+    Console.WriteLine("Server connected");
+}
+
+static async Task ServerDisconnected() 
+{
+    Console.WriteLine("Server disconnected");
+}
+```
+
+## Version History
+
+v1.3.x
 
 - Big thanks to @FodderMK for his time and contributions to WatsonWebsocket!
 - Breaking change, ```ClientConnected``` now returns entire HttpListenerRequest
 - Simplifications to test programs for both client and server
 - More appropriate status codes for various scenarios including non-websocket requests and denied requests
- 
-## Version History
 
 v1.2.x
 
