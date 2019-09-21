@@ -243,6 +243,10 @@ namespace WatsonWebsocket
 
         #region Private-Methods
 
+        /// <summary>
+        /// Tear down the server and dispose of background workers.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)

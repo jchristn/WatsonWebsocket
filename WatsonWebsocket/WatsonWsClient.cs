@@ -155,11 +155,15 @@ namespace WatsonWebsocket
         {
             return await MessageWriteAsync(data);
         }
-         
+
         #endregion
 
         #region Private-Methods
 
+        /// <summary>
+        /// Tear down the client and dispose of background workers.
+        /// </summary>
+        /// <param name="disposing">Disposing.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
