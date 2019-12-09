@@ -141,7 +141,7 @@ namespace WatsonWebsocket
         public void Start()
         {
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-
+             
             _ClientWs.ConnectAsync(_ServerUri, CancellationToken.None)
                 .ContinueWith(AfterConnect);
         }
@@ -198,13 +198,21 @@ namespace WatsonWebsocket
         private void AfterConnect(Task connectTask)
         { 
             if (connectTask.IsCompleted)
-            { 
-                Task.Run(async () =>
+            {
+                if (_ClientWs.State == WebSocketState.Open)
                 {
-                    _Connected = true;
-                    ServerConnected?.Invoke();
-                    await DataReceiver(Token);
-                }, Token);
+                    Task.Run(async () =>
+                    {
+                        _Connected = true;
+                        ServerConnected?.Invoke();
+                        await DataReceiver(Token);
+                    }, Token);
+                }
+                else
+                {
+                    _Connected = false;
+                    ServerDisconnected?.Invoke();
+                }
             }
             else
             { 

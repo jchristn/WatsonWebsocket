@@ -19,9 +19,9 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v2.0.1
+## New in v2.0.2
 
-- XML documentation
+- Fixed connection bug (thank you @wirmachenbunt)
 
 ## Server Example
 ```

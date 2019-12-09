@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>A simple C# async websocket server and client for reliable transmission and receipt of data</Description>
@@ -12,7 +12,7 @@
     <RepositoryType>Github</RepositoryType>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageTags>websocket message messaging frame framing web</PackageTags>
-    <PackageReleaseNotes>Breaking changes, Task-based callbacks, bugfixes with SSL</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed connection bug (thank you @wirmachenbunt)</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebsocket/master/assets/watson.ico</PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
   </PropertyGroup>

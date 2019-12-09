@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v2.0.2
+
+- Fixed connection bug (thank you @wirmachenbunt)
+
+## Previous Versions
+
 v2.0.1
 
 - XML documentation
-
-## Previous Versions
 
 v2.0.0
 
