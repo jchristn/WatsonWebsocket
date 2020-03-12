@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v2.1.2
+
+- Fix ClientConnectedEventArgs.HttpRequest issue (thank you @Danatobob)
+
+## Previous Versions
+
 v2.1.1
 
 - Fix for ```IPAddress.Any``` server constructor use case
-
-## Previous Versions
 
 v2.1.0
 

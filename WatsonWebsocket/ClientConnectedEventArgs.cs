@@ -13,6 +13,7 @@ namespace WatsonWebsocket
         internal ClientConnectedEventArgs(string ipPort, HttpListenerRequest http)
         {
             IpPort = ipPort;
+            HttpRequest = http;
         }
 
         /// <summary>
