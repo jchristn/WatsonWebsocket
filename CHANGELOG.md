@@ -2,11 +2,20 @@
 
 ## Current Version
 
+v2.1.0
+
+- BREAKING CHANGES
+- Migrated from Func-based callbacks to Event
+- Fix for using hostnames in server constructor (thank you @Danatobob); WatsonWebsocket will now bind to the first address returned in hostname resolution
+- Overrideable method for logging ```void Logger(string msg)``` and ```Action<string> Logger```
+- Code refactor and cleanup
+- ```IpPort``` is now a ```ClientMetadata``` property rather than a method
+
+## Previous Versions
+
 v2.0.2
 
 - Fixed connection bug (thank you @wirmachenbunt)
-
-## Previous Versions
 
 v2.0.1
 

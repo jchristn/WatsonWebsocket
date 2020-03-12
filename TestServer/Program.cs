@@ -16,7 +16,7 @@ namespace TestServer
 
         static void Main(string[] args)
         {
-            serverIp = InputString("Server IP:", "127.0.0.1", true);
+            serverIp = InputString("Server IP:", "localhost", true);
             serverPort = InputInteger("Server port:", 9000, true, true);
             ssl = InputBoolean("Use SSL:", false);
 
@@ -99,9 +99,9 @@ namespace TestServer
                 serverPort,
                 ssl);
 
-            server.ClientConnected = ClientConnected;
-            server.ClientDisconnected = ClientDisconnected;
-            server.MessageReceived = MessageReceived; 
+            server.ClientConnected += ClientConnected;
+            server.ClientDisconnected += ClientDisconnected;
+            server.MessageReceived += MessageReceived; 
 
             server.Start();
         }
@@ -216,29 +216,22 @@ namespace TestServer
                 return ret;
             }
         }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        static async Task<bool> ClientConnected(string ipPort, HttpListenerRequest request)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+         
+        static void ClientConnected(object sender, ClientConnectedEventArgs args) 
         {
-            Console.WriteLine("Client connected: " + ipPort);
-            return true;
+            Console.WriteLine("Client connected: " + args.IpPort);
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        static async Task ClientDisconnected(string ipPort)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        static void ClientDisconnected(object sender, ClientDisonnectedEventArgs args)
         {
-            Console.WriteLine("Client disconnected: " + ipPort);
+            Console.WriteLine("Client disconnected: " + args.IpPort);
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        static async Task MessageReceived(string ipPort, byte[] data)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        static void MessageReceived(object sender, MessageReceivedEventArgs args)
         {
-            string msg = "";
-            if (data != null && data.Length > 0) msg = Encoding.UTF8.GetString(data);
-            Console.WriteLine("Message received from " + ipPort + ": " + msg);
+            string msg = "(null)";
+            if (args.Data != null && args.Data.Length > 0) msg = Encoding.UTF8.GetString(args.Data);
+            Console.WriteLine("Message received from " + args.IpPort + ": " + msg);
         }
     }
 }

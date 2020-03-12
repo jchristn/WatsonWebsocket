@@ -16,7 +16,7 @@ namespace TestClient
 
         static void Main(string[] args)
         {
-            serverIp = InputString("Server IP:", "127.0.0.1", true);
+            serverIp = InputString("Server IP:", "localhost", true);
             serverPort = InputInteger("Server port:", 9000, true, true);
             ssl = InputBoolean("Use SSL:", false);
 
@@ -97,9 +97,9 @@ namespace TestClient
                 serverPort,
                 ssl);
 
-            client.ServerConnected = ServerConnected;
-            client.ServerDisconnected = ServerDisconnected;
-            client.MessageReceived = MessageReceived; 
+            client.ServerConnected += ServerConnected;
+            client.ServerDisconnected += ServerDisconnected;
+            client.MessageReceived += MessageReceived; 
 
             client.Start(); 
         }
@@ -214,24 +214,18 @@ namespace TestClient
                 return ret;
             }
         }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        static async Task MessageReceived(byte[] data)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+         
+        static void MessageReceived(object sender, MessageReceivedEventArgs args) 
         {
-            Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(data));
+            Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(args.Data));
         }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        static async Task ServerConnected()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+         
+        static void ServerConnected(object sender, EventArgs args)
         {
             Console.WriteLine("Server connected");
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        static async Task ServerDisconnected()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        static void ServerDisconnected(object sender, EventArgs args)
         {
             Console.WriteLine("Server disconnected");
         }

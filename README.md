@@ -7,7 +7,7 @@
 [nuget]:     https://www.nuget.org/packages/WatsonWebsocket/
 [nuget-img]: https://badge.fury.io/nu/Object.svg
 
-A simple C# async websocket server and client for reliable transmission and receipt of data, targeting both .NET Core and .NET Framework. 
+WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.
 
 ## Test App
 
@@ -19,34 +19,38 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v2.0.2
+## New in v2.1.0
 
-- Fixed connection bug (thank you @wirmachenbunt)
+- BREAKING CHANGES
+- Migrated from Func-based callbacks to Event
+- Fix for using hostnames in server constructor (thank you @Danatobob); WatsonWebsocket will now bind to the first address returned in hostname resolution
+- Overrideable method for logging ```void Logger(string msg)``` and ```Action<string> Logger```
+- Code refactor and cleanup
+- ```IpPort``` is now a ```ClientMetadata``` property rather than a method
 
 ## Server Example
 ```
 using WatsonWebsocket;
 
 WatsonWsServer server = new WatsonWsServer("[ip]", port, true|false);
-server.ClientConnected = ClientConnected;
-server.ClientDisconnected = ClientDisconnected;
-server.MessageReceived = MessageReceived; 
+server.ClientConnected += ClientConnected;
+server.ClientDisconnected += ClientDisconnected;
+server.MessageReceived += MessageReceived; 
 server.Start();
 
-static async Task<bool> ClientConnected(string ipPort, HttpListenerRequest request) 
+static void ClientConnected(object sender, ClientConnectedEventArgs args) 
 {
-    Console.WriteLine("Client connected: " + ipPort);
-    return true;
+    Console.WriteLine("Client connected: " + args.IpPort);
 }
 
-static async Task ClientDisconnected(string ipPort) 
+static void ClientDisconnected(object sender, ClientDisconnectedEventArgs args) 
 {
-    Console.WriteLine("Client disconnected: " + ipPort);
+    Console.WriteLine("Client disconnected: " + args.IpPort);
 }
 
-static async Task MessageReceived(string ipPort, byte[] data) 
+static void MessageReceived(object sender, MessageReceivedEventArgs args) 
 { 
-    Console.WriteLine("Message received from " + ipPort + ": " + Encoding.UTF8.GetString(data));
+    Console.WriteLine("Message received from " + args.IpPort + ": " + Encoding.UTF8.GetString(args.Data));
 }
 ```
 
@@ -55,22 +59,22 @@ static async Task MessageReceived(string ipPort, byte[] data)
 using WatsonWebsocket;
 
 WatsonWsClient client = new WatsonWsClient("[server ip]", [server port], true|false);
-client.ServerConnected = ServerConnected;
-client.ServerDisconnected = ServerDisconnected;
-client.MessageReceived = MessageReceived; 
+client.ServerConnected += ServerConnected;
+client.ServerDisconnected += ServerDisconnected;
+client.MessageReceived += MessageReceived; 
 client.Start(); 
 
-static async Task MessageReceived(byte[] data) 
+static void MessageReceived(object sender, MessageReceivedEventArgs args) 
 {
-    Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(data));
+    Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(args.Data));
 }
 
-static async Task ServerConnected() 
+static void ServerConnected(object sender, EventArgs args) 
 {
     Console.WriteLine("Server connected");
 }
 
-static async Task ServerDisconnected() 
+static void ServerDisconnected(object sender, EventArgs args) 
 {
     Console.WriteLine("Server disconnected");
 }
