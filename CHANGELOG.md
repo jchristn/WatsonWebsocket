@@ -2,6 +2,12 @@
 
 ## Current Version
 
+v2.1.1
+
+- Fix for ```IPAddress.Any``` server constructor use case
+
+## Previous Versions
+
 v2.1.0
 
 - BREAKING CHANGES
@@ -10,8 +16,6 @@ v2.1.0
 - Overrideable method for logging ```void Logger(string msg)``` and ```Action<string> Logger```
 - Code refactor and cleanup
 - ```IpPort``` is now a ```ClientMetadata``` property rather than a method
-
-## Previous Versions
 
 v2.0.2
 

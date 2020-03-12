@@ -100,7 +100,7 @@ namespace WatsonWebsocket
             }
             else if (listenerIp == "*" || listenerIp == "+")
             {
-                _ListenerIp = "*";
+                _ListenerIp = listenerIp;
                 _ListenerIpAddress = IPAddress.Any;
             }
             else

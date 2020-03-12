@@ -19,7 +19,7 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v2.1.0
+## New in v2.1.1
 
 - BREAKING CHANGES
 - Migrated from Func-based callbacks to Event
@@ -27,6 +27,7 @@ For more information on using SSL certificates, please refer to the wiki.
 - Overrideable method for logging ```void Logger(string msg)``` and ```Action<string> Logger```
 - Code refactor and cleanup
 - ```IpPort``` is now a ```ClientMetadata``` property rather than a method
+- Fix for ```IPAddress.Any``` server constructor use case
 
 ## Server Example
 ```

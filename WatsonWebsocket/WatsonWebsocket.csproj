@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
@@ -12,7 +12,7 @@
     <RepositoryType>Github</RepositoryType>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageTags>websocket message messaging frame framing web</PackageTags>
-    <PackageReleaseNotes>Breaking changes: migration from Func callbacks to events, fix for localhost issue (thank you @Danatobob), IpPort is now a property instead of a method on ClientMetadata, overrideable logger method, code cleanup and refactor</PackageReleaseNotes>
+    <PackageReleaseNotes>Breaking changes: migration from Func callbacks to events, fix for localhost issue (thank you @Danatobob), IpPort is now a property instead of a method on ClientMetadata, overrideable logger method, code cleanup and refactor, fix for server constructor IPAddress.Any use case</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebsocket/master/assets/watson.ico</PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
   </PropertyGroup>
