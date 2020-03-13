@@ -27,7 +27,7 @@ namespace WatsonWebsocket
         /// <summary>
         /// Event fired when a client disconnects.
         /// </summary>
-        public event EventHandler<ClientDisonnectedEventArgs> ClientDisconnected;
+        public event EventHandler<ClientDisconnectedEventArgs> ClientDisconnected;
 
         /// <summary>
         /// Event fired when the server stops.
@@ -417,7 +417,7 @@ namespace WatsonWebsocket
                 {
                     // must only fire disconnected event if the client was previously connected. Note that
                     // multithreading gives multiple disconnection events from the socket, the reader and the writer
-                    ClientDisconnected?.Invoke(this, new ClientDisonnectedEventArgs(clientId));
+                    ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(clientId));
                     client.Ws.Dispose();
                     Logger?.Invoke(header + "disconnected (now " + _Clients.Count + " clients active)");
                 }

@@ -8,9 +8,9 @@ namespace WatsonWebsocket
     /// <summary>
     /// Event arguments for when a client disconnects from the server.
     /// </summary>
-    public class ClientDisonnectedEventArgs : EventArgs
+    public class ClientDisconnectedEventArgs : EventArgs
     {
-        internal ClientDisonnectedEventArgs(string ipPort)
+        internal ClientDisconnectedEventArgs(string ipPort)
         {
             IpPort = ipPort;
         }

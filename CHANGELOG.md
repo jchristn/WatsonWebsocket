@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v2.1.3
+
+- Fix typo in ClientDisconnectedEventArgs class name (thank you @caozero and @Danatobob)
+
+## Previous Versions
+
 v2.1.2
 
 - Fix ClientConnectedEventArgs.HttpRequest issue (thank you @Danatobob)
-
-## Previous Versions
 
 v2.1.1
 

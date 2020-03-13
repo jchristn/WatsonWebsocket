@@ -222,7 +222,7 @@ namespace TestServer
             Console.WriteLine("Client connected: " + args.IpPort);
         }
 
-        static void ClientDisconnected(object sender, ClientDisonnectedEventArgs args)
+        static void ClientDisconnected(object sender, ClientDisconnectedEventArgs args)
         {
             Console.WriteLine("Client disconnected: " + args.IpPort);
         }
