@@ -238,6 +238,11 @@ namespace WatsonWebsocket
         /// </summary>
         public Action<string> Logger = null;
 
+        /// <summary>
+        /// Method to invoke when receiving a raw (non-websocket) HTTP-request
+        /// </summary>
+        public Action<HttpListenerContext> HttpHandler = null;
+
         #endregion
 
         #region Private-Methods
@@ -298,9 +303,18 @@ namespace WatsonWebsocket
                          
                     if (!ctx.Request.IsWebSocketRequest)
                     {
-                        Logger?.Invoke(header + "rejecting connection from " + clientIp + " (not a websocket request)");
-                        ctx.Response.StatusCode = 400;
-                        ctx.Response.Close();
+                        if (HttpHandler != null)
+                        {
+                            Logger?.Invoke(header + "forwarded request from " + clientIp + " to HttpHandler (not a websocket request)");
+                            HttpHandler.Invoke(ctx);
+                        }
+                        else
+                        {
+                            Logger?.Invoke(header + "rejecting connection from " + clientIp + " (not a websocket request)");
+                            ctx.Response.StatusCode = 400;
+                            ctx.Response.Close();
+                        }
+                        
                         continue;
                     }
 
