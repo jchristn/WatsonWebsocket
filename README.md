@@ -19,17 +19,9 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v2.1.x
+## New in v2.1.4
 
-- BREAKING CHANGES
-- Migrated from Func-based callbacks to Event
-- Fix for using hostnames in server constructor (thank you @Danatobob); WatsonWebsocket will now bind to the first address returned in hostname resolution
-- Overrideable method for logging ```void Logger(string msg)``` and ```Action<string> Logger```
-- Code refactor and cleanup
-- ```IpPort``` is now a ```ClientMetadata``` property rather than a method
-- Fix for ```IPAddress.Any``` server constructor use case
-- Fix ClientConnectedEventArgs.HttpRequest issue (thank you @Danatobob)
-- Fix typo in ClientDisconnectedEventArgs class name (thank you @caozero and @Danatobob)
+- Added generic HTTP handler that can be overridden for non-websocket requests (thanks @Data33!)
 
 ## Server Example
 ```
@@ -100,6 +92,16 @@ To configure access from other nodes outside of ```localhost```, use the followi
   - If you are using SSL, you will need to install the certificate in the certificate store and retrieve the thumbprint
   - Refer to https://github.com/jchristn/WatsonWebserver/wiki/Using-SSL-on-Windows for more information, or if you are using SSL
 - If you're still having problems, please do not hesitate to file an issue here, and I will do my best to help and update the documentation.
+
+## Thanks and Appreciation
+
+Many thanks and much appreciation to those that take the time to make this library better!  
+
+- @BryanCrotaz
+- @FodderMK
+- @caozero
+- @Danatobob
+- @Data33
 
 ## Version History
 

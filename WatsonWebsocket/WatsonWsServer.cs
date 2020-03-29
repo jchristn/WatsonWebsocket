@@ -59,10 +59,20 @@ namespace WatsonWebsocket
         /// </summary>
         public List<string> PermittedIpAddresses = new List<string>();
 
+        /// <summary>
+        /// Method to invoke when sending a log message.
+        /// </summary>
+        public Action<string> Logger = null;
+
+        /// <summary>
+        /// Method to invoke when receiving a raw (non-websocket) HTTP request.
+        /// </summary>
+        public Action<HttpListenerContext> HttpHandler = null;
+
         #endregion
 
         #region Private-Members
-         
+
         private bool _AcceptInvalidCertificates = true;
         private string _ListenerIp;
         private int _ListenerPort;
@@ -232,16 +242,6 @@ namespace WatsonWebsocket
         {
             return _AsyncTask.GetAwaiter();
         }
-
-        /// <summary>
-        /// Method to invoke when sending a log message.
-        /// </summary>
-        public Action<string> Logger = null;
-
-        /// <summary>
-        /// Method to invoke when receiving a raw (non-websocket) HTTP-request
-        /// </summary>
-        public Action<HttpListenerContext> HttpHandler = null;
 
         #endregion
 

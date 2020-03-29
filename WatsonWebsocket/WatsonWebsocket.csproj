@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
-    <Version>2.1.3</Version>
+    <Version>2.1.4</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
@@ -12,7 +12,7 @@
     <RepositoryType>Github</RepositoryType>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageTags>websocket message messaging frame framing web</PackageTags>
-    <PackageReleaseNotes>Fix typo in ClientDisconnectedEventArgs class name (thank you @caozero and @Danatobob)</PackageReleaseNotes>
+    <PackageReleaseNotes>Added generic HTTP handler that can be overridden for non-websocket requests (thanks @Data33!)</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebsocket/master/assets/watson.ico</PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
   </PropertyGroup>

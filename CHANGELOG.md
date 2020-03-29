@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v2.1.4
+
+- Added generic HTTP handler that can be overridden for non-websocket requests (thanks @Data33!)
+
+## Previous Versions
+
 v2.1.3
 
 - Fix typo in ClientDisconnectedEventArgs class name (thank you @caozero and @Danatobob)
-
-## Previous Versions
 
 v2.1.2
 
