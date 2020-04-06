@@ -330,9 +330,7 @@ namespace WatsonWebsocket
                         Logger?.Invoke(header + "starting data receiver for " + ipPort + " (now " + _Clients.Count + " clients)");
 
                         Task.Run(async () =>
-                        {                            
-                            ClientConnected?.Invoke(this, new ClientConnectedEventArgs(ipPort, ctx.Request));
-
+                        {
                             #region Get-Websocket-Context
 
                             WebSocketContext wsContext;
@@ -363,6 +361,7 @@ namespace WatsonWebsocket
                                 return;
                             }
 
+                            ClientConnected?.Invoke(this, new ClientConnectedEventArgs(ipPort, ctx.Request)); 
                             await DataReceiver(client, killToken);
 
                             #endregion

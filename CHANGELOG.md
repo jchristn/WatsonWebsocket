@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v2.1.5
+
+- Fix for ClientConnected event placement (thank you @AK5nowman!)
+
+## Previous Versions
+
 v2.1.4
 
 - Added generic HTTP handler that can be overridden for non-websocket requests (thanks @Data33!)
-
-## Previous Versions
 
 v2.1.3
 
