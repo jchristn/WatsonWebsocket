@@ -2,10 +2,7 @@
 
 # Watson Websocket
 
-[![][nuget-img]][nuget]
-
-[nuget]:     https://www.nuget.org/packages/WatsonWebsocket/
-[nuget-img]: https://badge.fury.io/nu/Object.svg
+[![NuGet Version](https://img.shields.io/nuget/v/WatsonWebsocket.svg?style=flat)](https://www.nuget.org/packages/WatsonWebsocket/) [![NuGet](https://img.shields.io/nuget/dt/WatsonWebsocket.svg)](https://www.nuget.org/packages/WatsonWebsocket) 
 
 WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.
 
