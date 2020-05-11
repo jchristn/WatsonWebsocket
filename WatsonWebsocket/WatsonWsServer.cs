@@ -327,7 +327,7 @@ namespace WatsonWebsocket
 
                     Task _ = Task.Run(() =>
                     {
-                        Logger?.Invoke(header + "starting data receiver for " + ipPort + " (now " + _Clients.Count + " clients)");
+                        Logger?.Invoke(header + "starting data receiver for " + ipPort);
 
                         Task.Run(async () =>
                         {

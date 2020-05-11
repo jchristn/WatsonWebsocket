@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
-    <Version>2.1.5</Version>
+    <Version>2.1.6</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
@@ -11,7 +11,7 @@
     <RepositoryUrl>https://github.com/jchristn/WatsonWebsocket</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageTags>websocket message messaging frame framing web</PackageTags>
+    <PackageTags>websocket message messaging frame framing web socket rpc api</PackageTags>
     <PackageReleaseNotes>Fix for ClientConnected event placement (thank you @AK5nowman!)</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebsocket/master/assets/watson.ico</PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>

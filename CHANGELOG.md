@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v2.1.6
+
+- Cosmetic fix in logger output
+
+## Previous Versions
+
 v2.1.5
 
 - Fix for ClientConnected event placement (thank you @AK5nowman!)
-
-## Previous Versions
 
 v2.1.4
 

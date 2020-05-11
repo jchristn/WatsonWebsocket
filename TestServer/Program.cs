@@ -101,9 +101,14 @@ namespace TestServer
 
             server.ClientConnected += ClientConnected;
             server.ClientDisconnected += ClientDisconnected;
-            server.MessageReceived += MessageReceived; 
-
+            server.MessageReceived += MessageReceived;
+            server.Logger = Logger;
             server.Start();
+        }
+
+        static void Logger(string msg)
+        {
+            Console.WriteLine(msg);
         }
 
         static bool InputBoolean(string question, bool yesDefault)
