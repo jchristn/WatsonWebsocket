@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WatsonWebsocket;
 
-namespace TestServer
+namespace Test.Server
 {
     class Program
     {

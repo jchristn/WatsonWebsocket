@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WatsonWebsocket;
 
-namespace TestClient
+namespace Test.Client
 {
     class Program
     {
@@ -99,8 +99,9 @@ namespace TestClient
 
             client.ServerConnected += ServerConnected;
             client.ServerDisconnected += ServerDisconnected;
-            client.MessageReceived += MessageReceived; 
+            client.MessageReceived += MessageReceived;
 
+            client.Logger = Logger;
             client.Start(); 
         }
 
@@ -215,6 +216,11 @@ namespace TestClient
             }
         }
          
+        static void Logger(string msg)
+        {
+            Console.WriteLine(msg);
+        }
+
         static void MessageReceived(object sender, MessageReceivedEventArgs args) 
         {
             Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(args.Data));

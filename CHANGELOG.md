@@ -2,11 +2,15 @@
 
 ## Current Version
 
+v2.1.7
+
+- Minor fixes
+
+## Previous Versions
+
 v2.1.6
 
 - Cosmetic fix in logger output
-
-## Previous Versions
 
 v2.1.5
 
