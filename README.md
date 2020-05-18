@@ -19,6 +19,7 @@ For more information on using SSL certificates, please refer to the wiki.
 ## New in v2.1.7
 
 - Minor fixes
+- SendAsync using string
 
 ## Server Example
 ```

@@ -168,6 +168,7 @@ namespace WatsonWebsocket
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(string ipPort, string data)
         {
+            if (String.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
             return await SendAsync(ipPort, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text);
         }
 
@@ -179,6 +180,7 @@ namespace WatsonWebsocket
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(string ipPort, byte[] data)
         {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
             return await SendAsync(ipPort, data, WebSocketMessageType.Binary);
         }
 
@@ -190,9 +192,9 @@ namespace WatsonWebsocket
         /// <param name="messageType">The type of websocket message.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType messageType)
-        { 
-            ClientMetadata client;
-            if (!_Clients.TryGetValue(ipPort, out client))
+        {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data)); 
+            if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
             {
                 Logger?.Invoke("[WatsonWsServer.SendAsync " + ipPort + "] unable to find client");
                 return false;

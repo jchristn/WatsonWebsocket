@@ -153,10 +153,22 @@ namespace WatsonWebsocket
         /// <summary>
         /// Send data to the server asynchronously
         /// </summary>
+        /// <param name="data">String data.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public async Task<bool> SendAsync(string data)
+        {
+            if (String.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
+            else return await SendAsync(Encoding.UTF8.GetBytes(data));
+        }
+
+        /// <summary>
+        /// Send data to the server asynchronously
+        /// </summary>
         /// <param name="data">Byte array containing data.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(byte[] data)
         {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
             return await MessageWriteAsync(data);
         }
 

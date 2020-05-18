@@ -5,6 +5,7 @@
 v2.1.7
 
 - Minor fixes
+- SendAsync using string
 
 ## Previous Versions
 
