@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Client", "Test.Client\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Server", "Test.Server\Test.Server.csproj", "{0EFEFCFF-B671-40BC-B13A-9455F5BC287E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Integrity", "Test.Integrity\Test.Integrity.csproj", "{4AB0E77C-1DD4-4127-AEC5-107D72D3EEE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Integrity", "Test.Integrity\Test.Integrity.csproj", "{4AB0E77C-1DD4-4127-AEC5-107D72D3EEE3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Echo", "Test.Echo\Test.Echo.csproj", "{942AE927-4F0C-401E-8167-B59CBA331EB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{4AB0E77C-1DD4-4127-AEC5-107D72D3EEE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4AB0E77C-1DD4-4127-AEC5-107D72D3EEE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4AB0E77C-1DD4-4127-AEC5-107D72D3EEE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{942AE927-4F0C-401E-8167-B59CBA331EB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{942AE927-4F0C-401E-8167-B59CBA331EB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{942AE927-4F0C-401E-8167-B59CBA331EB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{942AE927-4F0C-401E-8167-B59CBA331EB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
