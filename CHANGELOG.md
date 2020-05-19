@@ -6,6 +6,7 @@ v2.1.7
 
 - Minor fixes
 - SendAsync using string
+- Statistics object for both client and server
 
 ## Previous Versions
 

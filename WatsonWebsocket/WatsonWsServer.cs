@@ -69,6 +69,17 @@ namespace WatsonWebsocket
         /// </summary>
         public Action<HttpListenerContext> HttpHandler = null;
 
+        /// <summary>
+        /// Statistics.
+        /// </summary>
+        public Statistics Stats
+        {
+            get
+            {
+                return _Stats;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -84,6 +95,7 @@ namespace WatsonWebsocket
         private CancellationTokenSource _TokenSource;
         private CancellationToken _Token; 
         private Task _AcceptConnectionsTask;
+        private Statistics _Stats = new Statistics();
 
         #endregion
 
@@ -153,6 +165,8 @@ namespace WatsonWebsocket
         /// </summary>
         public void Start()
         {
+            _Stats = new Statistics();
+
             Logger?.Invoke("[WatsonWsServer.Start] starting on " + _ListenerPrefix);
 
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
@@ -369,6 +383,10 @@ namespace WatsonWebsocket
                 while (true)
                 {
                     byte[] data = await MessageReadAsync(md);
+
+                    _Stats.ReceivedMessages = _Stats.ReceivedMessages + 1;
+                    _Stats.ReceivedBytes += data.Length;
+
                     if (data != null)
                     { 
                         MessageReceived?.Invoke(this, new MessageReceivedEventArgs(md.IpPort, data));
@@ -453,6 +471,9 @@ namespace WatsonWebsocket
                 {
                     md.SendLock.Release();
                 }
+
+                _Stats.SentMessages += 1;
+                _Stats.SentBytes += data.Length;
 
                 return true;
 

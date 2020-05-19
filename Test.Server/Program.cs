@@ -40,6 +40,7 @@ namespace Test.Server
                         Console.WriteLine("  q                     quit");
                         Console.WriteLine("  cls                   clear screen");
                         Console.WriteLine("  list                  list clients");
+                        Console.WriteLine("  stats                 display server statistics");
                         Console.WriteLine("  send ip:port message  send message to client");
                         Console.WriteLine("  kill ip:port          disconnect a client");
                         break;
@@ -65,8 +66,11 @@ namespace Test.Server
                         else
                         {
                             Console.WriteLine("[No clients connected]");
-                        }
+                        } 
+                        break;
 
+                    case "stats":
+                        Console.WriteLine(server.Stats.ToString());
                         break;
 
                     case "send":

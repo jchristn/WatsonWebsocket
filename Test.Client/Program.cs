@@ -37,6 +37,7 @@ namespace Test.Client
                         Console.WriteLine("  q          quit");
                         Console.WriteLine("  cls        clear screen");
                         Console.WriteLine("  send       send message to server");
+                        Console.WriteLine("  stats      display client statistics");
                         Console.WriteLine("  status     show if client connected");
                         Console.WriteLine("  dispose    dispose of the connection");
                         Console.WriteLine("  connect    connect to the server if not connected");
@@ -56,6 +57,10 @@ namespace Test.Client
                         userInput = Console.ReadLine();
                         if (String.IsNullOrEmpty(userInput)) break;
                         if (!client.SendAsync(Encoding.UTF8.GetBytes(userInput)).Result) Console.WriteLine("Failed");
+                        break;
+
+                    case "stats":
+                        Console.WriteLine(client.Stats.ToString());
                         break;
 
                     case "status":

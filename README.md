@@ -20,6 +20,7 @@ For more information on using SSL certificates, please refer to the wiki.
 
 - Minor fixes
 - SendAsync using string
+- Statistics object for both client and server
 
 ## Server Example
 ```

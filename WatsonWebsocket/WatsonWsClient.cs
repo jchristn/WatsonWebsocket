@@ -63,6 +63,17 @@ namespace WatsonWebsocket
         /// </summary>
         public Action<string> Logger = null;
 
+        /// <summary>
+        /// Statistics.
+        /// </summary>
+        public Statistics Stats
+        {
+            get
+            {
+                return _Stats;
+            }
+        }
+
         #endregion
 
         #region Private-Members
@@ -74,11 +85,11 @@ namespace WatsonWebsocket
         private string _ServerIpPort;
         private string _Url;
         private ClientWebSocket _ClientWs;
-        private bool _Connected = false; 
-
+        private bool _Connected = false;  
         private readonly SemaphoreSlim _SendLock = new SemaphoreSlim(1);
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
+        private Statistics _Stats = new Statistics();
 
         #endregion
 
@@ -146,6 +157,7 @@ namespace WatsonWebsocket
         /// </summary>
         public void Start()
         {
+            _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;             
             _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect);
         }
@@ -230,7 +242,11 @@ namespace WatsonWebsocket
                 {
                     if (_Token.IsCancellationRequested) break;
                     byte[] data = await MessageReadAsync();
-                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(_ServerIpPort, data));
+
+                    _Stats.ReceivedMessages = _Stats.ReceivedMessages + 1;
+                    _Stats.ReceivedBytes += data.Length;
+
+                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(_ServerIpPort, data)); 
                 } 
             }
             catch (OperationCanceledException)
@@ -307,6 +323,9 @@ namespace WatsonWebsocket
                 {
                     _SendLock.Release();
                 }
+
+                _Stats.SentMessages += 1;
+                _Stats.SentBytes += data.Length;
 
                 return true; 
             }
