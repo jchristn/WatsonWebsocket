@@ -136,7 +136,7 @@ namespace WatsonWebsocket
             _ServerIpPort = uri.Host + ":" + uri.Port;
             _Token = _TokenSource.Token;
 
-            _ClientWs = new ClientWebSocket();
+            _ClientWs = new ClientWebSocket(); 
         }
 
         #endregion
