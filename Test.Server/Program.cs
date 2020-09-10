@@ -9,16 +9,17 @@ namespace Test.Server
 {
     class Program
     {
-        static string serverIp = "";
-        static int serverPort = 0;
-        static bool ssl = false;
-        static WatsonWsServer server = null;
+        static string _ServerIp = "";
+        static int _ServerPort = 0;
+        static bool _Ssl = false;
+        static WatsonWsServer _Server = null;
+        static string _LastIpPort = null;
 
         static void Main(string[] args)
         {
-            serverIp = InputString("Server IP:", "localhost", true);
-            serverPort = InputInteger("Server port:", 9000, true, true);
-            ssl = InputBoolean("Use SSL:", false);
+            _ServerIp = InputString("Server IP:", "localhost", true);
+            _ServerPort = InputInteger("Server port:", 9000, true, true);
+            _Ssl = InputBoolean("Use SSL:", false);
 
             InitializeServer();
 
@@ -36,13 +37,14 @@ namespace Test.Server
                 {
                     case "?":
                         Console.WriteLine("Available commands:");
-                        Console.WriteLine("  ?                     help (this menu)");
-                        Console.WriteLine("  q                     quit");
-                        Console.WriteLine("  cls                   clear screen");
-                        Console.WriteLine("  list                  list clients");
-                        Console.WriteLine("  stats                 display server statistics");
-                        Console.WriteLine("  send ip:port message  send message to client");
-                        Console.WriteLine("  kill ip:port          disconnect a client");
+                        Console.WriteLine("  ?                            help (this menu)");
+                        Console.WriteLine("  q                            quit");
+                        Console.WriteLine("  cls                          clear screen");
+                        Console.WriteLine("  list                         list clients");
+                        Console.WriteLine("  stats                        display server statistics");
+                        Console.WriteLine("  send ip:port text message    send text to client");
+                        Console.WriteLine("  send ip:port bytes message   send binary data to client");
+                        Console.WriteLine("  kill ip:port                 disconnect a client");
                         break;
 
                     case "q":
@@ -54,7 +56,7 @@ namespace Test.Server
                         break;
 
                     case "list":
-                        var clients = new List<string>(server.ListClients());
+                        var clients = new List<string>(_Server.ListClients());
                         if (clients.Count > 0)
                         {
                             Console.WriteLine("Clients");
@@ -70,23 +72,30 @@ namespace Test.Server
                         break;
 
                     case "stats":
-                        Console.WriteLine(server.Stats.ToString());
+                        Console.WriteLine(_Server.Stats.ToString());
                         break;
 
                     case "send":
                         if (splitInput.Length != 2) break;
-                        splitInput = splitInput[1].Split(new string[] { " " }, 2, StringSplitOptions.None);
-                        if (splitInput.Length != 2) break;
-                        ipPort = splitInput[0];
-                        string data = splitInput[1];
-
-                        if (string.IsNullOrEmpty(data)) break;
-                        success = server.SendAsync(ipPort, data).Result;
+                        splitInput = splitInput[1].Split(new string[] { " " }, 3, StringSplitOptions.None);
+                        if (splitInput.Length != 3) break;
+                        if (splitInput[0].Equals("last")) ipPort = _LastIpPort;
+                        else ipPort = splitInput[0];
+                        if (String.IsNullOrEmpty(splitInput[2])) break;
+                        if (splitInput[1].Equals("text")) success = _Server.SendAsync(ipPort, splitInput[2]).Result;
+                        else if (splitInput[1].Equals("bytes"))
+                        {
+                            byte[] data = Encoding.UTF8.GetBytes(splitInput[2]);
+                            success = _Server.SendAsync(ipPort, data).Result;
+                        }
+                        else break;
+                        if (!success) Console.WriteLine("Failed");
+                        else Console.WriteLine("Success");
                         break;
 
                     case "kill":
                         if (splitInput.Length != 2) break;
-                        server.DisconnectClient(splitInput[1]);
+                        _Server.DisconnectClient(splitInput[1]);
                         break;
 
                     default:
@@ -98,16 +107,16 @@ namespace Test.Server
 
         static void InitializeServer()
         {
-            server = new WatsonWsServer(
-                serverIp,
-                serverPort,
-                ssl);
+            _Server = new WatsonWsServer(
+                _ServerIp,
+                _ServerPort,
+                _Ssl);
 
-            server.ClientConnected += ClientConnected;
-            server.ClientDisconnected += ClientDisconnected;
-            server.MessageReceived += MessageReceived;
-            server.Logger = Logger;
-            server.Start();
+            _Server.ClientConnected += ClientConnected;
+            _Server.ClientDisconnected += ClientDisconnected;
+            _Server.MessageReceived += MessageReceived;
+            _Server.Logger = Logger;
+            _Server.Start();
         }
 
         static void Logger(string msg)
@@ -229,6 +238,7 @@ namespace Test.Server
         static void ClientConnected(object sender, ClientConnectedEventArgs args) 
         {
             Console.WriteLine("Client connected: " + args.IpPort);
+            _LastIpPort = args.IpPort;
         }
 
         static void ClientDisconnected(object sender, ClientDisconnectedEventArgs args)
@@ -240,7 +250,7 @@ namespace Test.Server
         {
             string msg = "(null)";
             if (args.Data != null && args.Data.Length > 0) msg = Encoding.UTF8.GetString(args.Data);
-            Console.WriteLine("Message received from " + args.IpPort + ": " + msg);
+            Console.WriteLine(args.MessageType.ToString() + " from " + args.IpPort + ": " + msg);
         }
     }
 }

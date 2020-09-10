@@ -18,11 +18,10 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v2.1.7
+## New in v2.2.0
 
-- Minor fixes
-- SendAsync using string
-- Statistics object for both client and server
+- Minor refactor
+- MessageReceivedEventArgs now includes the type of message (Text, Binary)
 
 ## Server Example
 ```
@@ -105,6 +104,7 @@ Many thanks and much appreciation to those that take the time to make this libra
 - @Danatobob
 - @Data33
 - @AK5nowman
+- @jjxtra
 
 ## Version History
 

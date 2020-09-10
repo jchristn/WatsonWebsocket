@@ -2,13 +2,18 @@
 
 ## Current Version
 
+v2.2.0
+
+- Minor refactor
+- MessageReceivedEventArgs now includes the type of message (Text, Binary)
+
+## Previous Versions
+
 v2.1.7
 
 - Minor fixes
 - SendAsync using string
 - Statistics object for both client and server
-
-## Previous Versions
 
 v2.1.6
 

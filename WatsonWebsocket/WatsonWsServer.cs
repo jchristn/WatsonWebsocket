@@ -175,7 +175,7 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
-        /// Send data to the specified client, asynchronously.
+        /// Send text data to the specified client, asynchronously.
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
         /// <param name="data">String containing data.</param>
@@ -183,11 +183,17 @@ namespace WatsonWebsocket
         public async Task<bool> SendAsync(string ipPort, string data)
         {
             if (String.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
-            return await SendAsync(ipPort, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text);
+            if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
+            {
+                Logger?.Invoke("[WatsonWsServer.SendAsync " + ipPort + "] unable to find client");
+                return false;
+            }
+
+            return await MessageWriteAsync(client, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text);
         }
 
         /// <summary>
-        /// Send data to the specified client, asynchronously.
+        /// Send binary data to the specified client, asynchronously.
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
         /// <param name="data">Byte array containing data.</param> 
@@ -195,28 +201,15 @@ namespace WatsonWebsocket
         public async Task<bool> SendAsync(string ipPort, byte[] data)
         {
             if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
-            return await SendAsync(ipPort, data, WebSocketMessageType.Binary);
-        }
-
-        /// <summary>
-        /// Send data to the specified client, asynchronously.
-        /// </summary>
-        /// <param name="ipPort">IP:port of the recipient client.</param>
-        /// <param name="data">Byte array containing data.</param>
-        /// <param name="messageType">The type of websocket message.</param>
-        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public async Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType messageType)
-        {
-            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data)); 
             if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
             {
                 Logger?.Invoke("[WatsonWsServer.SendAsync " + ipPort + "] unable to find client");
                 return false;
             }
 
-            return await MessageWriteAsync(client, data, messageType);
+            return await MessageWriteAsync(client, data, WebSocketMessageType.Binary);
         }
-
+         
         /// <summary>
         /// Determine whether or not the specified client is connected to the server.
         /// </summary>
@@ -382,18 +375,18 @@ namespace WatsonWebsocket
             { 
                 while (true)
                 {
-                    byte[] data = await MessageReadAsync(md);
+                    MessageReceivedEventArgs msg = await MessageReadAsync(md);
 
                     _Stats.ReceivedMessages = _Stats.ReceivedMessages + 1;
-                    _Stats.ReceivedBytes += data.Length;
+                    _Stats.ReceivedBytes += msg.Data.Length;
 
-                    if (data != null)
+                    if (msg.Data != null)
                     { 
-                        MessageReceived?.Invoke(this, new MessageReceivedEventArgs(md.IpPort, data));
+                        MessageReceived?.Invoke(this, msg);
                     }
                     else
                     { 
-                        await Task.Delay(500);
+                        await Task.Delay(100);
                     }
                 }
             }  
@@ -419,7 +412,7 @@ namespace WatsonWebsocket
             }
         }
           
-        private async Task<byte[]> MessageReadAsync(ClientMetadata md)
+        private async Task<MessageReceivedEventArgs> MessageReadAsync(ClientMetadata md)
         { 
             using (MemoryStream stream = new MemoryStream())
             {
@@ -444,7 +437,7 @@ namespace WatsonWebsocket
 
                     if (result.EndOfMessage)
                     {
-                        return stream.ToArray();
+                        return new MessageReceivedEventArgs(md.IpPort, stream.ToArray(), result.MessageType);
                     }
                 }
             } 
@@ -464,8 +457,7 @@ namespace WatsonWebsocket
                 await md.SendLock.WaitAsync(md.TokenSource.Token);
                 try
                 {
-                    await md.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length),
-                        messageType, true, md.TokenSource.Token);
+                    await md.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), messageType, true, md.TokenSource.Token);
                 }
                 finally
                 {

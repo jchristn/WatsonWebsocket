@@ -9,16 +9,16 @@ namespace Test.Client
 {
     class Program
     {
-        static string serverIp = "";
-        static int serverPort = 0;
-        static bool ssl = false;
-        static WatsonWsClient client = null;
+        static string _ServerIp = "";
+        static int _ServerPort = 0;
+        static bool _Ssl = false;
+        static WatsonWsClient _Client = null;
 
         static void Main(string[] args)
         {
-            serverIp = InputString("Server IP:", "localhost", true);
-            serverPort = InputInteger("Server port:", 9000, true, true);
-            ssl = InputBoolean("Use SSL:", false);
+            _ServerIp = InputString("Server IP:", "localhost", true);
+            _ServerPort = InputInteger("Server port:", 9000, true, true);
+            _Ssl = InputBoolean("Use SSL:", false);
 
             InitializeClient();
 
@@ -33,15 +33,16 @@ namespace Test.Client
                 {
                     case "?":
                         Console.WriteLine("Available commands:");
-                        Console.WriteLine("  ?          help (this menu)");
-                        Console.WriteLine("  q          quit");
-                        Console.WriteLine("  cls        clear screen");
-                        Console.WriteLine("  send       send message to server");
-                        Console.WriteLine("  stats      display client statistics");
-                        Console.WriteLine("  status     show if client connected");
-                        Console.WriteLine("  dispose    dispose of the connection");
-                        Console.WriteLine("  connect    connect to the server if not connected");
-                        Console.WriteLine("  reconnect  disconnect if connected, then reconnect");
+                        Console.WriteLine("  ?            help (this menu)");
+                        Console.WriteLine("  q            quit");
+                        Console.WriteLine("  cls          clear screen");
+                        Console.WriteLine("  send text    send text to the server");
+                        Console.WriteLine("  send bytes   send binary data to the server");
+                        Console.WriteLine("  stats        display client statistics");
+                        Console.WriteLine("  status       show if client connected");
+                        Console.WriteLine("  dispose      dispose of the connection");
+                        Console.WriteLine("  connect      connect to the server if not connected");
+                        Console.WriteLine("  reconnect    disconnect if connected, then reconnect");
                         break;
 
                     case "q":
@@ -52,28 +53,36 @@ namespace Test.Client
                         Console.Clear();
                         break;
 
-                    case "send":
+                    case "send text":
                         Console.Write("Data: ");
                         userInput = Console.ReadLine();
                         if (String.IsNullOrEmpty(userInput)) break;
-                        if (!client.SendAsync(Encoding.UTF8.GetBytes(userInput)).Result) Console.WriteLine("Failed");
+                        if (!_Client.SendAsync(userInput).Result) Console.WriteLine("Failed");
+                        else Console.WriteLine("Success");
+                        break;
+
+                    case "send bytes":
+                        Console.Write("Data: ");
+                        userInput = Console.ReadLine();
+                        if (String.IsNullOrEmpty(userInput)) break;
+                        if (!_Client.SendAsync(Encoding.UTF8.GetBytes(userInput)).Result) Console.WriteLine("Failed");
                         break;
 
                     case "stats":
-                        Console.WriteLine(client.Stats.ToString());
+                        Console.WriteLine(_Client.Stats.ToString());
                         break;
 
                     case "status":
-                        if (client == null) Console.WriteLine("Connected: False (null)");
-                        else Console.WriteLine("Connected: " + client.Connected);
+                        if (_Client == null) Console.WriteLine("Connected: False (null)");
+                        else Console.WriteLine("Connected: " + _Client.Connected);
                         break;
 
                     case "dispose":
-                        client.Dispose();
+                        _Client.Dispose();
                         break;
 
                     case "connect":
-                        if (client != null && client.Connected)
+                        if (_Client != null && _Client.Connected)
                         {
                             Console.WriteLine("Already connected");
                         }
@@ -95,19 +104,19 @@ namespace Test.Client
 
         static void InitializeClient()
         {
-            if (client != null) client.Dispose();
+            if (_Client != null) _Client.Dispose();
 
-            client = new WatsonWsClient(
-                serverIp,
-                serverPort,
-                ssl);
+            _Client = new WatsonWsClient(
+                _ServerIp,
+                _ServerPort,
+                _Ssl);
 
-            client.ServerConnected += ServerConnected;
-            client.ServerDisconnected += ServerDisconnected;
-            client.MessageReceived += MessageReceived;
+            _Client.ServerConnected += ServerConnected;
+            _Client.ServerDisconnected += ServerDisconnected;
+            _Client.MessageReceived += MessageReceived;
 
-            client.Logger = Logger;
-            client.Start(); 
+            _Client.Logger = Logger;
+            _Client.Start(); 
         }
 
         static bool InputBoolean(string question, bool yesDefault)
@@ -226,9 +235,11 @@ namespace Test.Client
             Console.WriteLine(msg);
         }
 
-        static void MessageReceived(object sender, MessageReceivedEventArgs args) 
+        static void MessageReceived(object sender, MessageReceivedEventArgs args)
         {
-            Console.WriteLine("Message from server: " + Encoding.UTF8.GetString(args.Data));
+            string msg = "(null)";
+            if (args.Data != null && args.Data.Length > 0) msg = Encoding.UTF8.GetString(args.Data);
+            Console.WriteLine(args.MessageType.ToString() + " from server: " + msg);
         }
          
         static void ServerConnected(object sender, EventArgs args)

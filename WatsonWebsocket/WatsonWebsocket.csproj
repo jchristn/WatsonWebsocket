@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
-    <Version>2.1.7.2</Version>
+    <TargetFrameworks>netcoreapp2.0;netstandard2.0;net452</TargetFrameworks>
+    <Version>2.2.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
@@ -12,7 +12,7 @@
     <RepositoryType>Github</RepositoryType>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageTags>websocket message messaging frame framing web socket rpc api</PackageTags>
-    <PackageReleaseNotes>Stats object for client and server</PackageReleaseNotes>
+    <PackageReleaseNotes>Including payload type (string, binary) in message events</PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/jchristn/watsonwebsocket/master/assets/watson.ico</PackageIconUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
   </PropertyGroup>

@@ -163,25 +163,25 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
-        /// Send data to the server asynchronously
+        /// Send text data to the server asynchronously.
         /// </summary>
         /// <param name="data">String data.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(string data)
         {
             if (String.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
-            else return await SendAsync(Encoding.UTF8.GetBytes(data));
+            else return await MessageWriteAsync(Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text);
         }
 
         /// <summary>
-        /// Send data to the server asynchronously
+        /// Send binary data to the server asynchronously.
         /// </summary>
         /// <param name="data">Byte array containing data.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(byte[] data)
         {
             if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
-            return await MessageWriteAsync(data);
+            return await MessageWriteAsync(data, WebSocketMessageType.Binary);
         }
 
         #endregion
@@ -241,12 +241,12 @@ namespace WatsonWebsocket
                 while (true)
                 {
                     if (_Token.IsCancellationRequested) break;
-                    byte[] data = await MessageReadAsync();
+                    MessageReceivedEventArgs msg = await MessageReadAsync();
 
                     _Stats.ReceivedMessages = _Stats.ReceivedMessages + 1;
-                    _Stats.ReceivedBytes += data.Length;
+                    _Stats.ReceivedBytes += msg.Data.Length;
 
-                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(_ServerIpPort, data)); 
+                    MessageReceived?.Invoke(this, msg); 
                 } 
             }
             catch (OperationCanceledException)
@@ -266,7 +266,7 @@ namespace WatsonWebsocket
             ServerDisconnected?.Invoke(this, EventArgs.Empty);
         }
          
-        private async Task<byte[]> MessageReadAsync()
+        private async Task<MessageReceivedEventArgs> MessageReadAsync()
         {
             // Do not catch exceptions, let them get caught by the data reader to destroy the connection
 
@@ -274,7 +274,7 @@ namespace WatsonWebsocket
             byte[] buffer = new byte[65536];
             byte[] data = null;
             WebSocketReceiveResult receiveResult = null;
-
+            
             using (MemoryStream dataMs = new MemoryStream())
             {
                 buffer = new byte[buffer.Length];
@@ -296,10 +296,10 @@ namespace WatsonWebsocket
                 }
             }
               
-            return data; 
+            return new MessageReceivedEventArgs(_ServerIpPort, data, receiveResult.MessageType); 
         }
          
-        private async Task<bool> MessageWriteAsync(byte[] data)
+        private async Task<bool> MessageWriteAsync(byte[] data, WebSocketMessageType messageType)
         {
             string header = "[WatsonWsClient.DataReceiver " + _ServerIpPort + "] ";
             bool disconnectDetected = false;
@@ -317,7 +317,7 @@ namespace WatsonWebsocket
 
                 try
                 {
-                    await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), messageType, true, CancellationToken.None);
                 } 
                 finally
                 {

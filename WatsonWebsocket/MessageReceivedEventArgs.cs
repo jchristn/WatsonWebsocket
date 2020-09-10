@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
+using System.Net.WebSockets;
 
 namespace WatsonWebsocket
 {
@@ -10,10 +11,11 @@ namespace WatsonWebsocket
     /// </summary>
     public class MessageReceivedEventArgs : EventArgs
     {
-        internal MessageReceivedEventArgs(string ipPort, byte[] data)
+        internal MessageReceivedEventArgs(string ipPort, byte[] data, WebSocketMessageType messageType)
         {
             IpPort = ipPort;
             Data = data;
+            MessageType = messageType;
         }
 
         /// <summary>
@@ -25,5 +27,10 @@ namespace WatsonWebsocket
         /// The data received.
         /// </summary>
         public byte[] Data { get; }
+
+        /// <summary>
+        /// The type of payload included in the message (Binary or Text).
+        /// </summary>
+        public WebSocketMessageType MessageType = WebSocketMessageType.Binary;
     }
 }
