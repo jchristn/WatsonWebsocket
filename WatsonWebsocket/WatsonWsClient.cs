@@ -184,6 +184,18 @@ namespace WatsonWebsocket
             return await MessageWriteAsync(data, WebSocketMessageType.Binary);
         }
 
+        /// <summary>
+        /// Send binary data to the server asynchronously.
+        /// </summary>
+        /// <param name="data">Byte array containing data.</param>
+        /// <param name="msgType">Web socket message type.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public async Task<bool> SendAsync(byte[] data, WebSocketMessageType msgType)
+        {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            return await MessageWriteAsync(data, msgType);
+        }
+
         #endregion
 
         #region Private-Methods
@@ -299,7 +311,7 @@ namespace WatsonWebsocket
             return new MessageReceivedEventArgs(_ServerIpPort, data, receiveResult.MessageType); 
         }
          
-        private async Task<bool> MessageWriteAsync(byte[] data, WebSocketMessageType messageType)
+        private async Task<bool> MessageWriteAsync(byte[] data, WebSocketMessageType msgType)
         {
             string header = "[WatsonWsClient.DataReceiver " + _ServerIpPort + "] ";
             bool disconnectDetected = false;
@@ -317,7 +329,7 @@ namespace WatsonWebsocket
 
                 try
                 {
-                    await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), messageType, true, CancellationToken.None);
+                    await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, CancellationToken.None);
                 } 
                 finally
                 {

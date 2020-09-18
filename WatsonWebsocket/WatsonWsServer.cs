@@ -209,7 +209,26 @@ namespace WatsonWebsocket
 
             return await MessageWriteAsync(client, data, WebSocketMessageType.Binary);
         }
-         
+
+        /// <summary>
+        /// Send binary data to the specified client, asynchronously.
+        /// </summary>
+        /// <param name="ipPort">IP:port of the recipient client.</param>
+        /// <param name="data">Byte array containing data.</param> 
+        /// <param name="msgType">Web socket message type.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public async Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType msgType)
+        {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
+            {
+                Logger?.Invoke("[WatsonWsServer.SendAsync " + ipPort + "] unable to find client");
+                return false;
+            }
+
+            return await MessageWriteAsync(client, data, msgType);
+        }
+
         /// <summary>
         /// Determine whether or not the specified client is connected to the server.
         /// </summary>
@@ -443,7 +462,7 @@ namespace WatsonWebsocket
             } 
         }
  
-        private async Task<bool> MessageWriteAsync(ClientMetadata md, byte[] data, WebSocketMessageType messageType)
+        private async Task<bool> MessageWriteAsync(ClientMetadata md, byte[] data, WebSocketMessageType msgType)
         {
             string header = "[WatsonWsServer.MessageWriteAsync " + md.IpPort + "] ";
 
@@ -457,7 +476,7 @@ namespace WatsonWebsocket
                 await md.SendLock.WaitAsync(md.TokenSource.Token);
                 try
                 {
-                    await md.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), messageType, true, md.TokenSource.Token);
+                    await md.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, md.TokenSource.Token);
                 }
                 finally
                 {
