@@ -24,7 +24,7 @@ For more information on using SSL certificates, please refer to the wiki.
 - MessageReceivedEventArgs now includes the type of message (Text, Binary)
 
 ## Server Example
-```
+```csharp
 using WatsonWebsocket;
 
 WatsonWsServer server = new WatsonWsServer("[ip]", port, true|false);
@@ -50,7 +50,7 @@ static void MessageReceived(object sender, MessageReceivedEventArgs args)
 ```
 
 ## Client Example
-```
+```csharp
 using WatsonWebsocket;
 
 WatsonWsClient client = new WatsonWsClient("[server ip]", [server port], true|false);
