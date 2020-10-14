@@ -275,7 +275,7 @@ namespace Test.Server
                 var items = req.Headers.AllKeys.SelectMany(req.Headers.GetValues, (k, v) => new { key = k, value = v });
                 foreach (var item in items)
                 {
-                    Console.WriteLine("{0}: {1}", item.key, item.value);
+                    Console.WriteLine("  {0}: {1}", item.key, item.value);
                 }
             }
 
