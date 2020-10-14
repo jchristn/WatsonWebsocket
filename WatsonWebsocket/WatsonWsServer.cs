@@ -20,6 +20,22 @@ namespace WatsonWebsocket
         #region Public-Members
 
         /// <summary>
+        /// Determine if the server is listening for new connections.
+        /// </summary>
+        public bool IsListening
+        {
+            get
+            {
+                if (_Listener != null)
+                {
+                    return _Listener.IsListening;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Event fired when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectedEventArgs> ClientConnected;
@@ -161,17 +177,37 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
-        /// Start the server.
+        /// Start accepting new connections.
         /// </summary>
         public void Start()
         {
             _Stats = new Statistics();
 
-            Logger?.Invoke("[WatsonWsServer.Start] starting on " + _ListenerPrefix);
+            Logger?.Invoke("[WatsonWsServer.Start] starting " + _ListenerPrefix);
 
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+
             _AcceptConnectionsTask = Task.Run(AcceptConnections, _Token);
+        }
+
+        /// <summary>
+        /// Stop accepting new connections.
+        /// </summary>
+        public void Stop()
+        {
+            Logger?.Invoke("[WatsonWsServer.Stop] stopping " + _ListenerPrefix);
+
+            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+            _TokenSource.Cancel();
+
+            _Listener.Stop();
+
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
         }
 
         /// <summary>
@@ -283,7 +319,12 @@ namespace WatsonWebsocket
         {
             if (disposing)
             {
-                _Listener?.Stop();
+                if (_Listener != null)
+                {
+                    if (_Listener.IsListening) _Listener.Stop();
+                    _Listener.Close();
+                }
+
                 _TokenSource.Cancel();
             }
         }
@@ -332,6 +373,22 @@ namespace WatsonWebsocket
                         
                         continue;
                     } 
+                    else
+                    { 
+                        /*
+                        HttpListenerRequest req = ctx.Request;
+                        Console.WriteLine(Environment.NewLine + req.HttpMethod.ToString() + " " + req.RawUrl);
+                        if (req.Headers != null && req.Headers.Count > 0)
+                        {
+                            Console.WriteLine("Headers:");
+                            var items = req.Headers.AllKeys.SelectMany(req.Headers.GetValues, (k, v) => new { key = k, value = v });
+                            foreach (var item in items)
+                            {
+                                Console.WriteLine("  {0}: {1}", item.key, item.value);
+                            }
+                        } 
+                        */
+                    }
 
                     CancellationTokenSource tokenSource = new CancellationTokenSource();
                     CancellationToken token = tokenSource.Token;
@@ -369,9 +426,13 @@ namespace WatsonWebsocket
             }
             catch (HttpListenerException)
             {
-                // can be thrown when disposed
+                // thrown when disposed
             }
             catch (OperationCanceledException)
+            {
+                // thrown when disposed
+            }
+            catch (ObjectDisposedException)
             {
                 // thrown when disposed
             }
