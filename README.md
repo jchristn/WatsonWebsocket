@@ -98,13 +98,7 @@ To configure access from other nodes outside of ```localhost```, use the followi
 
 Many thanks and much appreciation to those that take the time to make this library better!  
 
-- @BryanCrotaz
-- @FodderMK
-- @caozero
-- @Danatobob
-- @Data33
-- @AK5nowman
-- @jjxtra
+@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX
 
 ## Version History
 
