@@ -318,16 +318,16 @@ namespace WatsonWebsocket
                      
                     if (!ctx.Request.IsWebSocketRequest)
                     {
-                        if (HttpHandler != null)
-                        {
-                            Logger?.Invoke(header + "non-websocket request forwarded to HTTP handler from " + ipPort + ": " + ctx.Request.HttpMethod.ToString() + " " + ctx.Request.RawUrl);
-                            HttpHandler.Invoke(ctx);
-                        }
-                        else
+                        if (HttpHandler == null)
                         {
                             Logger?.Invoke(header + "non-websocket request rejected from " + ipPort);
                             ctx.Response.StatusCode = 400;
                             ctx.Response.Close();
+                        }
+                        else
+                        {
+                            Logger?.Invoke(header + "non-websocket request forwarded to HTTP handler from " + ipPort + ": " + ctx.Request.HttpMethod.ToString() + " " + ctx.Request.RawUrl);
+                            HttpHandler.Invoke(ctx);
                         }
                         
                         continue;

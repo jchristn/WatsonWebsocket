@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -116,9 +118,10 @@ namespace Test.Server
             _Server.ClientDisconnected += ClientDisconnected;
             _Server.MessageReceived += MessageReceived;
             _Server.Logger = Logger;
+            _Server.HttpHandler = HttpHandler;
             _Server.Start();
         }
-
+        
         static void Logger(string msg)
         {
             Console.WriteLine(msg);
@@ -251,6 +254,36 @@ namespace Test.Server
             string msg = "(null)";
             if (args.Data != null && args.Data.Length > 0) msg = Encoding.UTF8.GetString(args.Data);
             Console.WriteLine(args.MessageType.ToString() + " from " + args.IpPort + ": " + msg);
+        }
+
+        static void HttpHandler(HttpListenerContext ctx)
+        { 
+            HttpListenerRequest req = ctx.Request;
+            string contents = null;
+            using (Stream stream = req.InputStream)
+            {
+                using (StreamReader readStream = new StreamReader(stream, Encoding.UTF8))
+                {
+                    contents = readStream.ReadToEnd();
+                }
+            }
+
+            Console.WriteLine("Non-websocket request received for: " + req.HttpMethod.ToString() + " " + req.RawUrl);
+            if (req.Headers != null && req.Headers.Count > 0)
+            {
+                Console.WriteLine("Headers:"); 
+                var items = req.Headers.AllKeys.SelectMany(req.Headers.GetValues, (k, v) => new { key = k, value = v });
+                foreach (var item in items)
+                {
+                    Console.WriteLine("{0}: {1}", item.key, item.value);
+                }
+            }
+
+            if (!String.IsNullOrEmpty(contents))
+            {
+                Console.WriteLine("Request body:");
+                Console.WriteLine(contents);
+            }
         }
     }
 }
