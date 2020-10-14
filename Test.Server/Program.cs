@@ -42,6 +42,10 @@ namespace Test.Server
                         Console.WriteLine("  ?                            help (this menu)");
                         Console.WriteLine("  q                            quit");
                         Console.WriteLine("  cls                          clear screen");
+                        Console.WriteLine("  dispose                      dispose of the server");
+                        Console.WriteLine("  reinit                       reinitialize the server");
+                        Console.WriteLine("  start                        start accepting new connections (listening: " + _Server.IsListening + ")");
+                        Console.WriteLine("  stop                         stop accepting new connections");
                         Console.WriteLine("  list                         list clients");
                         Console.WriteLine("  stats                        display server statistics");
                         Console.WriteLine("  send ip:port text message    send text to client");
@@ -55,6 +59,22 @@ namespace Test.Server
 
                     case "cls":
                         Console.Clear();
+                        break;
+
+                    case "dispose":
+                        _Server.Dispose();
+                        break;
+
+                    case "reinit":
+                        InitializeServer();
+                        break;
+
+                    case "start":
+                        _Server.Start();
+                        break;
+
+                    case "stop":
+                        _Server.Stop();
                         break;
 
                     case "list":
@@ -118,8 +138,7 @@ namespace Test.Server
             _Server.ClientDisconnected += ClientDisconnected;
             _Server.MessageReceived += MessageReceived;
             _Server.Logger = Logger;
-            _Server.HttpHandler = HttpHandler;
-            _Server.Start();
+            _Server.HttpHandler = HttpHandler; 
         }
         
         static void Logger(string msg)

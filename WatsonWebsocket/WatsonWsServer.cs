@@ -181,6 +181,8 @@ namespace WatsonWebsocket
         /// </summary>
         public void Start()
         {
+            if (IsListening) throw new InvalidOperationException("Watson websocket server is already running.");
+
             _Stats = new Statistics();
 
             Logger?.Invoke("[WatsonWsServer.Start] starting " + _ListenerPrefix);
@@ -198,16 +200,11 @@ namespace WatsonWebsocket
         /// </summary>
         public void Stop()
         {
+            if (!IsListening) throw new InvalidOperationException("Watson websocket server is not running.");
+
             Logger?.Invoke("[WatsonWsServer.Stop] stopping " + _ListenerPrefix);
 
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-
-            _TokenSource.Cancel();
-
-            _Listener.Stop();
-
-            _TokenSource = new CancellationTokenSource();
-            _Token = _TokenSource.Token;
+            _Listener.Stop(); 
         }
 
         /// <summary>
@@ -319,6 +316,14 @@ namespace WatsonWebsocket
         {
             if (disposing)
             {
+                if (_Clients != null)
+                {
+                    foreach (KeyValuePair<string, ClientMetadata> client in _Clients)
+                    {
+                        client.Value.TokenSource.Cancel();
+                    }
+                }
+
                 if (_Listener != null)
                 {
                     if (_Listener.IsListening) _Listener.Stop();
@@ -337,8 +342,15 @@ namespace WatsonWebsocket
             { 
                 _Listener.Start();
                  
-                while (!_Token.IsCancellationRequested)
-                {  
+                while (true)
+                {
+                    if (_Token.IsCancellationRequested) break;
+                    if (!_Listener.IsListening)
+                    {
+                        Task.Delay(100).Wait();
+                        continue;
+                    } 
+
                     HttpListenerContext ctx = await _Listener.GetContextAsync();
                     string ip = ctx.Request.RemoteEndPoint.Address.ToString();
                     int port = ctx.Request.RemoteEndPoint.Port;
@@ -390,32 +402,21 @@ namespace WatsonWebsocket
                         */
                     }
 
-                    CancellationTokenSource tokenSource = new CancellationTokenSource();
-                    CancellationToken token = tokenSource.Token;
-
                     await Task.Run(() =>
                     {
                         Logger?.Invoke(header + "starting data receiver for " + ipPort);
 
-                        Task.Run(async () =>
-                        { 
-                            WebSocketContext wsContext;
-                            try
-                            {
-                                wsContext = await ctx.AcceptWebSocketAsync(subProtocol: null);
-                            }
-                            catch (Exception)
-                            {
-                                Logger?.Invoke(header + "unable to retrieve websocket content for client " + ipPort);
-                                ctx.Response.StatusCode = 500;
-                                ctx.Response.Close();
-                                return;
-                            }
+                        CancellationTokenSource tokenSource = new CancellationTokenSource();
+                        CancellationToken token = tokenSource.Token;
 
+                        Task.Run(async () =>
+                        {
+                            WebSocketContext wsContext = await ctx.AcceptWebSocketAsync(subProtocol: null);
                             WebSocket ws = wsContext.WebSocket;
                             ClientMetadata md = new ClientMetadata(ctx, ws, wsContext, tokenSource);
                              
                             _Clients.TryAdd(md.IpPort, md);
+
                             ClientConnected?.Invoke(this, new ClientConnectedEventArgs(md.IpPort, ctx.Request));
                             await Task.Run(() => DataReceiver(md), token);
                              
