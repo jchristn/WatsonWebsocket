@@ -12,6 +12,10 @@ A test project for both client (```TestClient```) and server (```TestServer```) 
 
 A test project that spawns a server and client and exchanges messages can be found here: https://github.com/jchristn/watsonwebsockettest
 
+## Supported Operating Systems
+
+WatsonWebsocket currently relies on websocket support being present in the underlying operating system.  Windows 7 **does not** support websockets.
+
 ## SSL
 
 SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` and ```WatsonWsClient``` accept a ```bool``` indicating whether or not SSL should be enabled.  Since websockets, and as a byproduct WatsonWebsocket, use HTTPS, they rely on certificates within the certificate store of your operating system.  A test certificate is provided in both the ```TestClient``` and ```TestServer``` projects which can be used for testing purposes.  These should NOT be used in production.
