@@ -6,12 +6,12 @@ using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
-using System.Text; 
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
- 
+
 namespace WatsonWebsocket
-{    
+{
     /// <summary>
     /// Watson Websocket server.
     /// </summary>
@@ -69,7 +69,7 @@ namespace WatsonWebsocket
                 _AcceptInvalidCertificates = value;
             }
         }
-         
+
         /// <summary>
         /// Specify the IP addresses that are allowed to connect.  If none are supplied, all IP addresses are permitted.
         /// </summary>
@@ -107,9 +107,9 @@ namespace WatsonWebsocket
         private string _ListenerPrefix;
         private HttpListener _Listener;
         private readonly object _PermittedIpsLock = new object();
-        private ConcurrentDictionary<string, ClientMetadata> _Clients; 
+        private ConcurrentDictionary<string, ClientMetadata> _Clients;
         private CancellationTokenSource _TokenSource;
-        private CancellationToken _Token; 
+        private CancellationToken _Token;
         private Task _AcceptConnectionsTask;
         private Statistics _Stats = new Statistics();
 
@@ -123,14 +123,14 @@ namespace WatsonWebsocket
         /// </summary>
         /// <param name="listenerIp">The IP address upon which to listen.</param>
         /// <param name="listenerPort">The TCP port upon which to listen.</param>
-        /// <param name="ssl">Enable or disable SSL.</param> 
+        /// <param name="ssl">Enable or disable SSL.</param>
         public WatsonWsServer(
             string listenerIp,
             int listenerPort,
             bool ssl)
         {
             if (listenerPort < 1) throw new ArgumentOutOfRangeException(nameof(listenerPort));
-             
+
             if (String.IsNullOrEmpty(listenerIp))
             {
                 _ListenerIpAddress = IPAddress.Loopback;
@@ -151,7 +151,7 @@ namespace WatsonWebsocket
                 _ListenerIp = listenerIp;
             }
 
-            _ListenerPort = listenerPort; 
+            _ListenerPort = listenerPort;
 
             if (ssl) _ListenerPrefix = "https://" + _ListenerIp + ":" + _ListenerPort + "/";
             else _ListenerPrefix = "http://" + _ListenerIp + ":" + _ListenerPort + "/";
@@ -204,7 +204,7 @@ namespace WatsonWebsocket
 
             Logger?.Invoke("[WatsonWsServer.Stop] stopping " + _ListenerPrefix);
 
-            _Listener.Stop(); 
+            _Listener.Stop();
         }
 
         /// <summary>
@@ -212,54 +212,57 @@ namespace WatsonWebsocket
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
         /// <param name="data">String containing data.</param>
+        /// <param name="cancellationToken">Cancellation token for cancelling of the operation by the user.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public async Task<bool> SendAsync(string ipPort, string data)
+        public Task<bool> SendAsync(string ipPort, string data, CancellationToken cancellationToken = default)
         {
             if (String.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
             if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
             {
                 Logger?.Invoke("[WatsonWsServer.SendAsync " + ipPort + "] unable to find client");
-                return false;
+                return Task.FromResult(false);
             }
 
-            return await MessageWriteAsync(client, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text);
+            return MessageWriteAsync(client, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, cancellationToken);
         }
 
         /// <summary>
         /// Send binary data to the specified client, asynchronously.
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
-        /// <param name="data">Byte array containing data.</param> 
+        /// <param name="data">Byte array containing data.</param>
+        /// <param name="cancellationToken">Cancellation token for cancelling of the operation by the user.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public async Task<bool> SendAsync(string ipPort, byte[] data)
+        public Task<bool> SendAsync(string ipPort, byte[] data, CancellationToken cancellationToken = default)
         {
             if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
             if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
             {
                 Logger?.Invoke("[WatsonWsServer.SendAsync " + ipPort + "] unable to find client");
-                return false;
+                return Task.FromResult(false);
             }
 
-            return await MessageWriteAsync(client, data, WebSocketMessageType.Binary);
+            return MessageWriteAsync(client, data, WebSocketMessageType.Binary, cancellationToken);
         }
 
         /// <summary>
         /// Send binary data to the specified client, asynchronously.
         /// </summary>
         /// <param name="ipPort">IP:port of the recipient client.</param>
-        /// <param name="data">Byte array containing data.</param> 
+        /// <param name="data">Byte array containing data.</param>
         /// <param name="msgType">Web socket message type.</param>
+        /// <param name="cancellationToken">Cancellation token for cancelling of the operation by the user.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public async Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType msgType)
+        public Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType msgType, CancellationToken cancellationToken = default)
         {
             if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
             if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
             {
                 Logger?.Invoke("[WatsonWsServer.SendAsync " + ipPort + "] unable to find client");
-                return false;
+                return Task.FromResult(false);
             }
 
-            return await MessageWriteAsync(client, data, msgType);
+            return MessageWriteAsync(client, data, msgType, cancellationToken);
         }
 
         /// <summary>
@@ -269,8 +272,7 @@ namespace WatsonWebsocket
         /// <returns>Boolean indicating if the client is connected to the server.</returns>
         public bool IsClientConnected(string ipPort)
         {
-            ClientMetadata client;
-            return _Clients.TryGetValue(ipPort, out client);
+            return _Clients.TryGetValue(ipPort, out _);
         }
 
         /// <summary>
@@ -333,15 +335,15 @@ namespace WatsonWebsocket
                 _TokenSource.Cancel();
             }
         }
-          
+
         private async Task AcceptConnections()
         {
             string header = "[WatsonWsServer.AcceptConnections] ";
 
             try
-            { 
+            {
                 _Listener.Start();
-                 
+
                 while (true)
                 {
                     if (_Token.IsCancellationRequested) break;
@@ -349,9 +351,9 @@ namespace WatsonWebsocket
                     {
                         Task.Delay(100).Wait();
                         continue;
-                    } 
+                    }
 
-                    HttpListenerContext ctx = await _Listener.GetContextAsync();
+                    HttpListenerContext ctx = await _Listener.GetContextAsync().ConfigureAwait(false);
                     string ip = ctx.Request.RemoteEndPoint.Address.ToString();
                     int port = ctx.Request.RemoteEndPoint.Port;
                     string ipPort = ip + ":" + port;
@@ -368,7 +370,7 @@ namespace WatsonWebsocket
                             continue;
                         }
                     }
-                     
+
                     if (!ctx.Request.IsWebSocketRequest)
                     {
                         if (HttpHandler == null)
@@ -382,11 +384,11 @@ namespace WatsonWebsocket
                             Logger?.Invoke(header + "non-websocket request forwarded to HTTP handler from " + ipPort + ": " + ctx.Request.HttpMethod.ToString() + " " + ctx.Request.RawUrl);
                             HttpHandler.Invoke(ctx);
                         }
-                        
+
                         continue;
-                    } 
+                    }
                     else
-                    { 
+                    {
                         /*
                         HttpListenerRequest req = ctx.Request;
                         Console.WriteLine(Environment.NewLine + req.HttpMethod.ToString() + " " + req.RawUrl);
@@ -398,7 +400,7 @@ namespace WatsonWebsocket
                             {
                                 Console.WriteLine("  {0}: {1}", item.key, item.value);
                             }
-                        } 
+                        }
                         */
                     }
 
@@ -414,16 +416,16 @@ namespace WatsonWebsocket
                             WebSocketContext wsContext = await ctx.AcceptWebSocketAsync(subProtocol: null);
                             WebSocket ws = wsContext.WebSocket;
                             ClientMetadata md = new ClientMetadata(ctx, ws, wsContext, tokenSource);
-                             
+
                             _Clients.TryAdd(md.IpPort, md);
 
                             ClientConnected?.Invoke(this, new ClientConnectedEventArgs(md.IpPort, ctx.Request));
                             await Task.Run(() => DataReceiver(md), token);
-                             
+
                         }, token);
 
-                    }, _Token); 
-                } 
+                    }, _Token).ConfigureAwait(false);
+                }
             }
             catch (HttpListenerException)
             {
@@ -448,29 +450,29 @@ namespace WatsonWebsocket
         }
 
         private async Task DataReceiver(ClientMetadata md)
-        { 
+        {
             string header = "[WatsonWsServer.DataReceiver " + md.IpPort + "] ";
             Logger?.Invoke(header + "starting data receiver");
-             
+
             try
-            { 
+            {
                 while (true)
                 {
-                    MessageReceivedEventArgs msg = await MessageReadAsync(md);
+                    MessageReceivedEventArgs msg = await MessageReadAsync(md).ConfigureAwait(false);
 
                     _Stats.ReceivedMessages = _Stats.ReceivedMessages + 1;
                     _Stats.ReceivedBytes += msg.Data.Length;
 
                     if (msg.Data != null)
-                    { 
+                    {
                         MessageReceived?.Invoke(this, msg);
                     }
                     else
-                    { 
-                        await Task.Delay(100);
+                    {
+                        await Task.Delay(100).ConfigureAwait(false);
                     }
                 }
-            }  
+            }
             catch (OperationCanceledException)
             {
                 // thrown when disposed
@@ -478,13 +480,13 @@ namespace WatsonWebsocket
             catch (WebSocketException)
             {
                 Logger?.Invoke(header + "websocket disconnected");
-            } 
+            }
             catch (Exception e)
-            { 
+            {
                 Logger?.Invoke(header + "exception: " + Environment.NewLine + e.ToString());
             }
             finally
-            { 
+            {
                 string ipPort = md.IpPort;
                 ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(md.IpPort));
                 md.Ws.Dispose();
@@ -492,9 +494,9 @@ namespace WatsonWebsocket
                 _Clients.TryRemove(ipPort, out _);
             }
         }
-          
+
         private async Task<MessageReceivedEventArgs> MessageReadAsync(ClientMetadata md)
-        { 
+        {
             using (MemoryStream stream = new MemoryStream())
             {
                 byte[] buffer = new byte[65536];
@@ -502,7 +504,7 @@ namespace WatsonWebsocket
 
                 while (true)
                 {
-                    WebSocketReceiveResult result = await md.Ws.ReceiveAsync(seg, md.TokenSource.Token);
+                    WebSocketReceiveResult result = await md.Ws.ReceiveAsync(seg, md.TokenSource.Token).ConfigureAwait(false);
                     if (result.CloseStatus != null
                         || md.Ws.State != WebSocketState.Open
                         || result.MessageType == WebSocketMessageType.Close
@@ -521,10 +523,10 @@ namespace WatsonWebsocket
                         return new MessageReceivedEventArgs(md.IpPort, stream.ToArray(), result.MessageType);
                     }
                 }
-            } 
+            }
         }
- 
-        private async Task<bool> MessageWriteAsync(ClientMetadata md, byte[] data, WebSocketMessageType msgType)
+
+        private async Task<bool> MessageWriteAsync(ClientMetadata md, byte[] data, WebSocketMessageType msgType, CancellationToken cancellationToken = default)
         {
             string header = "[WatsonWsServer.MessageWriteAsync " + md.IpPort + "] ";
 
@@ -532,17 +534,20 @@ namespace WatsonWebsocket
             {
                 #region Send-Message
 
-                // Cannot have two simultaneous SendAsync calls so use a 
+                // Cannot have two simultaneous SendAsync calls so use a
                 // semaphore to block the second until the first has completed
 
-                await md.SendLock.WaitAsync(md.TokenSource.Token);
-                try
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(md.TokenSource.Token, cancellationToken))
                 {
-                    await md.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, md.TokenSource.Token);
-                }
-                finally
-                {
-                    md.SendLock.Release();
+                    await md.SendLock.WaitAsync(linkedCts.Token).ConfigureAwait(false);
+                    try
+                    {
+                        await md.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, linkedCts.Token).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        md.SendLock.Release();
+                    }
                 }
 
                 _Stats.SentMessages += 1;
@@ -562,12 +567,12 @@ namespace WatsonWebsocket
             }
             catch (Exception e)
             {
-                Logger?.Invoke(header + "disconnected due to exception: " + Environment.NewLine + e.ToString()); 
+                Logger?.Invoke(header + "disconnected due to exception: " + Environment.NewLine + e.ToString());
             }
 
             return false;
         }
-         
+
         #endregion
     }
 }
