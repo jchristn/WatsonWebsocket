@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace WatsonWebsocket
 {
@@ -41,11 +42,7 @@ namespace WatsonWebsocket
             get
             {
                 return _ReceivedBytes;
-            }
-            internal set
-            {
-                _ReceivedBytes = value;
-            }
+            } 
         }
 
         /// <summary>
@@ -56,11 +53,7 @@ namespace WatsonWebsocket
             get
             {
                 return _ReceivedMessages;
-            }
-            internal set
-            {
-                _ReceivedMessages = value;
-            }
+            } 
         }
 
         /// <summary>
@@ -89,11 +82,7 @@ namespace WatsonWebsocket
             get
             {
                 return _SentBytes;
-            }
-            internal set
-            {
-                _SentBytes = value;
-            }
+            } 
         }
 
         /// <summary>
@@ -104,11 +93,7 @@ namespace WatsonWebsocket
             get
             {
                 return _SentMessages;
-            }
-            internal set
-            {
-                _SentMessages = value;
-            }
+            } 
         }
 
         /// <summary>
@@ -185,6 +170,30 @@ namespace WatsonWebsocket
             _ReceivedMessages = 0;
             _SentBytes = 0;
             _SentMessages = 0;
+        }
+
+        #endregion
+
+        #region Internal-Methods
+
+        internal void IncrementReceivedMessages()
+        {
+            _ReceivedMessages = Interlocked.Increment(ref _ReceivedMessages);
+        }
+
+        internal void IncrementSentMessages()
+        {
+            _SentMessages = Interlocked.Increment(ref _SentMessages);
+        }
+
+        internal void AddReceivedBytes(long bytes)
+        {
+            _ReceivedBytes = Interlocked.Add(ref _ReceivedBytes, bytes);
+        }
+
+        internal void AddSentBytes(long bytes)
+        {
+            _SentBytes = Interlocked.Add(ref _SentBytes, bytes);
         }
 
         #endregion

@@ -38,7 +38,12 @@ namespace WatsonWebsocket
         {
             get
             {
-                return _Connected;
+                if (_ClientWs != null)
+                {
+                    if (_ClientWs.State == WebSocketState.Open) return true;
+                }
+
+                return false;
             }
         }
 
@@ -78,14 +83,14 @@ namespace WatsonWebsocket
 
         #region Private-Members
 
+        private string _Header = "[WatsonWsClient] ";
         private bool _AcceptInvalidCertificates = true;
         private Uri _ServerUri;
         private string _ServerIp;
         private int _ServerPort;
         private string _ServerIpPort;
         private string _Url;
-        private ClientWebSocket _ClientWs;
-        private bool _Connected = false;  
+        private ClientWebSocket _ClientWs; 
         private readonly SemaphoreSlim _SendLock = new SemaphoreSlim(1);
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
@@ -163,6 +168,14 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
+        /// Close the client.
+        /// </summary>
+        public void Stop()
+        {
+            _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait();
+        }
+
+        /// <summary>
         /// Send text data to the server asynchronously.
         /// </summary>
         /// <param name="data">String data.</param>
@@ -208,12 +221,27 @@ namespace WatsonWebsocket
         {
             if (disposing)
             {
-                Logger?.Invoke("[WatsonWsClient] dispose requested (websocket state: " + _ClientWs.State.ToString() + ")");
+                if (_ClientWs != null)
+                {
+                    try
+                    {
+                        // see https://mcguirev10.com/2019/08/17/how-to-close-websocket-correctly.html  
+
+                        if (_ClientWs.State == WebSocketState.Open)
+                        { 
+                            _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                            _ClientWs.Dispose();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.ToString());
+                    }
+                }
 
                 _TokenSource.Cancel();
-                if (_ClientWs != null) _ClientWs.Dispose();
 
-                Logger?.Invoke("[WatsonWsClient] dispose complete");
+                Logger?.Invoke(_Header + "dispose complete");
             }
         }
          
@@ -224,30 +252,25 @@ namespace WatsonWebsocket
                 if (_ClientWs.State == WebSocketState.Open)
                 {
                     Task.Run(() =>
-                    {
-                        _Connected = true;
+                    { 
                         Task.Run(() => DataReceiver(), _Token); 
                         ServerConnected?.Invoke(this, EventArgs.Empty); 
 
                     }, _Token);
                 }
                 else
-                {
-                    _Connected = false;
+                { 
                     ServerDisconnected?.Invoke(this, EventArgs.Empty);
                 }
             }
             else
-            { 
-                _Connected = false;
+            {  
                 ServerDisconnected?.Invoke(this, EventArgs.Empty);
             }
         }
          
         private async Task DataReceiver()
-        {
-            string header = "[WatsonWsClient.DataReceiver " + _ServerIpPort + "] "; 
-
+        { 
             try
             { 
                 while (true)
@@ -255,26 +278,28 @@ namespace WatsonWebsocket
                     if (_Token.IsCancellationRequested) break;
                     MessageReceivedEventArgs msg = await MessageReadAsync();
 
-                    _Stats.ReceivedMessages = _Stats.ReceivedMessages + 1;
-                    _Stats.ReceivedBytes += msg.Data.Length;
+                    if (msg != null)
+                    {
+                        _Stats.IncrementReceivedMessages();
+                        _Stats.AddReceivedBytes(msg.Data.Length);
 
-                    MessageReceived?.Invoke(this, msg); 
+                        MessageReceived?.Invoke(this, msg);
+                    }
                 } 
             }
             catch (OperationCanceledException)
             {
-                Logger?.Invoke(header + "canceled");
+                Logger?.Invoke(_Header + "data receiver canceled");
             }
             catch (WebSocketException)
             {
-                Logger?.Invoke(header + "websocket disconnected");
+                Logger?.Invoke(_Header + "websocket disconnected");
             } 
             catch (Exception e)
             {
-                Logger?.Invoke(header + "exception: " + Environment.NewLine + e.ToString());
+                Logger?.Invoke(_Header + "exception: " + Environment.NewLine + e.ToString());
             }
-
-            _Connected = false;
+             
             ServerDisconnected?.Invoke(this, EventArgs.Empty);
         }
          
@@ -285,22 +310,29 @@ namespace WatsonWebsocket
             if (_ClientWs == null) return null;
             byte[] buffer = new byte[65536];
             byte[] data = null;
-            WebSocketReceiveResult receiveResult = null;
-            
+
+            WebSocketReceiveResult result = null;
+
             using (MemoryStream dataMs = new MemoryStream())
             {
                 buffer = new byte[buffer.Length];
                 ArraySegment<byte> bufferSegment = new ArraySegment<byte>(buffer);
 
+                if (_ClientWs.State == WebSocketState.CloseReceived
+                    || _ClientWs.State == WebSocketState.Closed)
+                {
+                    throw new WebSocketException("Websocket close received");
+                }
+
                 while (_ClientWs.State == WebSocketState.Open)
                 {
-                    receiveResult = await _ClientWs.ReceiveAsync(bufferSegment, _Token);
-                    if (receiveResult.Count > 0)
+                    result = await _ClientWs.ReceiveAsync(bufferSegment, _Token);
+                    if (result.Count > 0)
                     {
-                        await dataMs.WriteAsync(buffer, 0, receiveResult.Count);
+                        await dataMs.WriteAsync(buffer, 0, result.Count);
                     }
                      
-                    if (receiveResult.EndOfMessage)
+                    if (result.EndOfMessage)
                     {
                         data = dataMs.ToArray();
                         break;
@@ -308,19 +340,18 @@ namespace WatsonWebsocket
                 }
             }
               
-            return new MessageReceivedEventArgs(_ServerIpPort, data, receiveResult.MessageType); 
+            return new MessageReceivedEventArgs(_ServerIpPort, data, result.MessageType); 
         }
          
         private async Task<bool> MessageWriteAsync(byte[] data, WebSocketMessageType msgType)
-        {
-            string header = "[WatsonWsClient.DataReceiver " + _ServerIpPort + "] ";
+        { 
             bool disconnectDetected = false;
 
             try
             { 
-                if (!_Connected || _ClientWs == null)
+                if (_ClientWs == null || _ClientWs.State != WebSocketState.Open)
                 {
-                    Logger?.Invoke(header + "not connected");
+                    Logger?.Invoke(_Header + "not connected");
                     disconnectDetected = true;
                     return false;
                 }
@@ -336,60 +367,58 @@ namespace WatsonWebsocket
                     _SendLock.Release();
                 }
 
-                _Stats.SentMessages += 1;
-                _Stats.SentBytes += data.Length;
+                _Stats.IncrementSentMessages();
+                _Stats.AddSentBytes(data.Length);
 
                 return true; 
             }
             catch (OperationCanceledException)
             {
-                Logger?.Invoke(header + "canceled");
+                Logger?.Invoke(_Header + "canceled");
                 disconnectDetected = true;
                 return false;
             }
             catch (WebSocketException)
             {
-                Logger?.Invoke(header + "websocket disconnected");
+                Logger?.Invoke(_Header + "websocket disconnected");
                 disconnectDetected = true;
                 return false;
             }
             catch (ObjectDisposedException)
             {
-                Logger?.Invoke(header + "disposed");
+                Logger?.Invoke(_Header + "disposed");
                 disconnectDetected = true;
                 return false;
             }
             catch (SocketException)
             {
-                Logger?.Invoke(header + "socket disconnected"); 
+                Logger?.Invoke(_Header + "socket disconnected"); 
                 disconnectDetected = true;
                 return false;
             }
             catch (InvalidOperationException)
             {
-                Logger?.Invoke(header + "disconnected due to invalid operation"); 
+                Logger?.Invoke(_Header + "disconnected due to invalid operation"); 
                 disconnectDetected = true;
                 return false;
             }
             catch (IOException)
             {
-                Logger?.Invoke(header + "IO disconnected");
+                Logger?.Invoke(_Header + "IO disconnected");
                 disconnectDetected = true;
                 return false;
             }
             catch (Exception e)
             {
-                Logger?.Invoke(header + "exception: " + Environment.NewLine + e.ToString());
+                Logger?.Invoke(_Header + "exception: " + Environment.NewLine + e.ToString());
                 disconnectDetected = true;
                 return false;
             }
             finally
             {
                 if (disconnectDetected)
-                {
-                    _Connected = false;
-                    Dispose();
-
+                { 
+                    Dispose(); 
                     ServerDisconnected?.Invoke(this, EventArgs.Empty);
                 }
             }

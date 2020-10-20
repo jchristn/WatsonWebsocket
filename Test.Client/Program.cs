@@ -43,6 +43,7 @@ namespace Test.Client
                         Console.WriteLine("  dispose      dispose of the connection");
                         Console.WriteLine("  connect      connect to the server if not connected");
                         Console.WriteLine("  reconnect    disconnect if connected, then reconnect");
+                        Console.WriteLine("  close        close the connection");
                         break;
 
                     case "q":
@@ -96,6 +97,10 @@ namespace Test.Client
                         InitializeClient();
                         break;
 
+                    case "close":
+                        _Client.Stop();
+                        break;
+
                     default:
                         break;
                 }
@@ -113,8 +118,7 @@ namespace Test.Client
 
             _Client.ServerConnected += ServerConnected;
             _Client.ServerDisconnected += ServerDisconnected;
-            _Client.MessageReceived += MessageReceived;
-
+            _Client.MessageReceived += MessageReceived; 
             _Client.Logger = Logger;
             _Client.Start(); 
         }
