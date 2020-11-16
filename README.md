@@ -6,6 +6,12 @@
 
 WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.
 
+## Thanks and Appreciation
+
+Many thanks and much appreciation to those that take the time to make this library better!  
+
+@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX
+
 ## Test App
 
 A test project for both client (```TestClient```) and server (```TestServer```) are included which will help you understand and exercise the class library.
@@ -97,12 +103,6 @@ To configure access from other nodes outside of ```localhost```, use the followi
 - If you are using SSL, you will need to install the certificate in the certificate store and retrieve the thumbprint
   - Refer to https://github.com/jchristn/WatsonWebserver/wiki/Using-SSL-on-Windows for more information, or if you are using SSL
 - If you're still having problems, please do not hesitate to file an issue here, and I will do my best to help and update the documentation.
-
-## Thanks and Appreciation
-
-Many thanks and much appreciation to those that take the time to make this library better!  
-
-@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX
 
 ## Version History
 
