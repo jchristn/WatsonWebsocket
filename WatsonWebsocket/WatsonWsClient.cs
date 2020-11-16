@@ -283,7 +283,7 @@ namespace WatsonWebsocket
                         _Stats.IncrementReceivedMessages();
                         _Stats.AddReceivedBytes(msg.Data.Length);
 
-                        MessageReceived?.Invoke(this, msg);
+                        Task unawaited = Task.Run(() => MessageReceived?.Invoke(this, msg), _Token);
                     }
                 } 
             }
