@@ -466,11 +466,11 @@ namespace WatsonWebsocket
 
                         if (msg.Data != null)
                         {
-                            MessageReceived?.Invoke(this, msg);
+                            Task unawaited = Task.Run(() => MessageReceived?.Invoke(this, msg), md.TokenSource.Token);
                         }
                         else
                         {
-                            await Task.Delay(100);
+                            await Task.Delay(10);
                         }
                     }
                 }

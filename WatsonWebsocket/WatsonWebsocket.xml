@@ -4,6 +4,112 @@
         <name>WatsonWebsocket</name>
     </assembly>
     <members>
+        <member name="T:WatsonWebsocket.ClientConnectedEventArgs">
+            <summary>
+            Event arguments for when a client connects to the server.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.ClientConnectedEventArgs.IpPort">
+            <summary>
+            The IP:port of the client.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.ClientConnectedEventArgs.HttpRequest">
+            <summary>
+            The HttpListenerRequest from the client.  Helpful for accessing HTTP request related metadata such as the querystring.
+            </summary>
+        </member>
+        <member name="T:WatsonWebsocket.ClientDisconnectedEventArgs">
+            <summary>
+            Event arguments for when a client disconnects from the server.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.ClientDisconnectedEventArgs.IpPort">
+            <summary>
+            The IP:port of the client.
+            </summary>
+        </member>
+        <member name="T:WatsonWebsocket.MessageReceivedEventArgs">
+            <summary>
+            Event arguments for when a message is received.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.MessageReceivedEventArgs.IpPort">
+            <summary>
+            The IP:port of the sender.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.MessageReceivedEventArgs.Data">
+            <summary>
+            The data received.
+            </summary>
+        </member>
+        <member name="F:WatsonWebsocket.MessageReceivedEventArgs.MessageType">
+            <summary>
+            The type of payload included in the message (Binary or Text).
+            </summary>
+        </member>
+        <member name="T:WatsonWebsocket.Statistics">
+            <summary>
+            WatsonWebsocket statistics.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.StartTime">
+            <summary>
+            The time at which the client or server was started.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.UpTime">
+            <summary>
+            The amount of time which the client or server has been up.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.ReceivedBytes">
+            <summary>
+            The number of bytes received.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.ReceivedMessages">
+            <summary>
+            The number of messages received.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.ReceivedMessageSizeAverage">
+            <summary>
+            Average received message size in bytes.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.SentBytes">
+            <summary>
+            The number of bytes sent.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.SentMessages">
+            <summary>
+            The number of messages sent.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.Statistics.SentMessageSizeAverage">
+            <summary>
+            Average sent message size in bytes.
+            </summary>
+        </member>
+        <member name="M:WatsonWebsocket.Statistics.#ctor">
+            <summary>
+            Initialize the statistics object.
+            </summary>
+        </member>
+        <member name="M:WatsonWebsocket.Statistics.ToString">
+            <summary>
+            Return human-readable version of the object.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:WatsonWebsocket.Statistics.Reset">
+            <summary>
+            Reset statistics other than StartTime and UpTime.
+            </summary>
+        </member>
         <member name="T:WatsonWebsocket.WatsonWsClient">
             <summary>
             Watson websocket client.
@@ -14,30 +120,35 @@
             Indicate whether or not invalid or otherwise unverifiable certificates should be accepted.  Default is true.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsClient.Debug">
-            <summary>
-            Enable or disable console debugging.
-            </summary>
-        </member>
         <member name="P:WatsonWebsocket.WatsonWsClient.Connected">
             <summary>
             Indicates whether or not the client is connected to the server.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsClient.MessageReceived">
+        <member name="E:WatsonWebsocket.WatsonWsClient.MessageReceived">
             <summary>
-            Callback called when a message is received.
+            Event fired when a message is received.
             Parameter 1: byte array containing the data.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsClient.ServerConnected">
+        <member name="E:WatsonWebsocket.WatsonWsClient.ServerConnected">
             <summary>
-            Callback called when the client connects successfully to the server. 
+            Event fired when the client connects successfully to the server. 
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsClient.ServerDisconnected">
+        <member name="E:WatsonWebsocket.WatsonWsClient.ServerDisconnected">
             <summary>
-            Callback called when the client disconnects from the server.
+            Event fired when the client disconnects from the server.
+            </summary>
+        </member>
+        <member name="F:WatsonWebsocket.WatsonWsClient.Logger">
+            <summary>
+            Method to invoke when sending a log message.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.WatsonWsClient.Stats">
+            <summary>
+            Statistics.
             </summary>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsClient.#ctor(System.String,System.Int32,System.Boolean)">
@@ -66,11 +177,31 @@
             Start the client and connect to the server.
             </summary>
         </member>
+        <member name="M:WatsonWebsocket.WatsonWsClient.Stop">
+            <summary>
+            Close the client.
+            </summary>
+        </member>
+        <member name="M:WatsonWebsocket.WatsonWsClient.SendAsync(System.String)">
+            <summary>
+            Send text data to the server asynchronously.
+            </summary>
+            <param name="data">String data.</param>
+            <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        </member>
         <member name="M:WatsonWebsocket.WatsonWsClient.SendAsync(System.Byte[])">
             <summary>
-            Send data to the server asynchronously
+            Send binary data to the server asynchronously.
             </summary>
             <param name="data">Byte array containing data.</param>
+            <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        </member>
+        <member name="M:WatsonWebsocket.WatsonWsClient.SendAsync(System.Byte[],System.Net.WebSockets.WebSocketMessageType)">
+            <summary>
+            Send binary data to the server asynchronously.
+            </summary>
+            <param name="data">Byte array containing data.</param>
+            <param name="msgType">Web socket message type.</param>
             <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsClient.Dispose(System.Boolean)">
@@ -81,32 +212,32 @@
         </member>
         <member name="T:WatsonWebsocket.WatsonWsServer">
             <summary>
-            Watson TCP server.
+            Watson Websocket server.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsServer.ClientConnected">
+        <member name="P:WatsonWebsocket.WatsonWsServer.IsListening">
             <summary>
-            Callback called when a client connects.  Return 'true' to permit the connection or 'false' to deny.
-            Parameter 1: string containing "[ip]:[port]".
-            Parameter 2: full HttpListenerRequest object.
+            Determine if the server is listening for new connections.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsServer.ClientDisconnected">
+        <member name="E:WatsonWebsocket.WatsonWsServer.ClientConnected">
             <summary>
-            Callback called when a client disconnects.
-            Parameter 1: string containing "[ip]:[port]".
+            Event fired when a client connects.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsServer.ServerStopped">
+        <member name="E:WatsonWebsocket.WatsonWsServer.ClientDisconnected">
             <summary>
-            Callback called when the server stops.
+            Event fired when a client disconnects.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsServer.MessageReceived">
+        <member name="E:WatsonWebsocket.WatsonWsServer.ServerStopped">
             <summary>
-            Callback called when a message is received.
-            Parameter 1: string containing "[ip]:[port]".
-            Parameter 2: byte array containing the data.
+            Event fired when the server stops.
+            </summary>
+        </member>
+        <member name="E:WatsonWebsocket.WatsonWsServer.MessageReceived">
+            <summary>
+            Event fired when a message is received.
             </summary>
         </member>
         <member name="P:WatsonWebsocket.WatsonWsServer.AcceptInvalidCertificates">
@@ -114,14 +245,24 @@
             Indicate whether or not invalid or otherwise unverifiable certificates should be accepted.  Default is true.
             </summary>
         </member>
-        <member name="F:WatsonWebsocket.WatsonWsServer.Debug">
-            <summary>
-            Enable or disable console debugging.
-            </summary>
-        </member>
         <member name="F:WatsonWebsocket.WatsonWsServer.PermittedIpAddresses">
             <summary>
             Specify the IP addresses that are allowed to connect.  If none are supplied, all IP addresses are permitted.
+            </summary>
+        </member>
+        <member name="F:WatsonWebsocket.WatsonWsServer.Logger">
+            <summary>
+            Method to invoke when sending a log message.
+            </summary>
+        </member>
+        <member name="F:WatsonWebsocket.WatsonWsServer.HttpHandler">
+            <summary>
+            Method to invoke when receiving a raw (non-websocket) HTTP request.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.WatsonWsServer.Stats">
+            <summary>
+            Statistics.
             </summary>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.#ctor(System.String,System.Int32,System.Boolean)">
@@ -140,12 +281,17 @@
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.Start">
             <summary>
-            Start the server.
+            Start accepting new connections.
+            </summary>
+        </member>
+        <member name="M:WatsonWebsocket.WatsonWsServer.Stop">
+            <summary>
+            Stop accepting new connections.
             </summary>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.SendAsync(System.String,System.String)">
             <summary>
-            Send data to the specified client, asynchronously.
+            Send text data to the specified client, asynchronously.
             </summary>
             <param name="ipPort">IP:port of the recipient client.</param>
             <param name="data">String containing data.</param>
@@ -153,7 +299,7 @@
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.SendAsync(System.String,System.Byte[])">
             <summary>
-            Send data to the specified client, asynchronously.
+            Send binary data to the specified client, asynchronously.
             </summary>
             <param name="ipPort">IP:port of the recipient client.</param>
             <param name="data">Byte array containing data.</param> 
@@ -161,11 +307,11 @@
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.SendAsync(System.String,System.Byte[],System.Net.WebSockets.WebSocketMessageType)">
             <summary>
-            Send data to the specified client, asynchronously.
+            Send binary data to the specified client, asynchronously.
             </summary>
             <param name="ipPort">IP:port of the recipient client.</param>
-            <param name="data">Byte array containing data.</param>
-            <param name="messageType">The type of websocket message.</param>
+            <param name="data">Byte array containing data.</param> 
+            <param name="msgType">Web socket message type.</param>
             <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.IsClientConnected(System.String)">
