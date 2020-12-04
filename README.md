@@ -96,6 +96,8 @@ let socket = new WebSocket("ws://localhost:9000/test/");
 socket.onopen = function () { console.log("success"); };
 socket.onmessage = function (msg) { console.log(msg.data); };
 socket.onclose = function () { console.log("closed"); };
+// wait a moment
+socket.send("Hello, world!");
 ```
 
 ## Accessing from Outside Localhost
