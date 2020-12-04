@@ -85,6 +85,19 @@ static void ServerDisconnected(object sender, EventArgs args)
 }
 ```
 
+## Client Example using Browser
+```csharp
+server = new WatsonWsServer("http://localhost:9000/test/");
+server.Start();
+```
+
+```js
+let socket = new WebSocket("ws://localhost:9000/test/");
+socket.onopen = function () { console.log("success"); };
+socket.onmessage = function (msg) { console.log(msg.data); };
+socket.onclose = function () { console.log("closed"); };
+```
+
 ## Accessing from Outside Localhost
 
 When you configure WatsonWebsocket to listen on ```127.0.0.1``` or ```localhost```, it will only respond to requests received from within the local machine.
