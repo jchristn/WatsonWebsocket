@@ -129,10 +129,12 @@ namespace Test.Server
 
         static void InitializeServer()
         {
-            _Server = new WatsonWsServer(
-                _ServerIp,
-                _ServerPort,
-                _Ssl);
+            // original constructor
+            // _Server = new WatsonWsServer(_ServerIp, _ServerPort, _Ssl);
+
+            // URI-based constructor
+            if (_Ssl) _Server = new WatsonWsServer(new Uri("https://" + _ServerIp + ":" + _ServerPort + "/test/"));
+            else _Server = new WatsonWsServer(new Uri("http://" + _ServerIp + ":" + _ServerPort + "/test/"));
 
             _Server.ClientConnected += ClientConnected;
             _Server.ClientDisconnected += ClientDisconnected;

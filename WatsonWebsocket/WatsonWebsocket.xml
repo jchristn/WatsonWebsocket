@@ -277,6 +277,13 @@
             <param name="listenerPort">The TCP port upon which to listen.</param>
             <param name="ssl">Enable or disable SSL.</param> 
         </member>
+        <member name="M:WatsonWebsocket.WatsonWsServer.#ctor(System.Uri)">
+            <summary>
+            Initializes the Watson websocket server.
+            Be sure to call 'Start()' to start the server.
+            </summary>
+            <param name="uri">The URI on which you wish to listen, i.e. http://localhost:9090.</param>
+        </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.Dispose">
             <summary>
             Tear down the server and dispose of background workers.

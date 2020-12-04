@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0;netcoreapp3.0;netcoreapp3.1;netstandard2.0;netstandard2.1;net452;net5.0</TargetFrameworks>
-    <Version>2.2.0.8</Version>
+    <Version>2.2.0.9</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
-    <Copyright>(c)2019 Joel Christner</Copyright>
+    <Copyright>(c)2020 Joel Christner</Copyright>
     <PackageProjectUrl>https://github.com/jchristn/WatsonWebsocket</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jchristn/WatsonWebsocket</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>

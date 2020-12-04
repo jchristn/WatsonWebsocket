@@ -106,6 +106,7 @@ namespace WatsonWebsocket
         private string _ListenerIp;
         private int _ListenerPort;
         private IPAddress _ListenerIpAddress;
+        private Uri _Uri;
         private string _ListenerPrefix;
         private HttpListener _Listener;
         private readonly object _PermittedIpsLock = new object();
@@ -131,8 +132,8 @@ namespace WatsonWebsocket
             int listenerPort,
             bool ssl)
         {
-            if (listenerPort < 1) throw new ArgumentOutOfRangeException(nameof(listenerPort));
-             
+            if (listenerPort < 0) throw new ArgumentOutOfRangeException(nameof(listenerPort));
+
             if (String.IsNullOrEmpty(listenerIp))
             {
                 _ListenerIpAddress = IPAddress.Loopback;
@@ -153,11 +154,48 @@ namespace WatsonWebsocket
                 _ListenerIp = listenerIp;
             }
 
-            _ListenerPort = listenerPort; 
+            _ListenerPort = listenerPort;
 
             if (ssl) _ListenerPrefix = "https://" + _ListenerIp + ":" + _ListenerPort + "/";
             else _ListenerPrefix = "http://" + _ListenerIp + ":" + _ListenerPort + "/";
+            _Uri = new Uri(_ListenerPrefix);
 
+            _Listener = new HttpListener();
+            _Listener.Prefixes.Add(_ListenerPrefix);
+
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+            _Clients = new ConcurrentDictionary<string, ClientMetadata>();
+        }
+
+        /// <summary>
+        /// Initializes the Watson websocket server.
+        /// Be sure to call 'Start()' to start the server.
+        /// </summary>
+        /// <param name="uri">The URI on which you wish to listen, i.e. http://localhost:9090.</param>
+        public WatsonWsServer(Uri uri)
+        {
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+
+            _Uri = uri;
+            _ListenerPrefix = uri.ToString();
+            _ListenerPort = _Uri.Port;
+            _ListenerIp = _Uri.Host;
+
+            if (_ListenerPort < 0) throw new ArgumentException("Port must be zero or greater.");
+
+            if (_ListenerIp == "*" || _ListenerIp == "+")
+            {
+                _ListenerIpAddress = IPAddress.Any;
+            }
+            else
+            {
+                if (!IPAddress.TryParse(_ListenerIp, out _ListenerIpAddress))
+                {
+                    _ListenerIpAddress = Dns.GetHostEntry(_ListenerIp).AddressList[0];
+                } 
+            }
+              
             _Listener = new HttpListener();
             _Listener.Prefixes.Add(_ListenerPrefix);
 

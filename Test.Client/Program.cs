@@ -111,10 +111,12 @@ namespace Test.Client
         {
             if (_Client != null) _Client.Dispose();
 
-            _Client = new WatsonWsClient(
-                _ServerIp,
-                _ServerPort,
-                _Ssl);
+            // original constructor
+            // _Client = new WatsonWsClient(_ServerIp, _ServerPort, _Ssl);
+
+            // URI-based constructor
+            if (_Ssl) _Client = new WatsonWsClient(new Uri("wss://" + _ServerIp + ":" + _ServerPort + "/test/"));
+            else _Client = new WatsonWsClient(new Uri("ws://" + _ServerIp + ":" + _ServerPort + "/test/"));
 
             _Client.ServerConnected += ServerConnected;
             _Client.ServerDisconnected += ServerDisconnected;
