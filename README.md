@@ -87,7 +87,7 @@ static void ServerDisconnected(object sender, EventArgs args)
 
 ## Client Example using Browser
 ```csharp
-server = new WatsonWsServer("http://localhost:9000/test/");
+server = new WatsonWsServer("http://localhost:9000/");
 server.Start();
 ```
 

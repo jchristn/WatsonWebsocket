@@ -133,8 +133,8 @@ namespace Test.Server
             // _Server = new WatsonWsServer(_ServerIp, _ServerPort, _Ssl);
 
             // URI-based constructor
-            if (_Ssl) _Server = new WatsonWsServer(new Uri("https://" + _ServerIp + ":" + _ServerPort + "/test/"));
-            else _Server = new WatsonWsServer(new Uri("http://" + _ServerIp + ":" + _ServerPort + "/test/"));
+            if (_Ssl) _Server = new WatsonWsServer(new Uri("https://" + _ServerIp + ":" + _ServerPort));
+            else _Server = new WatsonWsServer(new Uri("http://" + _ServerIp + ":" + _ServerPort));
 
             _Server.ClientConnected += ClientConnected;
             _Server.ClientDisconnected += ClientDisconnected;
@@ -261,7 +261,7 @@ namespace Test.Server
          
         static void ClientConnected(object sender, ClientConnectedEventArgs args) 
         {
-            Console.WriteLine("Client connected: " + args.IpPort);
+            Console.WriteLine("Client " + args.IpPort + " connected using URL " + args.HttpRequest.RawUrl);
             _LastIpPort = args.IpPort;
         }
 
