@@ -333,7 +333,8 @@ namespace WatsonWebsocket
             // force disconnect of client
             if (_Clients.TryGetValue(ipPort, out var client))
             {
-                client.Ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
+                client.Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
+                // client.Ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
                 client.TokenSource.Cancel();
             }
         }

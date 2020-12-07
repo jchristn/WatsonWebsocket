@@ -225,21 +225,14 @@ namespace WatsonWebsocket
             if (disposing)
             {
                 if (_ClientWs != null)
-                {
-                    try
-                    {
-                        // see https://mcguirev10.com/2019/08/17/how-to-close-websocket-correctly.html  
+                { 
+                    // see https://mcguirev10.com/2019/08/17/how-to-close-websocket-correctly.html  
 
-                        if (_ClientWs.State == WebSocketState.Open)
-                        { 
-                            _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
-                            _ClientWs.Dispose();
-                        }
-                    }
-                    catch (Exception e)
+                    if (_ClientWs.State == WebSocketState.Open)
                     {
-                        Console.WriteLine(e.ToString());
-                    }
+                        Stop();
+                        _ClientWs.Dispose();
+                    } 
                 }
 
                 _TokenSource.Cancel();
