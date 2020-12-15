@@ -130,11 +130,11 @@ namespace Test.Server
         static void InitializeServer()
         {
             // original constructor
-            // _Server = new WatsonWsServer(_ServerIp, _ServerPort, _Ssl);
+            _Server = new WatsonWsServer(_ServerIp, _ServerPort, _Ssl);
 
             // URI-based constructor
-            if (_Ssl) _Server = new WatsonWsServer(new Uri("https://" + _ServerIp + ":" + _ServerPort));
-            else _Server = new WatsonWsServer(new Uri("http://" + _ServerIp + ":" + _ServerPort));
+            // if (_Ssl) _Server = new WatsonWsServer(new Uri("https://" + _ServerIp + ":" + _ServerPort));
+            // else _Server = new WatsonWsServer(new Uri("http://" + _ServerIp + ":" + _ServerPort));
 
             _Server.ClientConnected += ClientConnected;
             _Server.ClientDisconnected += ClientDisconnected;

@@ -10,7 +10,7 @@ WatsonWebsocket is the EASIEST and FASTEST way to build client and server applic
 
 Many thanks and much appreciation to those that take the time to make this library better!  
 
-@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX
+@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX @tersers
 
 ## Test App
 
@@ -107,7 +107,9 @@ When you configure WatsonWebsocket to listen on ```127.0.0.1``` or ```localhost`
 To configure access from other nodes outside of ```localhost```, use the following:
 
 - Specify the exact DNS hostname upon which WatsonWebsocket should listen in the Server constructor. The HOST header on incoming HTTP requests MUST match this value (this is an operating system limitation)
-- If you want to listen on more than one hostname or IP address, use ```*``` or ```+```. You MUST run WatsonWebsocket as administrator for this to work (this is an operating system limitation)
+- If you want to listen on more than one hostname or IP address, use ```*``` or ```+```. You MUST:
+  - Run WatsonWebsocket as administrator for this to work (this is an operating system limitation)
+  - Use the server constructor that takes distinct hostname and port values (not the URI-based constructor)
 - If you want to use a port number less than 1024, you MUST run WatsonWebsocket as administrator (this is an operating system limitation)
 - If you listen on an interface IP address other than ```127.0.0.1```, you MAY need to run as administrator (this is operating system dependent)
 - Open a port on your firewall to permit traffic on the TCP port upon which WatsonWebsocket is listening
