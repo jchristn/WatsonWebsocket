@@ -103,10 +103,6 @@ namespace WatsonWebsocket
 
         private string _Header = "[WatsonWsServer] ";
         private bool _AcceptInvalidCertificates = true;
-        private string _ListenerIp;
-        private int _ListenerPort;
-        private IPAddress _ListenerIpAddress;
-        private Uri _Uri;
         private string _ListenerPrefix;
         private HttpListener _Listener;
         private readonly object _PermittedIpsLock = new object();
@@ -134,31 +130,37 @@ namespace WatsonWebsocket
         {
             if (listenerPort < 0) throw new ArgumentOutOfRangeException(nameof(listenerPort));
 
+            string host;
             if (String.IsNullOrEmpty(listenerIp))
             {
-                _ListenerIpAddress = IPAddress.Loopback;
-                _ListenerIp = _ListenerIpAddress.ToString();
+                host = IPAddress.Loopback.ToString();
             }
             else if (listenerIp == "*" || listenerIp == "+")
             {
-                _ListenerIp = listenerIp;
-                _ListenerIpAddress = IPAddress.Any;
+                host = listenerIp;
             }
             else
             {
-                if (!IPAddress.TryParse(listenerIp, out _ListenerIpAddress))
+                if (!IPAddress.TryParse(listenerIp, out _))
                 {
-                    _ListenerIpAddress = Dns.GetHostEntry(listenerIp).AddressList[0];
+                    var dnsLookup = Dns.GetHostEntry(listenerIp);
+                    if (dnsLookup.AddressList.Length > 0)
+                    {
+                        host = dnsLookup.AddressList.First().ToString();
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Cannot resolve address to IP.");
+                    }
                 }
-
-                _ListenerIp = listenerIp;
+                else
+                {
+                    host = listenerIp;
+                }
             }
 
-            _ListenerPort = listenerPort;
-
-            if (ssl) _ListenerPrefix = "https://" + _ListenerIp + ":" + _ListenerPort + "/";
-            else _ListenerPrefix = "http://" + _ListenerIp + ":" + _ListenerPort + "/";
-            _Uri = new Uri(_ListenerPrefix);
+            if (ssl) _ListenerPrefix = "https://" + host + ":" + listenerPort + "/";
+            else _ListenerPrefix = "http://" + host + ":" + listenerPort + "/";
 
             _Listener = new HttpListener();
             _Listener.Prefixes.Add(_ListenerPrefix);
@@ -177,25 +179,33 @@ namespace WatsonWebsocket
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
 
-            _Uri = uri;
-            _ListenerPrefix = uri.ToString();
-            _ListenerPort = _Uri.Port;
-            _ListenerIp = _Uri.Host;
+            if (uri.Port < 0) throw new ArgumentException("Port must be zero or greater.");
 
-            if (_ListenerPort < 0) throw new ArgumentException("Port must be zero or greater.");
-
-            if (_ListenerIp == "*" || _ListenerIp == "+")
+            string host;
+            if (!IPAddress.TryParse(uri.Host, out _))
             {
-                _ListenerIpAddress = IPAddress.Any;
+                var dnsLookup = Dns.GetHostEntry(uri.Host);
+                if (dnsLookup.AddressList.Length > 0)
+                {
+                    host = dnsLookup.AddressList.First().ToString();
+                }
+                else
+                {
+                    throw new ArgumentException("Cannot resolve address to IP.");
+                }
             }
             else
             {
-                if (!IPAddress.TryParse(_ListenerIp, out _ListenerIpAddress))
-                {
-                    _ListenerIpAddress = Dns.GetHostEntry(_ListenerIp).AddressList[0];
-                } 
+                host = uri.Host;
             }
-              
+
+            var listenerUri = new UriBuilder(uri)
+            {
+                Host = host
+            };
+
+            _ListenerPrefix = listenerUri.ToString();
+
             _Listener = new HttpListener();
             _Listener.Prefixes.Add(_ListenerPrefix);
 
