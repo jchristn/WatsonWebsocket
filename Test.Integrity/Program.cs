@@ -11,7 +11,7 @@ namespace Test.Integrity
     {
         static int numClients = 5;
         static int messagesPerClient = 100;
-        static int msgLength = 1024;
+        static int msgLength = 4096;
         static byte[] msgData = null;
         static int sendDelay = 100;
 
@@ -115,7 +115,7 @@ namespace Test.Integrity
                     {
                         remaining = clients.Count;
                         if (remaining < 1) break;
-                        Console.WriteLine("Waiting for " + remaining + " clients: ");
+                        Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("HH:mm:ss.ffffff") + " waiting for " + remaining + " clients: ");
                         foreach (string curr in clients) Console.WriteLine("| " + curr);
                     }
                 }

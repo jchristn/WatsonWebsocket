@@ -344,7 +344,7 @@ namespace WatsonWebsocket
             bool disconnectDetected = false;
 
             using (CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_Token, token))
-            {
+            { 
                 try
                 {
                     if (_ClientWs == null || _ClientWs.State != WebSocketState.Open)

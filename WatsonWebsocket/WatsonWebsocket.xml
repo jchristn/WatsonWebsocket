@@ -272,8 +272,9 @@
             <summary>
             Initializes the Watson websocket server.
             Be sure to call 'Start()' to start the server.
+            By default, Watson Websocket will listen on http://localhost:9000/.
             </summary>
-            <param name="listenerIp">The IP address upon which to listen.</param>
+            <param name="listenerHostname">The hostname or IP address upon which to listen.</param>
             <param name="listenerPort">The TCP port upon which to listen.</param>
             <param name="ssl">Enable or disable SSL.</param> 
         </member>

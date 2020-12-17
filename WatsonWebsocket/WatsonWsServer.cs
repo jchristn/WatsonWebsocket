@@ -119,48 +119,18 @@ namespace WatsonWebsocket
         /// <summary>
         /// Initializes the Watson websocket server.
         /// Be sure to call 'Start()' to start the server.
+        /// By default, Watson Websocket will listen on http://localhost:9000/.
         /// </summary>
-        /// <param name="listenerIp">The IP address upon which to listen.</param>
+        /// <param name="listenerHostname">The hostname or IP address upon which to listen.</param>
         /// <param name="listenerPort">The TCP port upon which to listen.</param>
         /// <param name="ssl">Enable or disable SSL.</param> 
-        public WatsonWsServer(
-            string listenerIp,
-            int listenerPort,
-            bool ssl)
+        public WatsonWsServer(string listenerHostname = "localhost", int listenerPort = 9000, bool ssl = false)
         {
             if (listenerPort < 0) throw new ArgumentOutOfRangeException(nameof(listenerPort));
-
-            string host;
-            if (String.IsNullOrEmpty(listenerIp))
-            {
-                host = IPAddress.Loopback.ToString();
-            }
-            else if (listenerIp == "*" || listenerIp == "+")
-            {
-                host = listenerIp;
-            }
-            else
-            {
-                if (!IPAddress.TryParse(listenerIp, out _))
-                {
-                    var dnsLookup = Dns.GetHostEntry(listenerIp);
-                    if (dnsLookup.AddressList.Length > 0)
-                    {
-                        host = dnsLookup.AddressList.First().ToString();
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Cannot resolve address to IP.");
-                    }
-                }
-                else
-                {
-                    host = listenerIp;
-                }
-            }
-
-            if (ssl) _ListenerPrefix = "https://" + host + ":" + listenerPort + "/";
-            else _ListenerPrefix = "http://" + host + ":" + listenerPort + "/";
+            if (String.IsNullOrEmpty(listenerHostname)) listenerHostname = "localhost";
+            
+            if (ssl) _ListenerPrefix = "https://" + listenerHostname + ":" + listenerPort + "/";
+            else _ListenerPrefix = "http://" + listenerHostname + ":" + listenerPort + "/";
 
             _Listener = new HttpListener();
             _Listener.Prefixes.Add(_ListenerPrefix);
@@ -169,7 +139,7 @@ namespace WatsonWebsocket
             _Token = _TokenSource.Token;
             _Clients = new ConcurrentDictionary<string, ClientMetadata>();
         }
-
+         
         /// <summary>
         /// Initializes the Watson websocket server.
         /// Be sure to call 'Start()' to start the server.
@@ -561,7 +531,7 @@ namespace WatsonWebsocket
         {
             string header = "[WatsonWsServer " + md.IpPort + "] ";
 
-            using (MemoryStream stream = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
                 byte[] buffer = new byte[65536];
                 ArraySegment<byte> seg = new ArraySegment<byte>(buffer);
@@ -596,12 +566,12 @@ namespace WatsonWebsocket
 
                     if (result.Count > 0)
                     {
-                        stream.Write(buffer, 0, result.Count);
+                        ms.Write(buffer, 0, result.Count);
                     }
 
                     if (result.EndOfMessage)
                     {
-                        return new MessageReceivedEventArgs(md.IpPort, stream.ToArray(), result.MessageType);
+                        return new MessageReceivedEventArgs(md.IpPort, ms.ToArray(), result.MessageType);
                     }
                 }
             } 
