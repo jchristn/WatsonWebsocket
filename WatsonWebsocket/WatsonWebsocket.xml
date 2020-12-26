@@ -125,6 +125,11 @@
             Indicates whether or not the client is connected to the server.
             </summary>
         </member>
+        <member name="P:WatsonWebsocket.WatsonWsClient.EnableStatistics">
+            <summary>
+            Enable or disable statistics.
+            </summary>
+        </member>
         <member name="E:WatsonWebsocket.WatsonWsClient.MessageReceived">
             <summary>
             Event fired when a message is received.
@@ -221,6 +226,11 @@
         <member name="P:WatsonWebsocket.WatsonWsServer.IsListening">
             <summary>
             Determine if the server is listening for new connections.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.WatsonWsServer.EnableStatistics">
+            <summary>
+            Enable or disable statistics.
             </summary>
         </member>
         <member name="E:WatsonWebsocket.WatsonWsServer.ClientConnected">

@@ -48,6 +48,11 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
+        /// Enable or disable statistics.
+        /// </summary>
+        public bool EnableStatistics { get; set; } = true;
+
+        /// <summary>
         /// Event fired when a message is received.
         /// Parameter 1: byte array containing the data.
         /// </summary>
@@ -276,8 +281,11 @@ namespace WatsonWebsocket
 
                     if (msg != null)
                     {
-                        _Stats.IncrementReceivedMessages();
-                        _Stats.AddReceivedBytes(msg.Data.Length);
+                        if (EnableStatistics)
+                        {
+                            _Stats.IncrementReceivedMessages();
+                            _Stats.AddReceivedBytes(msg.Data.Length);
+                        }
 
                         Task unawaited = Task.Run(() => MessageReceived?.Invoke(this, msg), _Token);
                     }
@@ -365,8 +373,11 @@ namespace WatsonWebsocket
                         _SendLock.Release();
                     }
 
-                    _Stats.IncrementSentMessages();
-                    _Stats.AddSentBytes(data.Length);
+                    if (EnableStatistics)
+                    {
+                        _Stats.IncrementSentMessages();
+                        _Stats.AddSentBytes(data.Length);
+                    }
 
                     return true;
                 }

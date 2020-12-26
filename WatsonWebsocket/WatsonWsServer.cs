@@ -37,6 +37,11 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
+        /// Enable or disable statistics.
+        /// </summary>
+        public bool EnableStatistics { get; set; } = true;
+
+        /// <summary>
         /// Event fired when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectedEventArgs> ClientConnected;
@@ -243,7 +248,11 @@ namespace WatsonWebsocket
                 return Task.FromResult(false);
             }
 
-            return MessageWriteAsync(client, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, token);
+            Task<bool> task = MessageWriteAsync(client, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, token);
+
+            data = null; 
+            client = null;
+            return task;
         }
 
         /// <summary>
@@ -262,7 +271,11 @@ namespace WatsonWebsocket
                 return Task.FromResult(false);
             }
 
-            return MessageWriteAsync(client, data, WebSocketMessageType.Binary, token);
+            Task<bool> task = MessageWriteAsync(client, data, WebSocketMessageType.Binary, token);
+
+            client = null;
+            data = null;
+            return task;
         }
 
         /// <summary>
@@ -282,7 +295,11 @@ namespace WatsonWebsocket
                 return Task.FromResult(false);
             }
 
-            return MessageWriteAsync(client, data, msgType, token);
+            Task<bool> task = MessageWriteAsync(client, data, msgType, token);
+            
+            client = null;
+            data = null;
+            return task;
         }
 
         /// <summary>
@@ -309,13 +326,12 @@ namespace WatsonWebsocket
         /// </summary>
         /// <param name="ipPort">IP:port of the client.</param>
         public void DisconnectClient(string ipPort)
-        {
-            // force disconnect of client
+        { 
             if (_Clients.TryGetValue(ipPort, out var client))
             {
                 client.Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
-                // client.Ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
                 client.TokenSource.Cancel();
+                client.Ws.Dispose();
             }
         }
 
@@ -487,8 +503,11 @@ namespace WatsonWebsocket
 
                     if (msg != null)
                     {
-                        _Stats.IncrementReceivedMessages();
-                        _Stats.AddReceivedBytes(msg.Data.Length);
+                        if (EnableStatistics)
+                        {
+                            _Stats.IncrementReceivedMessages();
+                            _Stats.AddReceivedBytes(msg.Data.Length);
+                        }
 
                         if (msg.Data != null)
                         {
@@ -539,13 +558,7 @@ namespace WatsonWebsocket
                 while (true)
                 {
                     WebSocketReceiveResult result = await md.Ws.ReceiveAsync(seg, md.TokenSource.Token).ConfigureAwait(false);
-                    
-                    /*
-                    Console.WriteLine("Websocket state : " + md.Ws.State);
-                    Console.WriteLine("Close status    : " + result.CloseStatus);
-                    Console.WriteLine("Message type    : " + result.MessageType);  
-                    */
-
+                     
                     if (result.CloseStatus != null)
                     {
                         Logger?.Invoke(header + "close received");
@@ -603,8 +616,11 @@ namespace WatsonWebsocket
                         md.SendLock.Release();
                     }
 
-                    _Stats.IncrementSentMessages();
-                    _Stats.AddSentBytes(data.Length);
+                    if (EnableStatistics)
+                    {
+                        _Stats.IncrementSentMessages();
+                        _Stats.AddSentBytes(data.Length);
+                    }
 
                     return true;
 
@@ -629,7 +645,7 @@ namespace WatsonWebsocket
                 {
                     if (_Token.IsCancellationRequested)
                     {
-                        Logger?.Invoke(header + "canceled"); 
+                        Logger?.Invoke(header + "canceled");
                     }
                     else if (token.IsCancellationRequested)
                     {
@@ -663,6 +679,12 @@ namespace WatsonWebsocket
                 catch (Exception e)
                 {
                     Logger?.Invoke(header + "exception: " + Environment.NewLine + e.ToString());
+                }
+                finally
+                {
+                    md = null;
+                    data = null;
+                    tokens = null;
                 }
             }
 
