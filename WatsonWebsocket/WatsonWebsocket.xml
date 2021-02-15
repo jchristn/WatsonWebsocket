@@ -311,7 +311,7 @@
             Start accepting new connections.
             </summary>
         </member>
-        <member name="M:WatsonWebsocket.WatsonWsServer.StartAsync">
+        <member name="M:WatsonWebsocket.WatsonWsServer.StartAsync(System.Threading.CancellationToken)">
             <summary>
             Start accepting new connections.
             </summary>

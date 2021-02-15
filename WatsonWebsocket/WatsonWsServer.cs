@@ -218,14 +218,14 @@ namespace WatsonWebsocket
             _Token = _TokenSource.Token;
             _Listener.Start();
 
-            _AcceptConnectionsTask = Task.Run(() => AcceptConnections(), _Token);
+            _AcceptConnectionsTask = Task.Run(() => AcceptConnections(_Token), _Token);
         }
 
         /// <summary>
         /// Start accepting new connections.
         /// </summary>
         /// <returns>Task.</returns>
-        public Task StartAsync()
+        public Task StartAsync(CancellationToken token = default)
         {
             if (IsListening) throw new InvalidOperationException("Watson websocket server is already running.");
 
@@ -235,11 +235,12 @@ namespace WatsonWebsocket
 
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
-            _TokenSource = new CancellationTokenSource();
-            _Token = _TokenSource.Token;
+            _TokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+            _Token = token;
+
             _Listener.Start();
 
-            _AcceptConnectionsTask = Task.Run(() => AcceptConnections(), _Token);
+            _AcceptConnectionsTask = AcceptConnections(_Token);
             return _AcceptConnectionsTask;
         }
 
@@ -398,13 +399,13 @@ namespace WatsonWebsocket
             }
         }
           
-        private async Task AcceptConnections()
+        private async Task AcceptConnections(CancellationToken cancelToken)
         { 
             try
             { 
                 while (true)
                 {
-                    if (_Token.IsCancellationRequested) break;
+                    if (cancelToken.IsCancellationRequested) break;
                     if (!_Listener.IsListening)
                     {
                         Task.Delay(100).Wait();

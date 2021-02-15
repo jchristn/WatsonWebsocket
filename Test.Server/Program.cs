@@ -71,8 +71,7 @@ namespace Test.Server
                         break;
 
                     case "start":
-                        // _Server.Start();
-                        _ListenerTask = _Server.StartAsync();
+                        StartServer();
                         break;
 
                     case "stop":
@@ -145,6 +144,12 @@ namespace Test.Server
             _Server.HttpHandler = HttpHandler; 
         }
          
+        static async void StartServer()
+        {                         
+            // _Server.Start();
+            await _Server.StartAsync();
+        }
+
         static void Logger(string msg)
         {
             Console.WriteLine(msg);
