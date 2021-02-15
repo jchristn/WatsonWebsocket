@@ -70,7 +70,7 @@ namespace Test.Server
                         break;
 
                     case "start":
-                        _Server.Start();
+                        _Server.StartAsync();
                         break;
 
                     case "stop":
