@@ -107,7 +107,7 @@ namespace Test.Client
             }
         }
 
-        static void InitializeClient()
+        static async void InitializeClient()
         {
             if (_Client != null) _Client.Dispose();
 
@@ -122,7 +122,9 @@ namespace Test.Client
             _Client.ServerDisconnected += ServerDisconnected;
             _Client.MessageReceived += MessageReceived; 
             _Client.Logger = Logger;
-            _Client.Start(); 
+
+            await _Client.StartAsync();
+            Console.WriteLine("Client started: " + _Client.Connected);
         }
 
         static bool InputBoolean(string question, bool yesDefault)
