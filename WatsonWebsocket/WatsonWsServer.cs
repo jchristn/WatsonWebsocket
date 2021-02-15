@@ -216,6 +216,7 @@ namespace WatsonWebsocket
 
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
+            _Listener.Start();
 
             _AcceptConnectionsTask = Task.Run(() => AcceptConnections(), _Token);
         }
@@ -236,6 +237,7 @@ namespace WatsonWebsocket
 
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
+            _Listener.Start();
 
             _AcceptConnectionsTask = Task.Run(() => AcceptConnections(), _Token);
             return _AcceptConnectionsTask;
@@ -400,8 +402,6 @@ namespace WatsonWebsocket
         { 
             try
             { 
-                _Listener.Start();
-                 
                 while (true)
                 {
                     if (_Token.IsCancellationRequested) break;

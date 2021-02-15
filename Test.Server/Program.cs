@@ -16,6 +16,7 @@ namespace Test.Server
         static bool _Ssl = false;
         static WatsonWsServer _Server = null;
         static string _LastIpPort = null;
+        static Task _ListenerTask = null;
 
         static void Main(string[] args)
         {
@@ -70,7 +71,8 @@ namespace Test.Server
                         break;
 
                     case "start":
-                        _Server.StartAsync();
+                        // _Server.Start();
+                        _ListenerTask = _Server.StartAsync();
                         break;
 
                     case "stop":
@@ -142,7 +144,7 @@ namespace Test.Server
             _Server.Logger = Logger;
             _Server.HttpHandler = HttpHandler; 
         }
-        
+         
         static void Logger(string msg)
         {
             Console.WriteLine(msg);
