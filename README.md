@@ -28,10 +28,9 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v2.2.0
+## New in v2.2.1
 
-- Minor refactor
-- MessageReceivedEventArgs now includes the type of message (Text, Binary)
+- StartAsync methods
 
 ## Server Example
 ```csharp

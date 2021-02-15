@@ -217,7 +217,28 @@ namespace WatsonWebsocket
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
 
-            _AcceptConnectionsTask = Task.Run(AcceptConnections, _Token);
+            _AcceptConnectionsTask = Task.Run(() => AcceptConnections(), _Token);
+        }
+
+        /// <summary>
+        /// Start accepting new connections.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public Task StartAsync()
+        {
+            if (IsListening) throw new InvalidOperationException("Watson websocket server is already running.");
+
+            _Stats = new Statistics();
+
+            Logger?.Invoke(_Header + "starting " + _ListenerPrefix);
+
+            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+
+            _AcceptConnectionsTask = Task.Run(() => AcceptConnections(), _Token);
+            return _AcceptConnectionsTask;
         }
 
         /// <summary>
@@ -464,10 +485,12 @@ namespace WatsonWebsocket
                     }, _Token).ConfigureAwait(false); 
                 } 
             }
+            /*
             catch (HttpListenerException)
             {
                 // thrown when disposed
             }
+            */
             catch (TaskCanceledException)
             {
                 // thrown when disposed

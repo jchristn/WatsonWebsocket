@@ -182,6 +182,12 @@
             Start the client and connect to the server.
             </summary>
         </member>
+        <member name="M:WatsonWebsocket.WatsonWsClient.StartAsync">
+            <summary>
+            Start the client and connect to the server.
+            </summary>
+            <returns>Task.</returns>
+        </member>
         <member name="M:WatsonWebsocket.WatsonWsClient.Stop">
             <summary>
             Close the client.
@@ -304,6 +310,12 @@
             <summary>
             Start accepting new connections.
             </summary>
+        </member>
+        <member name="M:WatsonWebsocket.WatsonWsServer.StartAsync">
+            <summary>
+            Start accepting new connections.
+            </summary>
+            <returns>Task.</returns>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.Stop">
             <summary>

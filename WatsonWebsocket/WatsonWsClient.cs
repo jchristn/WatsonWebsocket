@@ -168,8 +168,19 @@ namespace WatsonWebsocket
         public void Start()
         {
             _Stats = new Statistics();
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;   
+            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect);
+        }
+
+        /// <summary>
+        /// Start the client and connect to the server.
+        /// </summary>
+        /// <returns>Task.</returns>
+        public Task StartAsync()
+        {
+            _Stats = new Statistics();
+            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            return _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect);
         }
 
         /// <summary>

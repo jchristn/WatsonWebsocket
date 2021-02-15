@@ -2,12 +2,16 @@
 
 ## Current Version
 
+v2.2.1
+
+- StartAsync methods
+
+## Previous Versions
+
 v2.2.0
 
 - Minor refactor
 - MessageReceivedEventArgs now includes the type of message (Text, Binary)
-
-## Previous Versions
 
 v2.1.7
 
