@@ -148,6 +148,7 @@ namespace Test.Server
         {                         
             // _Server.Start();
             await _Server.StartAsync();
+            Console.WriteLine("Server is listening: " + _Server.IsListening);
         }
 
         static void Logger(string msg)

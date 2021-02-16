@@ -240,8 +240,9 @@ namespace WatsonWebsocket
 
             _Listener.Start();
 
-            _AcceptConnectionsTask = AcceptConnections(_Token);
-            return _AcceptConnectionsTask;
+            _AcceptConnectionsTask = Task.Run(() => AcceptConnections(_Token), _Token);
+
+            return Task.Delay(1);
         }
 
         /// <summary>
