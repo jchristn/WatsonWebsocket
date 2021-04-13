@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Diagnostics;
 using System.Threading;
@@ -31,7 +32,7 @@ namespace WatsonWebsocket
                 _AcceptInvalidCertificates = value;
             }
         }
-         
+
         /// <summary>
         /// Indicates whether or not the client is connected to the server.
         /// </summary>
@@ -132,7 +133,6 @@ namespace WatsonWebsocket
 
         private string _Header = "[WatsonWsClient] ";
         private bool _AcceptInvalidCertificates = true;
-        private bool _IsConnecting;
         private Uri _ServerUri;
         private string _ServerIp;
         private int _ServerPort;
@@ -146,6 +146,7 @@ namespace WatsonWebsocket
         private event EventHandler<MessageReceivedEventArgs> InternalMessageReceived;
         private event EventHandler InternalServerDisconnected;
         private readonly SemaphoreSlim _SendLock = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _InternalLock = new SemaphoreSlim(1);
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
         private Statistics _Stats = new Statistics();
@@ -177,7 +178,7 @@ namespace WatsonWebsocket
 
             if (ssl) _Url = "wss://" + _ServerIp + ":" + _ServerPort;
             else _Url = "ws://" + _ServerIp + ":" + _ServerPort;
-            _ServerUri = new Uri(_Url); 
+            _ServerUri = new Uri(_Url);
             _Token = _TokenSource.Token;
 
             _ClientWs = new ClientWebSocket();
@@ -235,7 +236,6 @@ namespace WatsonWebsocket
         /// </summary>
         public void Start()
         {
-            _IsConnecting = true;
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -254,10 +254,9 @@ namespace WatsonWebsocket
         /// <returns>Task.</returns>
         public Task StartAsync()
         {
-            _IsConnecting = true;
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-            
+
             // Pre Configure WebSocket Client
             _ClientWs.Options.Cookies = _Cookies;
             _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
@@ -274,7 +273,9 @@ namespace WatsonWebsocket
         /// <returns>Boolean indicating if the connection was successfully.</returns>
         public bool Start(CancellationToken token = default)
         {
-            _IsConnecting = true;
+            // Check Network is Connected
+            if (!NetworkInterface.GetIsNetworkAvailable()) return false;
+
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -307,7 +308,6 @@ namespace WatsonWebsocket
                     return true;
                 }
             }
-            _IsConnecting = false;
             return false;
         }
 
@@ -318,7 +318,9 @@ namespace WatsonWebsocket
         /// <returns>Task with Boolean indicating if the connection was successfully.</returns>
         public async Task<bool> StartAsync(CancellationToken token = default)
         {
-            _IsConnecting = true;
+            // Check Network is Connected
+            if (!NetworkInterface.GetIsNetworkAvailable()) return false;
+
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -342,7 +344,7 @@ namespace WatsonWebsocket
                 {
                     await _ClientWs.ConnectAsync(_ServerUri, token).ContinueWith(AfterConnect);
                 }
-                catch(System.Net.WebSockets.WebSocketException) { }
+                catch (System.Net.WebSockets.WebSocketException) { }
                 await Task.Delay(500); // Wait to Reconnect or Change Connecting State
 
                 // Check Connected
@@ -351,7 +353,7 @@ namespace WatsonWebsocket
                     return true;
                 }
             }
-            _IsConnecting = false;
+
             return false;
         }
 
@@ -361,11 +363,18 @@ namespace WatsonWebsocket
         public void Stop(bool forced = true)
         {
             // Reset Subscriptions for no generate DisconnectEvent in Forced Close the Client.
-            if (forced)
-            {
-                DisconnectResetSubscriptions();
-            }
-            _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait();
+            if (forced) DisconnectResetSubscriptions();
+            _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, _ClientWs.CloseStatusDescription, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Close the client and wait to Disconnect.
+        /// </summary>
+        public async Task StopAsync(bool forced = true)
+        {
+            // Reset Subscriptions for no generate DisconnectEvent in Forced Close the Client.
+            if (forced) DisconnectResetSubscriptions();
+            await _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, _ClientWs.CloseStatusDescription, CancellationToken.None);
         }
 
         /// <summary>
@@ -376,7 +385,7 @@ namespace WatsonWebsocket
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(string data, CancellationToken token = default)
         {
-            if (String.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
+            if (string.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
             else return await MessageWriteAsync(Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, token);
         }
 
@@ -396,7 +405,7 @@ namespace WatsonWebsocket
         /// Send text data to the server asynchronously and wait for anything response.
         /// </summary>
         /// <param name="data">String data.</param>
-        /// <param name="timeout">Maximum waiting time until one response.</param>
+        /// <param name="timeout">Maximum waiting time until one response (seconds).</param>
         /// <param name="token">Cancellation token allowing for termination of this request.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<string> SendAndReplyAnythingAsync(string data, int timeout = 30, CancellationToken token = default)
@@ -405,10 +414,11 @@ namespace WatsonWebsocket
             if (timeout < 1) throw new ArgumentException("Timeout invalid", nameof(data));
             string result = null;
 
-            await Task.Run(async () =>
+            // Create Catcher Data
+            var receivedEvent = new ManualResetEvent(false);
+            await _InternalLock.WaitAsync(_Token);
+            await Task.Run(() =>
             {
-                // Create Catcher Data
-                var receivedEvent = new ManualResetEvent(false);
                 InternalMessageReceived += (s, e) =>
                 {
                     result = Encoding.UTF8.GetString(e.Data);
@@ -423,7 +433,8 @@ namespace WatsonWebsocket
                 // Reset Internal Events
                 InternalMessageReceived = delegate { };
                 InternalServerDisconnected = delegate { };
-            }, token);
+                _InternalLock.Release();
+            });
 
             return result;
         }
@@ -432,7 +443,7 @@ namespace WatsonWebsocket
         /// Send text data to the server asynchronously and wait for text response.
         /// </summary>
         /// <param name="data">String data.</param>
-        /// <param name="timeout">Maximum waiting time until one response.</param>
+        /// <param name="timeout">Maximum waiting time until one response (seconds).</param>
         /// <param name="token">Cancellation token allowing for termination of this request.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<string> SendAndReplyAsync(string data, int timeout = 30, CancellationToken token = default)
@@ -441,10 +452,11 @@ namespace WatsonWebsocket
             if (timeout < 1) throw new ArgumentException("Timeout must be zero or greater.", nameof(data));
             string result = null;
 
-            await Task.Run(async () =>
+            // Create Catcher Data
+            var receivedEvent = new ManualResetEvent(false);
+            await _InternalLock.WaitAsync(_Token);
+            await Task.Run(() =>
             {
-                // Create Catcher Data
-                var receivedEvent = new ManualResetEvent(false);
                 InternalMessageReceived += (s, e) =>
                 {
                     if (e.MessageType == WebSocketMessageType.Text)
@@ -462,6 +474,7 @@ namespace WatsonWebsocket
                 // Reset Internal Received
                 InternalMessageReceived = delegate { };
                 InternalServerDisconnected = delegate { };
+                _InternalLock.Release();
             }, token);
 
             return result;
@@ -471,7 +484,7 @@ namespace WatsonWebsocket
         /// Send binary data to the server asynchronously and wait for anything response.
         /// </summary>
         /// <param name="data">Byte array containing data.</param>
-        /// <param name="timeout">Maximum waiting time until one response.</param>
+        /// <param name="timeout">Maximum waiting time until one respons (seconds)e.</param>
         /// <param name="token">Cancellation token allowing for termination of this request.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<byte[]> SendAndReplyAnythingAsync(byte[] data, int timeout = 30, CancellationToken token = default)
@@ -480,10 +493,11 @@ namespace WatsonWebsocket
             if (timeout < 1) throw new ArgumentException("Timeout must be zero or greater.", nameof(data));
             byte[] result = null;
 
-            await Task.Run(async () =>
+            // Create Catcher Data
+            var receivedEvent = new ManualResetEvent(false);
+            await _InternalLock.WaitAsync(_Token);
+            await Task.Run(() =>
             {
-                // Create Catcher Data
-                var receivedEvent = new ManualResetEvent(false);
                 InternalMessageReceived += (s, e) =>
                 {
                     result = e.Data;
@@ -498,7 +512,8 @@ namespace WatsonWebsocket
                 // Reset Internal Received
                 InternalMessageReceived = delegate { };
                 InternalServerDisconnected = delegate { };
-            }, token);
+                _InternalLock.Release();
+            });
 
             return result;
         }
@@ -507,7 +522,7 @@ namespace WatsonWebsocket
         /// Send binary data to the server asynchronously and wait for binary response.
         /// </summary>
         /// <param name="data">Byte array containing data.</param>
-        /// <param name="timeout">Maximum waiting time until one response.</param>
+        /// <param name="timeout">Maximum waiting time until one response (seconds).</param>
         /// <param name="token">Cancellation token allowing for termination of this request.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<byte[]> SendAndReplyAsync(byte[] data, int timeout = 30, CancellationToken token = default)
@@ -516,10 +531,11 @@ namespace WatsonWebsocket
             if (timeout < 1) throw new ArgumentException("Timeout must be zero or greater.", nameof(data));
             byte[] result = null;
 
-            await Task.Run(async () =>
+            // Create Catcher Data
+            var receivedEvent = new ManualResetEvent(false);
+            await _InternalLock.WaitAsync(_Token);
+            await Task.Run(() =>
             {
-                // Create Catcher Data
-                var receivedEvent = new ManualResetEvent(false);
                 InternalMessageReceived += (s, e) =>
                 {
                     if (e.MessageType == WebSocketMessageType.Binary)
@@ -537,7 +553,9 @@ namespace WatsonWebsocket
                 // Reset Internal Received
                 InternalMessageReceived = delegate { };
                 InternalServerDisconnected = delegate { };
-            }, token);
+
+                _InternalLock.Release();
+            });
 
             return result;
         }
@@ -568,7 +586,7 @@ namespace WatsonWebsocket
             if (disposing)
             {
                 if (_ClientWs != null)
-                { 
+                {
                     // see https://mcguirev10.com/2019/08/17/how-to-close-websocket-correctly.html  
 
                     if (_ClientWs.State == WebSocketState.Open)
@@ -583,22 +601,21 @@ namespace WatsonWebsocket
                 Logger?.Invoke(_Header + "dispose complete");
             }
         }
-        
+
         private void AfterConnect(Task task)
-        { 
+        {
             if (task.IsCompleted)
             {
                 if (_ClientWs.State == WebSocketState.Open)
                 {
-                    _IsConnecting = false;
                     Task.Run(() =>
                     {
-                        Task.Run(() => DataReceiver(), _Token); 
-                        ServerConnected?.Invoke(this, EventArgs.Empty); 
+                        Task.Run(() => DataReceiver(), _Token);
+                        ServerConnected?.Invoke(this, EventArgs.Empty);
                     }, _Token);
                 }
                 else
-                { 
+                {
                     if (DisconnectEventConnecting)
                     {
                         ServerDisconnected?.Invoke(this, EventArgs.Empty);
@@ -615,11 +632,11 @@ namespace WatsonWebsocket
                 }
             }
         }
-        
+
         private async Task DataReceiver()
-        { 
+        {
             try
-            { 
+            {
                 while (true)
                 {
                     if (_Token.IsCancellationRequested) break;
@@ -633,12 +650,13 @@ namespace WatsonWebsocket
                             _Stats.AddReceivedBytes(msg.Data.Length);
                         }
 
-                        Task unawaited = Task.WhenAll(
-                            Task.Run(() => MessageReceived?.Invoke(this, msg), _Token),
-                            Task.Run(() => InternalMessageReceived?.Invoke(this, msg), _Token)
-                        );
+                        Task internal_unawaited = Task.Run(() => InternalMessageReceived?.Invoke(this, msg), _Token);
+                        if (msg.MessageType != WebSocketMessageType.Close)
+                        {
+                            Task unawaited = Task.Run(() => MessageReceived?.Invoke(this, msg), _Token);
+                        }
                     }
-                } 
+                }
             }
             catch (OperationCanceledException)
             {
@@ -647,16 +665,16 @@ namespace WatsonWebsocket
             catch (WebSocketException)
             {
                 Logger?.Invoke(_Header + "websocket disconnected");
-            } 
+            }
             catch (Exception e)
             {
                 Logger?.Invoke(_Header + "exception: " + Environment.NewLine + e.ToString());
             }
-             
+
             ServerDisconnected?.Invoke(this, EventArgs.Empty);
             InternalServerDisconnected?.Invoke(this, EventArgs.Empty);
         }
-        
+
         private async Task<MessageReceivedEventArgs> MessageReadAsync()
         {
             // Do not catch exceptions, let them get caught by the data reader to destroy the connection
@@ -685,7 +703,7 @@ namespace WatsonWebsocket
                     {
                         await dataMs.WriteAsync(buffer, 0, result.Count);
                     }
-                    
+
                     if (result.EndOfMessage)
                     {
                         data = dataMs.ToArray();
@@ -693,16 +711,16 @@ namespace WatsonWebsocket
                     }
                 }
             }
-              
-            return new MessageReceivedEventArgs(_ServerIpPort, data, result.MessageType); 
+
+            return new MessageReceivedEventArgs(_ServerIpPort, data, result.MessageType);
         }
-        
+
         private async Task<bool> MessageWriteAsync(byte[] data, WebSocketMessageType msgType, CancellationToken token)
-        { 
+        {
             bool disconnectDetected = false;
 
             using (CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_Token, token))
-            { 
+            {
                 try
                 {
                     if (_ClientWs == null || _ClientWs.State != WebSocketState.Open)
