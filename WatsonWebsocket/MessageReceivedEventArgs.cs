@@ -11,6 +11,31 @@ namespace WatsonWebsocket
     /// </summary>
     public class MessageReceivedEventArgs : EventArgs
     {
+        #region Public-Members
+
+        /// <summary>
+        /// The IP:port of the sender.
+        /// </summary>
+        public string IpPort { get; } = null;
+
+        /// <summary>
+        /// The data received.
+        /// </summary>
+        public byte[] Data { get; } = null;
+
+        /// <summary>
+        /// The type of payload included in the message (Binary or Text).
+        /// </summary>
+        public WebSocketMessageType MessageType = WebSocketMessageType.Binary;
+
+        #endregion
+
+        #region Private-Members
+
+        #endregion
+
+        #region Constructors-and-Factories
+
         internal MessageReceivedEventArgs(string ipPort, byte[] data, WebSocketMessageType messageType)
         {
             IpPort = ipPort;
@@ -18,19 +43,14 @@ namespace WatsonWebsocket
             MessageType = messageType;
         }
 
-        /// <summary>
-        /// The IP:port of the sender.
-        /// </summary>
-        public string IpPort { get; }
+        #endregion
 
-        /// <summary>
-        /// The data received.
-        /// </summary>
-        public byte[] Data { get; }
+        #region Public-Methods
 
-        /// <summary>
-        /// The type of payload included in the message (Binary or Text).
-        /// </summary>
-        public WebSocketMessageType MessageType = WebSocketMessageType.Binary;
+        #endregion
+
+        #region Private-Methods
+
+        #endregion
     }
 }

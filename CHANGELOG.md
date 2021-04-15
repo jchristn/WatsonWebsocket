@@ -2,11 +2,18 @@
 
 ## Current Version
 
+v2.3.x
+
+- Minor breaking changes
+- Merge PR from @MacKey-255 with new enhancements
+- Send and wait APIs (```SendAndWaitAsync```)
+- Client connect with timeout API (```StartWithTimeout``` and ```StartWithTimeoutAsync```)
+
+## Previous Versions
+
 v2.2.1
 
 - StartAsync methods
-
-## Previous Versions
 
 v2.2.0
 

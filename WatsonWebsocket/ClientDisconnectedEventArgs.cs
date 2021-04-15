@@ -10,14 +10,34 @@ namespace WatsonWebsocket
     /// </summary>
     public class ClientDisconnectedEventArgs : EventArgs
     {
+        #region Public-Members
+
+        /// <summary>
+        /// The IP:port of the client.
+        /// </summary>
+        public string IpPort { get; } = null;
+
+        #endregion
+
+        #region Private-Members
+
+        #endregion
+
+        #region Constructors-and-Factories
+
         internal ClientDisconnectedEventArgs(string ipPort)
         {
             IpPort = ipPort;
         }
 
-        /// <summary>
-        /// The IP:port of the client.
-        /// </summary>
-        public string IpPort { get; } 
+        #endregion
+
+        #region Public-Methods
+
+        #endregion
+
+        #region Private-Methods
+
+        #endregion
     }
 }

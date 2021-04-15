@@ -15,12 +15,12 @@ namespace WatsonWebsocket
             }
         }
 
-        internal string Ip;
-        internal int Port;
-        internal HttpListenerContext HttpContext;
-        internal WebSocket Ws;
-        internal WebSocketContext WsContext;
-        internal readonly CancellationTokenSource TokenSource;
+        internal string Ip = null;
+        internal int Port = 0;
+        internal HttpListenerContext HttpContext = null;
+        internal WebSocket Ws = null;
+        internal WebSocketContext WsContext = null;
+        internal readonly CancellationTokenSource TokenSource = null;
         internal readonly SemaphoreSlim SendLock = new SemaphoreSlim(1);
          
         internal ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext, CancellationTokenSource tokenSource)

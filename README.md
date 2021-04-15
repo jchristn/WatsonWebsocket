@@ -10,7 +10,7 @@ WatsonWebsocket is the EASIEST and FASTEST way to build client and server applic
 
 Many thanks and much appreciation to those that take the time to make this library better!  
 
-@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX @rajeshdua123 @tersers
+@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX @rajeshdua123 @tersers @MacKey-255
 
 ## Test App
 
@@ -28,9 +28,12 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v2.2.1
+## New in v2.3.x
 
-- StartAsync methods
+- Minor breaking changes
+- Merge PR from @MacKey-255 with new enhancements
+- Send and wait APIs (```SendAndWaitAsync```)
+- Client connect with timeout API (```StartWithTimeout``` and ```StartWithTimeoutAsync```)
 
 ## Server Example
 ```csharp

@@ -38,6 +38,8 @@ namespace Test.Client
                         Console.WriteLine("  cls          clear screen");
                         Console.WriteLine("  send text    send text to the server");
                         Console.WriteLine("  send bytes   send binary data to the server");
+                        Console.WriteLine("  sync text    send text to the server and await response");
+                        Console.WriteLine("  sync bytes   send binary data to the server and await response");
                         Console.WriteLine("  stats        display client statistics");
                         Console.WriteLine("  status       show if client connected");
                         Console.WriteLine("  dispose      dispose of the connection");
@@ -67,6 +69,36 @@ namespace Test.Client
                         userInput = Console.ReadLine();
                         if (String.IsNullOrEmpty(userInput)) break;
                         if (!_Client.SendAsync(Encoding.UTF8.GetBytes(userInput)).Result) Console.WriteLine("Failed");
+                        break;
+
+                    case "sync text":
+                        Console.Write("Data: ");
+                        userInput = Console.ReadLine();
+                        if (String.IsNullOrEmpty(userInput)) break;
+                        string resultStr = _Client.SendAndWaitAsync(userInput).Result;
+                        if (!String.IsNullOrEmpty(resultStr))
+                        {
+                            Console.WriteLine("Response: " + resultStr);
+                        }
+                        else
+                        {
+                            Console.WriteLine("(null)");
+                        }
+                        break;
+
+                    case "sync bytes":
+                        Console.Write("Data: ");
+                        userInput = Console.ReadLine();
+                        if (String.IsNullOrEmpty(userInput)) break;
+                        byte[] resultBytes = _Client.SendAndWaitAsync(Encoding.UTF8.GetBytes(userInput)).Result;
+                        if (resultBytes != null && resultBytes.Length > 0)
+                        {
+                            Console.WriteLine("Response: " + Encoding.UTF8.GetString(resultBytes));
+                        }
+                        else
+                        {
+                            Console.WriteLine("(null)");
+                        }
                         break;
 
                     case "stats":
@@ -123,8 +155,9 @@ namespace Test.Client
             _Client.MessageReceived += MessageReceived; 
             _Client.Logger = Logger;
 
-            await _Client.StartAsync();
-            Console.WriteLine("Client started: " + _Client.Connected);
+            // await _Client.StartAsync();
+            _Client.StartWithTimeout(10);
+            Console.WriteLine("Client connected: " + _Client.Connected);
         }
 
         static bool InputBoolean(string question, bool yesDefault)
