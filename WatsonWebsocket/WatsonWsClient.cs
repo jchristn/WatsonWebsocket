@@ -210,8 +210,6 @@ namespace WatsonWebsocket
         /// </summary>
         public void Start()
         {
-            if (!NetworkInterface.GetIsNetworkAvailable()) throw new InvalidOperationException("No network is available.");
-
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -232,8 +230,6 @@ namespace WatsonWebsocket
         /// <returns>Task.</returns>
         public Task StartAsync()
         {
-            if (!NetworkInterface.GetIsNetworkAvailable()) throw new InvalidOperationException("No network is available.");
-
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -258,7 +254,6 @@ namespace WatsonWebsocket
         public bool StartWithTimeout(int timeout = 30, CancellationToken token = default)
         {
             if (timeout < 1) throw new ArgumentException("Timeout must be greater than zero seconds.");
-            if (!NetworkInterface.GetIsNetworkAvailable()) throw new InvalidOperationException("No network is available.");
 
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
@@ -328,7 +323,6 @@ namespace WatsonWebsocket
         public async Task<bool> StartWithTimeoutAsync(int timeout = 30, CancellationToken token = default)
         {
             if (timeout < 1) throw new ArgumentException("Timeout must be greater than zero seconds.");
-            if (!NetworkInterface.GetIsNetworkAvailable()) throw new InvalidOperationException("No network is available.");
 
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
@@ -645,11 +639,11 @@ namespace WatsonWebsocket
                         return false;
                     }
 
-                    await _SendLock.WaitAsync(_Token);
+                    await _SendLock.WaitAsync(_Token).ConfigureAwait(false);
 
                     try
                     {
-                        await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, token);
+                        await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, token).ConfigureAwait(false);
                     }
                     catch 
                     { 

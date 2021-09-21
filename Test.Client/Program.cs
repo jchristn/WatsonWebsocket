@@ -139,7 +139,7 @@ namespace Test.Client
             }
         }
 
-        static async void InitializeClient()
+        static void InitializeClient()
         {
             if (_Client != null) _Client.Dispose();
 

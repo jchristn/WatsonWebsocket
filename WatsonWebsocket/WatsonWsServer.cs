@@ -570,7 +570,7 @@ namespace WatsonWebsocket
                 _Clients.TryRemove(ipPort, out _);
             }
         }
-          
+         
         private async Task<MessageReceivedEventArgs> MessageReadAsync(ClientMetadata md)
         {
             string header = "[WatsonWsServer " + md.IpPort + "] ";
@@ -583,7 +583,6 @@ namespace WatsonWebsocket
                 while (true)
                 {
                     WebSocketReceiveResult result = await md.Ws.ReceiveAsync(seg, md.TokenSource.Token).ConfigureAwait(false);
-                     
                     if (result.CloseStatus != null)
                     {
                         Logger?.Invoke(header + "close received");
