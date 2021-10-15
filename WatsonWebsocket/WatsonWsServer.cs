@@ -108,7 +108,7 @@ namespace WatsonWebsocket
 
         private string _Header = "[WatsonWsServer] ";
         private bool _AcceptInvalidCertificates = true;
-        private string _ListenerPrefix;
+        private List<string> _ListenerPrefixes = new List<string>();
         private HttpListener _Listener;
         private readonly object _PermittedIpsLock = new object();
         private ConcurrentDictionary<string, ClientMetadata> _Clients; 
@@ -122,29 +122,62 @@ namespace WatsonWebsocket
         #region Constructors-and-Factories
 
         /// <summary>
-        /// Initializes the Watson websocket server.
+        /// Initializes the Watson websocket server with a single listener prefix.
         /// Be sure to call 'Start()' to start the server.
         /// By default, Watson Websocket will listen on http://localhost:9000/.
         /// </summary>
-        /// <param name="listenerHostname">The hostname or IP address upon which to listen.</param>
-        /// <param name="listenerPort">The TCP port upon which to listen.</param>
+        /// <param name="hostname">The hostname or IP address upon which to listen.</param>
+        /// <param name="port">The TCP port on which to listen.</param>
         /// <param name="ssl">Enable or disable SSL.</param> 
-        public WatsonWsServer(string listenerHostname = "localhost", int listenerPort = 9000, bool ssl = false)
+        public WatsonWsServer(string hostname = "localhost", int port = 9000, bool ssl = false)
         {
-            if (listenerPort < 0) throw new ArgumentOutOfRangeException(nameof(listenerPort));
-            if (String.IsNullOrEmpty(listenerHostname)) listenerHostname = "localhost";
+            if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
+            if (String.IsNullOrEmpty(hostname)) hostname = "localhost";
             
-            if (ssl) _ListenerPrefix = "https://" + listenerHostname + ":" + listenerPort + "/";
-            else _ListenerPrefix = "http://" + listenerHostname + ":" + listenerPort + "/";
+            if (ssl) _ListenerPrefixes.Add("https://" + hostname + ":" + port + "/");
+            else _ListenerPrefixes.Add("http://" + hostname + ":" + port + "/");
 
             _Listener = new HttpListener();
-            _Listener.Prefixes.Add(_ListenerPrefix);
+            foreach (string prefix in _ListenerPrefixes)
+            {
+                _Listener.Prefixes.Add(prefix);
+            }
 
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
             _Clients = new ConcurrentDictionary<string, ClientMetadata>();
         }
-         
+
+        /// <summary>
+        /// Initializes the Watson websocket server with one or more listener prefixes.  
+        /// Be sure to call 'Start()' to start the server.
+        /// </summary>
+        /// <param name="hostnames">The hostnames or IP addresses upon which to listen.</param>
+        /// <param name="port">The TCP port on which to listen.</param>
+        /// <param name="ssl">Enable or disable SSL.</param>
+        public WatsonWsServer(List<string> hostnames, int port, bool ssl = false)
+        {
+            if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
+            if (hostnames == null) throw new ArgumentNullException(nameof(hostnames));
+            if (hostnames.Count < 1) throw new ArgumentException("At least one hostname must be supplied.");
+
+            foreach (string hostname in hostnames)
+            {
+                if (ssl) _ListenerPrefixes.Add("https://" + hostname + ":" + port + "/");
+                else _ListenerPrefixes.Add("http://" + hostname + ":" + port + "/");
+            }
+
+            _Listener = new HttpListener();
+            foreach (string prefix in _ListenerPrefixes)
+            {
+                _Listener.Prefixes.Add(prefix);
+            }
+
+            _TokenSource = new CancellationTokenSource();
+            _Token = _TokenSource.Token;
+            _Clients = new ConcurrentDictionary<string, ClientMetadata>();
+        }
+
         /// <summary>
         /// Initializes the Watson websocket server.
         /// Be sure to call 'Start()' to start the server.
@@ -179,10 +212,13 @@ namespace WatsonWebsocket
                 Host = host
             };
 
-            _ListenerPrefix = listenerUri.ToString();
+            _ListenerPrefixes.Add(listenerUri.ToString());
 
             _Listener = new HttpListener();
-            _Listener.Prefixes.Add(_ListenerPrefix);
+            foreach (string prefix in _ListenerPrefixes)
+            {
+                _Listener.Prefixes.Add(prefix);
+            }
 
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
@@ -210,7 +246,9 @@ namespace WatsonWebsocket
 
             _Stats = new Statistics();
 
-            Logger?.Invoke(_Header + "starting " + _ListenerPrefix);
+            string logMsg = _Header + "starting on:";
+            foreach (string prefix in _ListenerPrefixes) logMsg += " " + prefix;
+            Logger?.Invoke(logMsg);
 
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -231,7 +269,9 @@ namespace WatsonWebsocket
 
             _Stats = new Statistics();
 
-            Logger?.Invoke(_Header + "starting " + _ListenerPrefix);
+            string logMsg = _Header + "starting on:";
+            foreach (string prefix in _ListenerPrefixes) logMsg += " " + prefix;
+            Logger?.Invoke(logMsg);
 
             if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -252,7 +292,7 @@ namespace WatsonWebsocket
         {
             if (!IsListening) throw new InvalidOperationException("Watson websocket server is not running.");
 
-            Logger?.Invoke(_Header + "stopping " + _ListenerPrefix);
+            Logger?.Invoke(_Header + "stopping");
 
             _Listener.Stop(); 
         }

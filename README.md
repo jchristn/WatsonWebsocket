@@ -34,6 +34,7 @@ For more information on using SSL certificates, please refer to the wiki.
 - Merge PR from @MacKey-255 with new enhancements
 - Send and wait APIs (```SendAndWaitAsync```)
 - Client connect with timeout API (```StartWithTimeout``` and ```StartWithTimeoutAsync```)
+- Multiple listener prefixes
 
 ## Server Example
 ```csharp

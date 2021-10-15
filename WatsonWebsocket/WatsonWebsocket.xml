@@ -333,13 +333,22 @@
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.#ctor(System.String,System.Int32,System.Boolean)">
             <summary>
-            Initializes the Watson websocket server.
+            Initializes the Watson websocket server with a single listener prefix.
             Be sure to call 'Start()' to start the server.
             By default, Watson Websocket will listen on http://localhost:9000/.
             </summary>
-            <param name="listenerHostname">The hostname or IP address upon which to listen.</param>
-            <param name="listenerPort">The TCP port upon which to listen.</param>
+            <param name="hostname">The hostname or IP address upon which to listen.</param>
+            <param name="port">The TCP port on which to listen.</param>
             <param name="ssl">Enable or disable SSL.</param> 
+        </member>
+        <member name="M:WatsonWebsocket.WatsonWsServer.#ctor(System.Collections.Generic.List{System.String},System.Int32,System.Boolean)">
+            <summary>
+            Initializes the Watson websocket server with one or more listener prefixes.  
+            Be sure to call 'Start()' to start the server.
+            </summary>
+            <param name="hostnames">The hostnames or IP addresses upon which to listen.</param>
+            <param name="port">The TCP port on which to listen.</param>
+            <param name="ssl">Enable or disable SSL.</param>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.#ctor(System.Uri)">
             <summary>

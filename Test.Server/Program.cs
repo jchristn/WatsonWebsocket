@@ -24,7 +24,8 @@ namespace Test.Server
             _ServerPort = InputInteger("Server port:", 9000, true, true);
             _Ssl = InputBoolean("Use SSL:", false);
 
-            InitializeServer();
+            // InitializeServer();
+            InitializeServerMultiple();
 
             bool runForever = true;
             while (runForever)
@@ -141,9 +142,31 @@ namespace Test.Server
             _Server.ClientDisconnected += ClientDisconnected;
             _Server.MessageReceived += MessageReceived;
             _Server.Logger = Logger;
-            _Server.HttpHandler = HttpHandler; 
+            _Server.HttpHandler = HttpHandler;
         }
-         
+
+        static void InitializeServerMultiple()
+        {
+            // original constructor
+            List<string> hostnames = new List<string>
+            {
+                "192.168.1.163",
+                "127.0.0.1"
+            };
+
+            _Server = new WatsonWsServer(hostnames, _ServerPort, _Ssl);
+
+            // URI-based constructor
+            // if (_Ssl) _Server = new WatsonWsServer(new Uri("https://" + _ServerIp + ":" + _ServerPort));
+            // else _Server = new WatsonWsServer(new Uri("http://" + _ServerIp + ":" + _ServerPort));
+
+            _Server.ClientConnected += ClientConnected;
+            _Server.ClientDisconnected += ClientDisconnected;
+            _Server.MessageReceived += MessageReceived;
+            _Server.Logger = Logger;
+            _Server.HttpHandler = HttpHandler;
+        }
+
         static async void StartServer()
         {                         
             // _Server.Start();
