@@ -154,6 +154,7 @@ namespace Test.Client
             _Client.ServerDisconnected += ServerDisconnected;
             _Client.MessageReceived += MessageReceived; 
             _Client.Logger = Logger;
+            _Client.AddCookie(new System.Net.Cookie("foo", "bar", "/", "localhost"));
 
             // await _Client.StartAsync();
             _Client.StartWithTimeout(10);

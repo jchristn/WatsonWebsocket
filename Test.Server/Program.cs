@@ -24,8 +24,8 @@ namespace Test.Server
             _ServerPort = InputInteger("Server port:", 9000, true, true);
             _Ssl = InputBoolean("Use SSL:", false);
 
-            // InitializeServer();
-            InitializeServerMultiple();
+            InitializeServer();
+            // InitializeServerMultiple();
 
             bool runForever = true;
             while (runForever)
@@ -294,6 +294,13 @@ namespace Test.Server
         {
             Console.WriteLine("Client " + args.IpPort + " connected using URL " + args.HttpRequest.RawUrl);
             _LastIpPort = args.IpPort;
+            if (args.HttpRequest.Cookies != null && args.HttpRequest.Cookies.Count > 0)
+            {
+                foreach (Cookie cookie in args.HttpRequest.Cookies)
+                {
+                    Console.WriteLine(cookie.Name + ": " + cookie.Value);
+                }
+            }
         }
 
         static void ClientDisconnected(object sender, ClientDisconnectedEventArgs args)
