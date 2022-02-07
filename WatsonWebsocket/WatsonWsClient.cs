@@ -211,7 +211,7 @@ namespace WatsonWebsocket
         public void Start()
         {
             _Stats = new Statistics();
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
             _ClientWs.Options.Cookies = _Cookies;
             _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
@@ -221,7 +221,7 @@ namespace WatsonWebsocket
                 _PreConfigureOptions(_ClientWs.Options);
             }
 
-            _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect);
+            _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect).Wait();
         }
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace WatsonWebsocket
         public Task StartAsync()
         {
             _Stats = new Statistics();
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
             _ClientWs.Options.Cookies = _Cookies;
             _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
@@ -256,7 +256,7 @@ namespace WatsonWebsocket
             if (timeout < 1) throw new ArgumentException("Timeout must be greater than zero seconds.");
 
             _Stats = new Statistics();
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
             Stopwatch sw = new Stopwatch();
             TimeSpan timeOut = TimeSpan.FromSeconds(timeout);
@@ -325,7 +325,7 @@ namespace WatsonWebsocket
             if (timeout < 1) throw new ArgumentException("Timeout must be greater than zero seconds.");
 
             _Stats = new Statistics();
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
             Stopwatch sw = new Stopwatch();
             TimeSpan timeOut = TimeSpan.FromSeconds(timeout);
@@ -520,6 +520,21 @@ namespace WatsonWebsocket
 
                 Logger?.Invoke(_Header + "dispose complete");
             }
+        }
+
+        private void SetInvalidCertificateAcceptance()
+        {
+#if NETFRAMEWORK
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+#endif
+
+#if NET || NETSTANDARD || NETCOREAPP
+            _ClientWs.Options.RemoteCertificateValidationCallback +=
+                (message, certificate, chain, sslPolicyErrors) =>
+                {
+                    return true;
+                };
+#endif
         }
 
         private void AfterConnect(Task task)

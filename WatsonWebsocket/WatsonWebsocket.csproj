@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net452;net5.0;net6.0</TargetFrameworks>
-    <Version>2.3.2.1</Version>
+    <TargetFrameworks>netstandard2.1;netcoreapp3.1;net461;net5.0;net6.0</TargetFrameworks>
+    <Version>2.3.2.5</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Joel Christner</Authors>
     <Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
@@ -37,10 +37,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5.0|AnyCPU'">
-    <DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
+	<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
   </PropertyGroup>
-
-
+	
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+	<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
+  </PropertyGroup>
 
 
 
@@ -64,6 +66,9 @@
     <DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+	<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
+  </PropertyGroup>
 
 
   <ItemGroup>
@@ -78,12 +83,10 @@
     </None>
   </ItemGroup>
 
-
-
   <ItemGroup>
     <None Update="WatsonWebsocket.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
+	
 </Project>

@@ -12,6 +12,7 @@ namespace Test.Client
         static string _ServerIp = "";
         static int _ServerPort = 0;
         static bool _Ssl = false;
+        static bool _AcceptInvalidCertificates = true;
         static WatsonWsClient _Client = null;
 
         static void Main(string[] args)
@@ -147,9 +148,10 @@ namespace Test.Client
             // _Client = new WatsonWsClient(_ServerIp, _ServerPort, _Ssl);
 
             // URI-based constructor
-            if (_Ssl) _Client = new WatsonWsClient(new Uri("wss://" + _ServerIp + ":" + _ServerPort + "/test/"));
-            else _Client = new WatsonWsClient(new Uri("ws://" + _ServerIp + ":" + _ServerPort + "/test/"));
+            if (_Ssl) _Client = new WatsonWsClient(new Uri("wss://" + _ServerIp + ":" + _ServerPort));
+            else _Client = new WatsonWsClient(new Uri("ws://" + _ServerIp + ":" + _ServerPort));
 
+            _Client.AcceptInvalidCertificates = _AcceptInvalidCertificates;
             _Client.ServerConnected += ServerConnected;
             _Client.ServerDisconnected += ServerDisconnected;
             _Client.MessageReceived += MessageReceived; 
@@ -157,7 +159,7 @@ namespace Test.Client
             _Client.AddCookie(new System.Net.Cookie("foo", "bar", "/", "localhost"));
 
             // await _Client.StartAsync();
-            _Client.StartWithTimeout(10);
+            _Client.Start();
             Console.WriteLine("Client connected: " + _Client.Connected);
         }
 

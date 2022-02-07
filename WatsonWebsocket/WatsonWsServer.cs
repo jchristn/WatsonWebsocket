@@ -250,7 +250,7 @@ namespace WatsonWebsocket
             foreach (string prefix in _ListenerPrefixes) logMsg += " " + prefix;
             Logger?.Invoke(logMsg);
 
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
             _TokenSource = new CancellationTokenSource();
             _Token = _TokenSource.Token;
@@ -273,7 +273,7 @@ namespace WatsonWebsocket
             foreach (string prefix in _ListenerPrefixes) logMsg += " " + prefix;
             Logger?.Invoke(logMsg);
 
-            if (_AcceptInvalidCertificates) ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
             _TokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
             _Token = token;
@@ -439,7 +439,18 @@ namespace WatsonWebsocket
                 _TokenSource.Cancel();
             }
         }
-          
+
+        private void SetInvalidCertificateAcceptance()
+        {
+#if NETFRAMEWORK
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+#endif
+
+#if NET || NETSTANDARD || NETCOREAPP
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+#endif
+        }
+
         private async Task AcceptConnections(CancellationToken cancelToken)
         { 
             try

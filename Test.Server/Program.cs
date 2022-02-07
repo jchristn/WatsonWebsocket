@@ -11,9 +11,10 @@ namespace Test.Server
 {
     class Program
     {
-        static string _ServerIp = "";
+        static string _ServerIp = "localhost";
         static int _ServerPort = 0;
         static bool _Ssl = false;
+        static bool _AcceptInvalidCertificates = true;
         static WatsonWsServer _Server = null;
         static string _LastIpPort = null;
         static Task _ListenerTask = null;
@@ -26,6 +27,7 @@ namespace Test.Server
 
             InitializeServer();
             // InitializeServerMultiple();
+            Console.WriteLine("Please manually start the server");
 
             bool runForever = true;
             while (runForever)
@@ -131,13 +133,8 @@ namespace Test.Server
 
         static void InitializeServer()
         {
-            // original constructor
-            _Server = new WatsonWsServer(_ServerIp, _ServerPort, _Ssl);
-
-            // URI-based constructor
-            // if (_Ssl) _Server = new WatsonWsServer(new Uri("https://" + _ServerIp + ":" + _ServerPort));
-            // else _Server = new WatsonWsServer(new Uri("http://" + _ServerIp + ":" + _ServerPort));
-
+            _Server = new WatsonWsServer(_ServerIp, _ServerPort, _Ssl);            
+            _Server.AcceptInvalidCertificates = _AcceptInvalidCertificates;
             _Server.ClientConnected += ClientConnected;
             _Server.ClientDisconnected += ClientDisconnected;
             _Server.MessageReceived += MessageReceived;
@@ -294,11 +291,13 @@ namespace Test.Server
         {
             Console.WriteLine("Client " + args.IpPort + " connected using URL " + args.HttpRequest.RawUrl);
             _LastIpPort = args.IpPort;
+
             if (args.HttpRequest.Cookies != null && args.HttpRequest.Cookies.Count > 0)
             {
+                Console.WriteLine(args.HttpRequest.Cookies.Count + " cookie(s) present:");
                 foreach (Cookie cookie in args.HttpRequest.Cookies)
                 {
-                    Console.WriteLine(cookie.Name + ": " + cookie.Value);
+                    Console.WriteLine("| " + cookie.Name + ": " + cookie.Value);
                 }
             }
         }
