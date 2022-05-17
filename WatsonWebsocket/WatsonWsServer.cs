@@ -394,9 +394,13 @@ namespace WatsonWebsocket
         { 
             if (_Clients.TryGetValue(ipPort, out var client))
             {
-                client.Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
-                client.TokenSource.Cancel();
-                client.Ws.Dispose();
+                lock (client)
+                {
+                    // lock because CloseOutputAsync can fail with InvalidOperationAsync with overlapping operations
+                    client.Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
+                    client.TokenSource.Cancel();
+                    client.Ws.Dispose();
+                }
             }
         }
 
