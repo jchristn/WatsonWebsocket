@@ -17,7 +17,6 @@ namespace Test.Server
         static bool _AcceptInvalidCertificates = true;
         static WatsonWsServer _Server = null;
         static string _LastIpPort = null;
-        static Task _ListenerTask = null;
 
         static void Main(string[] args)
         {

@@ -1,10 +1,10 @@
 @echo off
-cd Test.Server\bin\debug\net452
+cd src\Test.Server\bin\debug\net6.0
 start Test.Server.exe
 TIMEOUT 1 > NUL
-cd ..\..\..\..
+cd ..\..\..\..\..
 
-cd Test.Client\bin\debug\net452
+cd src\Test.Client\bin\debug\net6.0
 start Test.Client.exe
-cd ..\..\..\..
+cd ..\..\..\..\..
 echo on
