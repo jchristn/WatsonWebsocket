@@ -10,7 +10,7 @@ WatsonWebsocket is the EASIEST and FASTEST way to build client and server applic
 
 Many thanks and much appreciation to those that take the time to make this library better!  
 
-@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX @rajeshdua123 @tersers @MacKey-255 @KRookoo1
+@BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX @rajeshdua123 @tersers @MacKey-255 @KRookoo1 @joreg
 
 ## Test App
 
