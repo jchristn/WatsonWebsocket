@@ -313,9 +313,8 @@ namespace WatsonWebsocket
                 return Task.FromResult(false);
             }
 
-            Task<bool> task = MessageWriteAsync(client, Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, token);
+            Task<bool> task = MessageWriteAsync(client, new ArraySegment<byte>(Encoding.UTF8.GetBytes(data)), WebSocketMessageType.Text, token);
 
-            data = null; 
             client = null;
             return task;
         }
@@ -329,18 +328,7 @@ namespace WatsonWebsocket
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public Task<bool> SendAsync(string ipPort, byte[] data, CancellationToken token = default)
         {
-            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
-            if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
-            {
-                Logger?.Invoke(_Header + "unable to find client " + ipPort);
-                return Task.FromResult(false);
-            }
-
-            Task<bool> task = MessageWriteAsync(client, data, WebSocketMessageType.Binary, token);
-
-            client = null;
-            data = null;
-            return task;
+            return SendAsync(ipPort, new ArraySegment<byte>(data), WebSocketMessageType.Binary, token);
         }
 
         /// <summary>
@@ -353,7 +341,20 @@ namespace WatsonWebsocket
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public Task<bool> SendAsync(string ipPort, byte[] data, WebSocketMessageType msgType, CancellationToken token = default)
         {
-            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            return SendAsync(ipPort, new ArraySegment<byte>(data), msgType, token);
+        }
+
+        /// <summary>
+        /// Send binary data to the specified client, asynchronously.
+        /// </summary>
+        /// <param name="ipPort">IP:port of the recipient client.</param>
+        /// <param name="data">ArraySegment containing data.</param> 
+        /// <param name="msgType">Web socket message type.</param>
+        /// <param name="token">Cancellation token allowing for termination of this request.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public Task<bool> SendAsync(string ipPort, ArraySegment<byte> data, WebSocketMessageType msgType = WebSocketMessageType.Binary, CancellationToken token = default)
+        {
+            if (data.Array == null || data.Count < 1) throw new ArgumentNullException(nameof(data));
             if (!_Clients.TryGetValue(ipPort, out ClientMetadata client))
             {
                 Logger?.Invoke(_Header + "unable to find client " + ipPort);
@@ -361,9 +362,8 @@ namespace WatsonWebsocket
             }
 
             Task<bool> task = MessageWriteAsync(client, data, msgType, token);
-            
+
             client = null;
-            data = null;
             return task;
         }
 
@@ -669,7 +669,7 @@ namespace WatsonWebsocket
             } 
         }
  
-        private async Task<bool> MessageWriteAsync(ClientMetadata md, byte[] data, WebSocketMessageType msgType, CancellationToken token)
+        private async Task<bool> MessageWriteAsync(ClientMetadata md, ArraySegment<byte> data, WebSocketMessageType msgType, CancellationToken token)
         {
             string header = "[WatsonWsServer " + md.IpPort + "] ";
 
@@ -688,7 +688,7 @@ namespace WatsonWebsocket
 
                     try
                     {
-                        await md.Ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, linkedCts.Token).ConfigureAwait(false);
+                        await md.Ws.SendAsync(data, msgType, true, linkedCts.Token).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -698,7 +698,7 @@ namespace WatsonWebsocket
                     if (EnableStatistics)
                     {
                         _Stats.IncrementSentMessages();
-                        _Stats.AddSentBytes(data.Length);
+                        _Stats.AddSentBytes(data.Count);
                     }
 
                     return true;
@@ -762,7 +762,6 @@ namespace WatsonWebsocket
                 finally
                 {
                     md = null;
-                    data = null;
                     tokens = null;
                 }
             }

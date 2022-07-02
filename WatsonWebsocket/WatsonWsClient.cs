@@ -409,7 +409,7 @@ namespace WatsonWebsocket
         public async Task<bool> SendAsync(string data, WebSocketMessageType msgType = WebSocketMessageType.Text, CancellationToken token = default)
         {
             if (string.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
-            else return await MessageWriteAsync(Encoding.UTF8.GetBytes(data), msgType, token);
+            else return await MessageWriteAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(data)), msgType, token);
         }
 
         /// <summary>
@@ -421,7 +421,19 @@ namespace WatsonWebsocket
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
         public async Task<bool> SendAsync(byte[] data, WebSocketMessageType msgType = WebSocketMessageType.Binary, CancellationToken token = default)
         {
-            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            return await MessageWriteAsync(new ArraySegment<byte>(data), msgType, token);
+        }
+
+        /// <summary>
+        /// Send binary data to the server asynchronously.
+        /// </summary>
+        /// <param name="data">ArraySegment containing data.</param>
+        /// <param name="msgType">Message type.</param>
+        /// <param name="token">Cancellation token allowing for termination of this request.</param>
+        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
+        public async Task<bool> SendAsync(ArraySegment<byte> data, WebSocketMessageType msgType = WebSocketMessageType.Binary, CancellationToken token = default)
+        {
+            if (data.Array == null || data.Count < 1) throw new ArgumentNullException(nameof(data));
             return await MessageWriteAsync(data, msgType, token);
         }
 
@@ -449,7 +461,7 @@ namespace WatsonWebsocket
                     receivedEvent.Set();
                 };
 
-                await MessageWriteAsync(Encoding.UTF8.GetBytes(data), WebSocketMessageType.Text, token);
+                await MessageWriteAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(data)), WebSocketMessageType.Text, token);
                 receivedEvent.WaitOne(TimeSpan.FromSeconds(timeout));
 
                 _AwaitingSyncResponseEvent = null;
@@ -468,7 +480,19 @@ namespace WatsonWebsocket
         /// <returns>Byte array from response.</returns>
         public async Task<byte[]> SendAndWaitAsync(byte[] data, int timeout = 30, CancellationToken token = default)
         {
-            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            return await SendAndWaitAsync(new ArraySegment<byte>(data), timeout, token);
+        }
+
+        /// <summary>
+        /// Send binary data to the server and wait for a response.
+        /// </summary>
+        /// <param name="data">ArraySegment containing data.</param>
+        /// <param name="timeout">Timeout, in seconds.</param>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>Byte array from response.</returns>
+        public async Task<byte[]> SendAndWaitAsync(ArraySegment<byte> data, int timeout = 30, CancellationToken token = default)
+        {
+            if (data.Array == null || data.Count < 1) throw new ArgumentNullException(nameof(data));
             if (timeout < 1) throw new ArgumentException("Timeout must be zero or greater.", nameof(data));
             byte[] result = null;
 
@@ -492,7 +516,7 @@ namespace WatsonWebsocket
 
             return result;
         }
-         
+
         #endregion
 
         #region Private-Methods
@@ -639,7 +663,7 @@ namespace WatsonWebsocket
             return new MessageReceivedEventArgs(_ServerIpPort, data, result.MessageType);
         }
 
-        private async Task<bool> MessageWriteAsync(byte[] data, WebSocketMessageType msgType, CancellationToken token)
+        private async Task<bool> MessageWriteAsync(ArraySegment<byte> data, WebSocketMessageType msgType, CancellationToken token)
         {
             bool disconnectDetected = false;
 
@@ -658,7 +682,7 @@ namespace WatsonWebsocket
 
                     try
                     {
-                        await _ClientWs.SendAsync(new ArraySegment<byte>(data, 0, data.Length), msgType, true, token).ConfigureAwait(false);
+                        await _ClientWs.SendAsync(data, msgType, true, token).ConfigureAwait(false);
                     }
                     catch 
                     { 
@@ -672,7 +696,7 @@ namespace WatsonWebsocket
                     if (EnableStatistics)
                     {
                         _Stats.IncrementSentMessages();
-                        _Stats.AddSentBytes(data.Length);
+                        _Stats.AddSentBytes(data.Count);
                     }
 
                     return true;
