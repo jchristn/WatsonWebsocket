@@ -229,6 +229,20 @@
             Disconnect the client.
             </summary>
         </member>
+        <member name="M:WatsonWebsocket.WatsonWsClient.Stop(System.Net.WebSockets.WebSocketCloseStatus,System.String)">
+            <summary>
+            Disconnect the client by code and reason.
+            </summary>
+            <param name="closeCode">Close code.</param>
+            <param name="reason">Close by reason.</param>
+        </member>
+        <member name="M:WatsonWebsocket.WatsonWsClient.StopAsync(System.Net.WebSockets.WebSocketCloseStatus,System.String)">
+            <summary>
+            Disconnect the client by code and reason.
+            </summary>
+            <param name="closeCode">Close code.</param>
+            <param name="reason">Close by reason.</param>
+        </member>
         <member name="M:WatsonWebsocket.WatsonWsClient.SendAsync(System.String,System.Net.WebSockets.WebSocketMessageType,System.Threading.CancellationToken)">
             <summary>
             Send text data to the server asynchronously.
