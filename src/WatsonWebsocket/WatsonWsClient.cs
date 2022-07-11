@@ -388,7 +388,7 @@ namespace WatsonWebsocket
         /// </summary>
         public void Stop()
         {
-            _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, _ClientWs.CloseStatusDescription, _Token).Wait();
+            Stop(WebSocketCloseStatus.NormalClosure, _ClientWs.CloseStatusDescription);
         }
 
         /// <summary>
@@ -396,8 +396,28 @@ namespace WatsonWebsocket
         /// </summary>
         public async Task StopAsync()
         {
-            await _ClientWs.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, _ClientWs.CloseStatusDescription, _Token).ConfigureAwait(false);
+            await StopAsync(WebSocketCloseStatus.NormalClosure, _ClientWs.CloseStatusDescription);
         }
+
+        /// <summary>
+        /// Disconnect the client by code and reason.
+        /// </summary>
+        /// <param name="closeCode">Close code.</param>
+        /// <param name="reason">Close by reason.</param>
+        public void Stop(WebSocketCloseStatus closeCode, string reason)
+        { 
+            _ClientWs.CloseOutputAsync(closeCode, reason, _Token).Wait();
+        } 
+        
+        /// <summary>
+        /// Disconnect the client by code and reason.
+        /// </summary>
+        /// <param name="closeCode">Close code.</param>
+        /// <param name="reason">Close by reason.</param>
+        public async Task StopAsync(WebSocketCloseStatus closeCode, string reason)
+        { 
+            await _ClientWs.CloseOutputAsync(closeCode, reason, _Token).ConfigureAwait(false);
+        } 
 
         /// <summary>
         /// Send text data to the server asynchronously.
