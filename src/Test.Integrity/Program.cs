@@ -58,7 +58,7 @@ namespace Test.Integrity
 
                 server.MessageReceived += (s, e) =>
                 {
-                    serverStats.AddRecv(e.Data.Length);
+                    serverStats.AddRecv(e.Data.Count);
                 };
 
                 // server.Logger = Logger;
@@ -162,7 +162,7 @@ namespace Test.Integrity
 
                 client.MessageReceived += (s, e) =>
                 {
-                    stats.AddRecv(e.Data.Length);
+                    stats.AddRecv(e.Data.Count);
                 };
 
                 // client.Logger = Logger;

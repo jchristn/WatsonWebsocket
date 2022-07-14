@@ -42,9 +42,9 @@ namespace Test.Echo
                 server.MessageReceived += async (s, e) =>
                 {
                     // echo it back
-                    serverStats.AddRecv(e.Data.Length);
+                    serverStats.AddRecv(e.Data.Count);
                     await server.SendAsync(e.IpPort, e.Data);
-                    serverStats.AddSent(e.Data.Length);
+                    serverStats.AddSent(e.Data.Count);
                 };
 
                 server.Logger = Logger;
@@ -131,7 +131,7 @@ namespace Test.Echo
 
                 client.MessageReceived += (s, e) =>
                 {
-                    clientStats.AddRecv(e.Data.Length);
+                    clientStats.AddRecv(e.Data.Count);
                 };
 
                 client.Logger = Logger;

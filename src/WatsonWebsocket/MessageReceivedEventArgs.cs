@@ -21,7 +21,7 @@ namespace WatsonWebsocket
         /// <summary>
         /// The data received.
         /// </summary>
-        public byte[] Data { get; } = null;
+        public ArraySegment<byte> Data { get; } = default;
 
         /// <summary>
         /// The type of payload included in the message (Binary or Text).
@@ -36,7 +36,7 @@ namespace WatsonWebsocket
 
         #region Constructors-and-Factories
 
-        internal MessageReceivedEventArgs(string ipPort, byte[] data, WebSocketMessageType messageType)
+        internal MessageReceivedEventArgs(string ipPort, ArraySegment<byte> data, WebSocketMessageType messageType)
         {
             IpPort = ipPort;
             Data = data;
