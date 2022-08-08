@@ -459,9 +459,8 @@ namespace WatsonWebsocket
         { 
             try
             { 
-                while (true)
+                while (!cancelToken.IsCancellationRequested)
                 {
-                    if (cancelToken.IsCancellationRequested) break;
                     if (!_Listener.IsListening)
                     {
                         Task.Delay(100).Wait();
