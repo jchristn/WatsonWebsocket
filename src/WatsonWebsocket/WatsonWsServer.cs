@@ -573,19 +573,20 @@ namespace WatsonWebsocket
         { 
             string header = "[WatsonWsServer " + md.IpPort + "] ";
             Logger?.Invoke(header + "starting data receiver");
-             
+            byte[] buffer = new byte[65536];
+
             try
             { 
                 while (true)
                 {
-                    MessageReceivedEventArgs msg = await MessageReadAsync(md).ConfigureAwait(false);
+                    MessageReceivedEventArgs msg = await MessageReadAsync(md, buffer).ConfigureAwait(false);
 
                     if (msg != null)
                     {
                         if (EnableStatistics)
                         {
                             _Stats.IncrementReceivedMessages();
-                            _Stats.AddReceivedBytes(msg.Data.Length);
+                            _Stats.AddReceivedBytes(msg.Data.Count);
                         }
 
                         if (msg.Data != null)
@@ -625,13 +626,12 @@ namespace WatsonWebsocket
             }
         }
          
-        private async Task<MessageReceivedEventArgs> MessageReadAsync(ClientMetadata md)
+        private async Task<MessageReceivedEventArgs> MessageReadAsync(ClientMetadata md, byte[] buffer)
         {
             string header = "[WatsonWsServer " + md.IpPort + "] ";
 
             using (MemoryStream ms = new MemoryStream())
             {
-                byte[] buffer = new byte[65536];
                 ArraySegment<byte> seg = new ArraySegment<byte>(buffer);
 
                 while (true)
@@ -662,7 +662,7 @@ namespace WatsonWebsocket
 
                     if (result.EndOfMessage)
                     {
-                        return new MessageReceivedEventArgs(md.IpPort, ms.ToArray(), result.MessageType);
+                        return new MessageReceivedEventArgs(md.IpPort, new ArraySegment<byte>(ms.GetBuffer(), 0, (int)ms.Length), result.MessageType);
                     }
                 }
             } 

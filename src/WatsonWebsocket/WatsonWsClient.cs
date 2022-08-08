@@ -477,7 +477,7 @@ namespace WatsonWebsocket
             {
                 _AwaitingSyncResponseEvent += (s, e) =>
                 {
-                    result = Encoding.UTF8.GetString(e.Data);
+                    result = Encoding.UTF8.GetString(e.Data.Array, 0, e.Data.Count);
                     receivedEvent.Set();
                 };
 
@@ -498,7 +498,7 @@ namespace WatsonWebsocket
         /// <param name="timeout">Timeout, in seconds.</param>
         /// <param name="token">Cancellation token.</param>
         /// <returns>Byte array from response.</returns>
-        public async Task<byte[]> SendAndWaitAsync(byte[] data, int timeout = 30, CancellationToken token = default)
+        public async Task<ArraySegment<byte>> SendAndWaitAsync(byte[] data, int timeout = 30, CancellationToken token = default)
         {
             return await SendAndWaitAsync(new ArraySegment<byte>(data), timeout, token);
         }
@@ -510,11 +510,11 @@ namespace WatsonWebsocket
         /// <param name="timeout">Timeout, in seconds.</param>
         /// <param name="token">Cancellation token.</param>
         /// <returns>Byte array from response.</returns>
-        public async Task<byte[]> SendAndWaitAsync(ArraySegment<byte> data, int timeout = 30, CancellationToken token = default)
+        public async Task<ArraySegment<byte>> SendAndWaitAsync(ArraySegment<byte> data, int timeout = 30, CancellationToken token = default)
         {
             if (data.Array == null || data.Count < 1) throw new ArgumentNullException(nameof(data));
             if (timeout < 1) throw new ArgumentException("Timeout must be zero or greater.", nameof(data));
-            byte[] result = null;
+            ArraySegment<byte> result = default;
 
             var receivedEvent = new ManualResetEvent(false);
             await _AwaitingSyncResposeLock.WaitAsync(_Token);
@@ -598,19 +598,21 @@ namespace WatsonWebsocket
 
         private async Task DataReceiver()
         {
+            byte[] buffer = new byte[65536];
+
             try
             {
                 while (true)
                 {
                     if (_Token.IsCancellationRequested) break;
-                    MessageReceivedEventArgs msg = await MessageReadAsync();
+                    MessageReceivedEventArgs msg = await MessageReadAsync(buffer);
 
                     if (msg != null)
                     {
                         if (EnableStatistics)
                         {
                             _Stats.IncrementReceivedMessages();
-                            _Stats.AddReceivedBytes(msg.Data.Length);
+                            _Stats.AddReceivedBytes(msg.Data.Count);
                         }
 
                         if (msg.MessageType != WebSocketMessageType.Close)
@@ -642,14 +644,12 @@ namespace WatsonWebsocket
 
             ServerDisconnected?.Invoke(this, EventArgs.Empty);
         }
-
-        private async Task<MessageReceivedEventArgs> MessageReadAsync()
+        private async Task<MessageReceivedEventArgs> MessageReadAsync(byte[] buffer)
         {
             // Do not catch exceptions, let them get caught by the data reader to destroy the connection
 
             if (_ClientWs == null) return null;
-            byte[] buffer = new byte[65536];
-            byte[] data = null;
+            ArraySegment<byte> data = default;
 
             WebSocketReceiveResult result = null;
 
@@ -674,7 +674,7 @@ namespace WatsonWebsocket
 
                     if (result.EndOfMessage)
                     {
-                        data = dataMs.ToArray();
+                        data = new ArraySegment<byte>(dataMs.GetBuffer(), 0, (int)dataMs.Length);
                         break;
                     }
                 }

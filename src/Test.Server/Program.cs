@@ -309,7 +309,7 @@ namespace Test.Server
         static void MessageReceived(object sender, MessageReceivedEventArgs args)
         {
             string msg = "(null)";
-            if (args.Data != null && args.Data.Length > 0) msg = Encoding.UTF8.GetString(args.Data);
+            if (args.Data != null && args.Data.Count > 0) msg = Encoding.UTF8.GetString(args.Data.Array, 0, args.Data.Count);
             Console.WriteLine(args.MessageType.ToString() + " from " + args.IpPort + ": " + msg);
         }
 

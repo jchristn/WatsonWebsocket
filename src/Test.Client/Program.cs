@@ -91,10 +91,10 @@ namespace Test.Client
                         Console.Write("Data: ");
                         userInput = Console.ReadLine();
                         if (String.IsNullOrEmpty(userInput)) break;
-                        byte[] resultBytes = _Client.SendAndWaitAsync(Encoding.UTF8.GetBytes(userInput)).Result;
-                        if (resultBytes != null && resultBytes.Length > 0)
+                        var resultBytes = _Client.SendAndWaitAsync(Encoding.UTF8.GetBytes(userInput)).Result;
+                        if (resultBytes != null && resultBytes.Count > 0)
                         {
-                            Console.WriteLine("Response: " + Encoding.UTF8.GetString(resultBytes));
+                            Console.WriteLine("Response: " + Encoding.UTF8.GetString(resultBytes.Array, 0, resultBytes.Count));
                         }
                         else
                         {
@@ -282,7 +282,7 @@ namespace Test.Client
         static void MessageReceived(object sender, MessageReceivedEventArgs args)
         {
             string msg = "(null)";
-            if (args.Data != null && args.Data.Length > 0) msg = Encoding.UTF8.GetString(args.Data);
+            if (args.Data != null && args.Data.Count > 0) msg = Encoding.UTF8.GetString(args.Data.Array, 0, args.Data.Count);
             Console.WriteLine(args.MessageType.ToString() + " from server: " + msg);
         }
          
