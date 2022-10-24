@@ -573,11 +573,14 @@ namespace WatsonWebsocket
 #endif
 
 #if NET || NETSTANDARD || NETCOREAPP
-            _ClientWs.Options.RemoteCertificateValidationCallback +=
-                (message, certificate, chain, sslPolicyErrors) =>
-                {
-                    return true;
-                };
+            if (_ClientWs.State == WebSocketState.Open)
+            {
+                _ClientWs.Options.RemoteCertificateValidationCallback +=
+                    (message, certificate, chain, sslPolicyErrors) =>
+                    {
+                        return true;
+                    };
+            }
 #endif
         }
 

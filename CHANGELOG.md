@@ -2,6 +2,13 @@
 
 ## Current Version
 
+v3.0.x
+
+- Fix for setting certificate callback while starting client with timeout, thank you @xbarra
+- Allocation-free receives, thank you @joreg
+
+## Previous Versions
+
 v2.3.x
 
 - Minor breaking changes
@@ -9,8 +16,6 @@ v2.3.x
 - Send and wait APIs (```SendAndWaitAsync```)
 - Client connect with timeout API (```StartWithTimeout``` and ```StartWithTimeoutAsync```)
 - Multiple listener prefixes
-
-## Previous Versions
 
 v2.2.1
 
