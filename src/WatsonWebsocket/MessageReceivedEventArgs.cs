@@ -16,12 +16,12 @@ namespace WatsonWebsocket
         /// <summary>
         /// The IP:port of the sender.
         /// </summary>
-        public string IpPort { get; } = null;
+        public string IpPort { get; }
 
         /// <summary>
         /// The data received.
         /// </summary>
-        public ArraySegment<byte> Data { get; } = default;
+        public ArraySegment<byte> Data { get; }
 
         /// <summary>
         /// The type of payload included in the message (Binary or Text).

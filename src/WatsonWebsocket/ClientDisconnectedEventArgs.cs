@@ -15,7 +15,7 @@ namespace WatsonWebsocket
         /// <summary>
         /// The IP:port of the client.
         /// </summary>
-        public string IpPort { get; } = null;
+        public string IpPort { get; }
 
         #endregion
 

@@ -7,20 +7,14 @@ namespace WatsonWebsocket
 {
     internal class ClientMetadata
     { 
-        internal string IpPort
-        {
-            get
-            {
-                return Ip + ":" + Port;
-            }
-        }
+        internal string IpPort => Ip + ":" + Port;
 
-        internal string Ip = null;
-        internal int Port = 0;
-        internal HttpListenerContext HttpContext = null;
-        internal WebSocket Ws = null;
-        internal WebSocketContext WsContext = null;
-        internal readonly CancellationTokenSource TokenSource = null;
+        private string Ip;
+        private int Port;
+        private HttpListenerContext HttpContext;
+        private WebSocketContext WsContext;
+        internal WebSocket Ws;
+        internal readonly CancellationTokenSource TokenSource;
         internal readonly SemaphoreSlim SendLock = new SemaphoreSlim(1);
          
         internal ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext, CancellationTokenSource tokenSource)

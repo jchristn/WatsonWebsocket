@@ -15,46 +15,22 @@ namespace WatsonWebsocket
         /// <summary>
         /// The time at which the client or server was started.
         /// </summary>
-        public DateTime StartTime
-        {
-            get
-            {
-                return _StartTime;
-            }
-        }
+        public DateTime StartTime => _StartTime;
 
         /// <summary>
         /// The amount of time which the client or server has been up.
         /// </summary>
-        public TimeSpan UpTime
-        {
-            get
-            {
-                return DateTime.Now.ToUniversalTime() - _StartTime;
-            }
-        }
+        public TimeSpan UpTime => DateTime.Now.ToUniversalTime() - _StartTime;
 
         /// <summary>
         /// The number of bytes received.
         /// </summary>
-        public long ReceivedBytes
-        {
-            get
-            {
-                return _ReceivedBytes;
-            } 
-        }
+        public long ReceivedBytes => _ReceivedBytes;
 
         /// <summary>
         /// The number of messages received.
         /// </summary>
-        public long ReceivedMessages
-        {
-            get
-            {
-                return _ReceivedMessages;
-            } 
-        }
+        public long ReceivedMessages => _ReceivedMessages;
 
         /// <summary>
         /// Average received message size in bytes.
@@ -67,10 +43,8 @@ namespace WatsonWebsocket
                 {
                     return (int)(_ReceivedBytes / _ReceivedMessages);
                 }
-                else
-                {
-                    return 0;
-                }
+
+                return 0;
             }
         }
 
@@ -88,13 +62,7 @@ namespace WatsonWebsocket
         /// <summary>
         /// The number of messages sent.
         /// </summary>
-        public long SentMessages
-        {
-            get
-            {
-                return _SentMessages;
-            } 
-        }
+        public long SentMessages => _SentMessages;
 
         /// <summary>
         /// Average sent message size in bytes.
@@ -107,10 +75,8 @@ namespace WatsonWebsocket
                 {
                     return (int)(_SentBytes / _SentMessages);
                 }
-                else
-                {
-                    return 0;
-                }
+
+                return 0;
             }
         }
 
@@ -119,10 +85,10 @@ namespace WatsonWebsocket
         #region Private-Members
 
         private DateTime _StartTime = DateTime.Now.ToUniversalTime();
-        private long _ReceivedBytes = 0;
-        private long _ReceivedMessages = 0;
-        private long _SentBytes = 0;
-        private long _SentMessages = 0;
+        private long _ReceivedBytes;
+        private long _ReceivedMessages;
+        private long _SentBytes;
+        private long _SentMessages;
 
         #endregion
 
@@ -148,8 +114,8 @@ namespace WatsonWebsocket
         {
             string ret =
                 "--- Statistics ---" + Environment.NewLine +
-                "    Started     : " + _StartTime.ToString() + Environment.NewLine +
-                "    Uptime      : " + UpTime.ToString() + Environment.NewLine +
+                "    Started     : " + _StartTime + Environment.NewLine +
+                "    Uptime      : " + UpTime + Environment.NewLine +
                 "    Received    : " + Environment.NewLine +
                 "       Bytes    : " + ReceivedBytes + Environment.NewLine +
                 "       Messages : " + ReceivedMessages + Environment.NewLine +

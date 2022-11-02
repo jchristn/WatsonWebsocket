@@ -15,12 +15,12 @@ namespace WatsonWebsocket
         /// <summary>
         /// The IP:port of the client.
         /// </summary>
-        public string IpPort { get; } = null;
+        public string IpPort { get; }
 
         /// <summary>
         /// The HttpListenerRequest from the client.  Helpful for accessing HTTP request related metadata such as the querystring.
         /// </summary>
-        public HttpListenerRequest HttpRequest { get; } = null;
+        public HttpListenerRequest HttpRequest { get; }
 
         #endregion
 
