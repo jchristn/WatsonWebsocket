@@ -451,9 +451,7 @@ namespace WatsonWebsocket
 
                     lock (_PermittedIpsLock)
                     {
-                        if (PermittedIpAddresses != null
-                            && PermittedIpAddresses.Count > 0
-                            && !PermittedIpAddresses.Contains(ip))
+                        if (PermittedIpAddresses is {Count: > 0} && !PermittedIpAddresses.Contains(ip))
                         {
                             Logger?.Invoke(_Header + "rejecting " + ipPort + " (not permitted)");
                             ctx.Response.StatusCode = 401;

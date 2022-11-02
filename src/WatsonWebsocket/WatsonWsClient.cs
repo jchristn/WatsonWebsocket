@@ -23,10 +23,7 @@ namespace WatsonWebsocket
         public bool AcceptInvalidCertificates
         {
             get => _AcceptInvalidCertificates;
-            set
-            {
-                _AcceptInvalidCertificates = value;
-            }
+            set => _AcceptInvalidCertificates = value;
         }
 
         /// <summary>
@@ -627,8 +624,7 @@ namespace WatsonWebsocket
                 buffer = new byte[buffer.Length];
                 ArraySegment<byte> bufferSegment = new ArraySegment<byte>(buffer);
 
-                if (_ClientWs.State == WebSocketState.CloseReceived
-                    || _ClientWs.State == WebSocketState.Closed)
+                if (_ClientWs.State is WebSocketState.CloseReceived or WebSocketState.Closed)
                 {
                     throw new WebSocketException("Websocket close received");
                 }
