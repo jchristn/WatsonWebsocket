@@ -423,13 +423,7 @@ namespace WatsonWebsocket
 
         private void SetInvalidCertificateAcceptance()
         {
-#if NETFRAMEWORK
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-#endif
-
-#if NET || NETSTANDARD || NETCOREAPP
-            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-#endif
         }
 
         private async Task AcceptConnections(CancellationToken cancelToken)

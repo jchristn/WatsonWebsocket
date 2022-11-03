@@ -51,13 +51,7 @@ namespace WatsonWebsocket
         /// <summary>
         /// The number of bytes sent.
         /// </summary>
-        public long SentBytes
-        {
-            get
-            {
-                return _SentBytes;
-            } 
-        }
+        public long SentBytes => _SentBytes;
 
         /// <summary>
         /// The number of messages sent.
