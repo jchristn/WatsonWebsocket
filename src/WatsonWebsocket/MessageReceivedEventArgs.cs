@@ -14,9 +14,9 @@ namespace WatsonWebsocket
         #region Public-Members
 
         /// <summary>
-        /// The IP:port of the sender.
+        /// Client metadata.
         /// </summary>
-        public string IpPort { get; } = null;
+        public ClientMetadata Client { get; } = null;
 
         /// <summary>
         /// The data received.
@@ -36,9 +36,9 @@ namespace WatsonWebsocket
 
         #region Constructors-and-Factories
 
-        internal MessageReceivedEventArgs(string ipPort, ArraySegment<byte> data, WebSocketMessageType messageType)
+        internal MessageReceivedEventArgs(ClientMetadata client, ArraySegment<byte> data, WebSocketMessageType messageType)
         {
-            IpPort = ipPort;
+            Client = client;
             Data = data;
             MessageType = messageType;
         }

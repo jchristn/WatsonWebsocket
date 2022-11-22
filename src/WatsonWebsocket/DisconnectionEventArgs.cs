@@ -8,14 +8,14 @@ namespace WatsonWebsocket
     /// <summary>
     /// Event arguments for when a client disconnects from the server.
     /// </summary>
-    public class ClientDisconnectedEventArgs : EventArgs
+    public class DisconnectionEventArgs : EventArgs
     {
         #region Public-Members
 
         /// <summary>
-        /// The IP:port of the client.
+        /// Client metadata.
         /// </summary>
-        public string IpPort { get; } = null;
+        public ClientMetadata Client { get; } = null;
 
         #endregion
 
@@ -25,9 +25,9 @@ namespace WatsonWebsocket
 
         #region Constructors-and-Factories
 
-        internal ClientDisconnectedEventArgs(string ipPort)
+        internal DisconnectionEventArgs(ClientMetadata client)
         {
-            IpPort = ipPort;
+            Client = client;
         }
 
         #endregion

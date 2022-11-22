@@ -28,10 +28,13 @@ SSL is supported in WatsonWebsocket.  The constructors for ```WatsonWsServer``` 
 
 For more information on using SSL certificates, please refer to the wiki.
 
-## New in v3.0.x
+## New in v4.0.x
 
-- Fix for setting certificate callback while starting client with timeout, thank you @xbarra
-- Allocation-free receives, thank you @joreg
+- Breaking changes
+- Clients now identified by ```Guid``` in ```ClientMetadata```
+- ```ListClients``` now returns full ```ClientMetadata```
+- ```Send*``` methods now take ```guid``` as opposed to ```IpPort```
+- Add targeting for .NET 7.0
 
 ## Server Example
 ```csharp
@@ -45,17 +48,17 @@ server.Start();
 
 static void ClientConnected(object sender, ClientConnectedEventArgs args) 
 {
-    Console.WriteLine("Client connected: " + args.IpPort);
+    Console.WriteLine("Client connected: " + args.Client.ToString());
 }
 
 static void ClientDisconnected(object sender, ClientDisconnectedEventArgs args) 
 {
-    Console.WriteLine("Client disconnected: " + args.IpPort);
+    Console.WriteLine("Client disconnected: " + args.Client.ToString());
 }
 
 static void MessageReceived(object sender, MessageReceivedEventArgs args) 
 { 
-    Console.WriteLine("Message received from " + args.IpPort + ": " + Encoding.UTF8.GetString(args.Data));
+    Console.WriteLine("Message received from " + args.Client.ToString() + ": " + Encoding.UTF8.GetString(args.Data));
 }
 ```
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GetSomeInput;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,20 +10,20 @@ using WatsonWebsocket;
 
 namespace Test.Server
 {
-    class Program
+    class Server
     {
         static string _ServerIp = "localhost";
         static int _ServerPort = 0;
         static bool _Ssl = false;
         static bool _AcceptInvalidCertificates = true;
         static WatsonWsServer _Server = null;
-        static string _LastIpPort = null;
+        static Guid _LastGuid = Guid.Empty;
 
         static void Main(string[] args)
         {
-            _ServerIp = InputString("Server IP:", "localhost", true);
-            _ServerPort = InputInteger("Server port:", 9000, true, true);
-            _Ssl = InputBoolean("Use SSL:", false);
+            _ServerIp = Inputty.GetString("Server IP:", "localhost", true);
+            _ServerPort = Inputty.GetInteger("Server port:", 9000, true, true);
+            _Ssl = Inputty.GetBoolean("Use SSL:", false);
 
             InitializeServer();
             // InitializeServerMultiple();
@@ -35,7 +36,7 @@ namespace Test.Server
                 string userInput = Console.ReadLine()?.Trim();
                 if (string.IsNullOrEmpty(userInput)) continue;
                 string[] splitInput = userInput.Split(new string[] { " " }, 2, StringSplitOptions.None);
-                string ipPort = null;
+                Guid guid = Guid.Empty;
                 bool success = false;
 
                 switch (splitInput[0])
@@ -81,14 +82,17 @@ namespace Test.Server
                         break;
 
                     case "list":
-                        var clients = new List<string>(_Server.ListClients());
+                        var clients = new List<ClientMetadata>(_Server.ListClients());
                         if (clients.Count > 0)
                         {
+                            Console.WriteLine("");
                             Console.WriteLine("Clients");
-                            foreach (string curr in clients)
+                            Console.WriteLine("-------");
+                            foreach (ClientMetadata client in clients)
                             {
-                                Console.WriteLine("  " + curr);
+                                Console.WriteLine(client.ToString());
                             }
+                            Console.WriteLine("");
                         }
                         else
                         {
@@ -104,14 +108,14 @@ namespace Test.Server
                         if (splitInput.Length != 2) break;
                         splitInput = splitInput[1].Split(new string[] { " " }, 3, StringSplitOptions.None);
                         if (splitInput.Length != 3) break;
-                        if (splitInput[0].Equals("last")) ipPort = _LastIpPort;
-                        else ipPort = splitInput[0];
+                        if (splitInput[0].Equals("last")) guid = _LastGuid;
+                        else guid = Guid.Parse(splitInput[0]);
                         if (String.IsNullOrEmpty(splitInput[2])) break;
-                        if (splitInput[1].Equals("text")) success = _Server.SendAsync(ipPort, splitInput[2]).Result;
+                        if (splitInput[1].Equals("text")) success = _Server.SendAsync(guid, splitInput[2]).Result;
                         else if (splitInput[1].Equals("bytes"))
                         {
                             byte[] data = Encoding.UTF8.GetBytes(splitInput[2]);
-                            success = _Server.SendAsync(ipPort, data).Result;
+                            success = _Server.SendAsync(guid, data).Result;
                         }
                         else break;
                         if (!success) Console.WriteLine("Failed");
@@ -120,7 +124,9 @@ namespace Test.Server
 
                     case "kill":
                         if (splitInput.Length != 2) break;
-                        _Server.DisconnectClient(splitInput[1]);
+                        if (splitInput[1].Equals("last")) guid = _LastGuid;
+                        else guid = Guid.Parse(splitInput[1]);
+                        _Server.DisconnectClient(guid);
                         break;
 
                     default:
@@ -174,122 +180,11 @@ namespace Test.Server
         {
             Console.WriteLine(msg);
         }
-
-        static bool InputBoolean(string question, bool yesDefault)
-        {
-            Console.Write(question);
-
-            if (yesDefault) Console.Write(" [Y/n]? ");
-            else Console.Write(" [y/N]? ");
-
-            string userInput = Console.ReadLine();
-
-            if (String.IsNullOrEmpty(userInput))
-            {
-                if (yesDefault) return true;
-                return false;
-            }
-
-            userInput = userInput.ToLower();
-
-            if (yesDefault)
-            {
-                if (
-                    (String.Compare(userInput, "n") == 0)
-                    || (String.Compare(userInput, "no") == 0)
-                   )
-                {
-                    return false;
-                }
-
-                return true;
-            }
-            else
-            {
-                if (
-                    (String.Compare(userInput, "y") == 0)
-                    || (String.Compare(userInput, "yes") == 0)
-                   )
-                {
-                    return true;
-                }
-
-                return false;
-            }
-        }
-
-        static string InputString(string question, string defaultAnswer, bool allowNull)
-        {
-            while (true)
-            {
-                Console.Write(question);
-
-                if (!String.IsNullOrEmpty(defaultAnswer))
-                {
-                    Console.Write(" [" + defaultAnswer + "]");
-                }
-
-                Console.Write(" ");
-
-                string userInput = Console.ReadLine();
-
-                if (String.IsNullOrEmpty(userInput))
-                {
-                    if (!String.IsNullOrEmpty(defaultAnswer)) return defaultAnswer;
-                    if (allowNull) return null;
-                    else continue;
-                }
-
-                return userInput;
-            }
-        }
-
-        static int InputInteger(string question, int defaultAnswer, bool positiveOnly, bool allowZero)
-        {
-            while (true)
-            {
-                Console.Write(question);
-                Console.Write(" [" + defaultAnswer + "] ");
-
-                string userInput = Console.ReadLine();
-
-                if (String.IsNullOrEmpty(userInput))
-                {
-                    return defaultAnswer;
-                }
-
-                int ret = 0;
-                if (!Int32.TryParse(userInput, out ret))
-                {
-                    Console.WriteLine("Please enter a valid integer.");
-                    continue;
-                }
-
-                if (ret == 0)
-                {
-                    if (allowZero)
-                    {
-                        return 0;
-                    }
-                }
-
-                if (ret < 0)
-                {
-                    if (positiveOnly)
-                    {
-                        Console.WriteLine("Please enter a value greater than zero.");
-                        continue;
-                    }
-                }
-
-                return ret;
-            }
-        }
          
-        static void ClientConnected(object sender, ClientConnectedEventArgs args) 
+        static void ClientConnected(object sender, ConnectionEventArgs args) 
         {
-            Console.WriteLine("Client " + args.IpPort + " connected using URL " + args.HttpRequest.RawUrl);
-            _LastIpPort = args.IpPort;
+            Console.WriteLine("Client " + args.Client.ToString() + " connected using URL " + args.HttpRequest.RawUrl);
+            _LastGuid = args.Client.Guid;
 
             if (args.HttpRequest.Cookies != null && args.HttpRequest.Cookies.Count > 0)
             {
@@ -301,16 +196,16 @@ namespace Test.Server
             }
         }
 
-        static void ClientDisconnected(object sender, ClientDisconnectedEventArgs args)
+        static void ClientDisconnected(object sender, DisconnectionEventArgs args)
         {
-            Console.WriteLine("Client disconnected: " + args.IpPort);
+            Console.WriteLine("Client disconnected: " + args.Client.ToString());
         }
 
         static void MessageReceived(object sender, MessageReceivedEventArgs args)
         {
             string msg = "(null)";
             if (args.Data != null && args.Data.Count > 0) msg = Encoding.UTF8.GetString(args.Data.Array, 0, args.Data.Count);
-            Console.WriteLine(args.MessageType.ToString() + " from " + args.IpPort + ": " + msg);
+            Console.WriteLine(args.MessageType.ToString() + " from " + args.Client.ToString() + ": " + msg);
         }
 
         static void HttpHandler(HttpListenerContext ctx)

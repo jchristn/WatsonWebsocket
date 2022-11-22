@@ -2,12 +2,20 @@
 
 ## Current Version
 
+v4.0.x
+
+- Breaking changes
+- Clients now identified by ```Guid``` in ```ClientMetadata```
+- ```ListClients``` now returns full ```ClientMetadata```
+- ```Send*``` methods now take ```guid``` as opposed to ```IpPort```
+- Add targeting for .NET 7.0
+
+## Previous Versions
+
 v3.0.x
 
 - Fix for setting certificate callback while starting client with timeout, thank you @xbarra
 - Allocation-free receives, thank you @joreg
-
-## Previous Versions
 
 v2.3.x
 

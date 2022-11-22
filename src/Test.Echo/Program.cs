@@ -8,47 +8,47 @@ namespace Test.Echo
 {
     class Program
     {  
-        static string hostname = "localhost";
-        static int port = 8000;
-        static WatsonWsServer server = null;
-        static string clientIpPort = null;
-        static long serverSendMessageCount = 5000;
-        static int serverMessageLength = 16;
-        static long clientSendMessageCount = 5000;
-        static int clientMessageLength = 16;
+        static string _Hostname = "localhost";
+        static int _Port = 8000;
+        static WatsonWsServer _Server = null;
+        static Guid _ClientGuid = Guid.Empty;
+        static long _ServerSendMessageCount = 5000;
+        static int _ServerMessageLength = 16;
+        static long _ClientSendMessageCount = 5000;
+        static int _ClientMessageLength = 16;
          
-        static Statistics serverStats = new Statistics();
-        static Statistics clientStats = new Statistics();
+        static Statistics _ServerStats = new Statistics();
+        static Statistics _ClientStats = new Statistics();
 
         static void Main(string[] args)
         {
             string header = "[Server] ";
-            using (server = new WatsonWsServer(hostname, port, false))
+            using (_Server = new WatsonWsServer(_Hostname, _Port, false))
             {
                 #region Start-Server
                  
-                server.ClientConnected += (s, e) =>
+                _Server.ClientConnected += (s, e) =>
                 {
-                    clientIpPort = e.IpPort;
-                    Console.WriteLine(header + "client connected: " + e.IpPort);
+                    _ClientGuid = e.Client.Guid;
+                    Console.WriteLine(header + "client connected: " + e.Client.ToString());
                 };
 
-                server.ClientDisconnected += (s, e) =>
+                _Server.ClientDisconnected += (s, e) =>
                 {
-                    clientIpPort = null;
-                    Console.WriteLine(header + "client disconnected: " + e.IpPort);
+                    _ClientGuid = Guid.Empty;
+                    Console.WriteLine(header + "client disconnected: " + e.Client.ToString());
                 };
 
-                server.MessageReceived += async (s, e) =>
+                _Server.MessageReceived += async (s, e) =>
                 {
                     // echo it back
-                    serverStats.AddRecv(e.Data.Count);
-                    await server.SendAsync(e.IpPort, e.Data);
-                    serverStats.AddSent(e.Data.Count);
+                    _ServerStats.AddRecv(e.Data.Count);
+                    await _Server.SendAsync(e.Client.Guid, e.Data);
+                    _ServerStats.AddSent(e.Data.Count);
                 };
 
-                server.Logger = Logger;
-                server.Start();
+                _Server.Logger = Logger;
+                _Server.Start();
                 Console.WriteLine(header + "started");
 
                 #endregion
@@ -59,19 +59,19 @@ namespace Test.Echo
 
                 Task.Delay(1000).Wait();
 
-                while (String.IsNullOrEmpty(clientIpPort)) 
+                while (_ClientGuid == Guid.Empty) 
                 {
                     Task.Delay(1000).Wait();
                     Console.WriteLine(header + "waiting for client connection");
                 };
 
-                Console.WriteLine(header + "detected client " + clientIpPort + ", sending messages");
+                Console.WriteLine(header + "detected client " + _ClientGuid + ", sending messages");
                  
-                for (int i = 0; i < serverSendMessageCount; i++)
+                for (int i = 0; i < _ServerSendMessageCount; i++)
                 {
-                    byte[] msgData = Encoding.UTF8.GetBytes(RandomString(serverMessageLength));
-                    server.SendAsync(clientIpPort, msgData).Wait();
-                    serverStats.AddSent(msgData.Length);
+                    byte[] msgData = Encoding.UTF8.GetBytes(RandomString(_ServerMessageLength));
+                    _Server.SendAsync(_ClientGuid, msgData).Wait();
+                    _ServerStats.AddSent(msgData.Length);
                 }
 
                 Console.WriteLine(header + "messages sent");
@@ -80,7 +80,7 @@ namespace Test.Echo
 
                 #region Wait-for-and-Echo-Client-Messages
 
-                while (!String.IsNullOrEmpty(clientIpPort))
+                while (_ClientGuid != Guid.Empty)
                 {
                     Console.WriteLine(header + "waiting for client to finish");
                     Task.Delay(1000).Wait();
@@ -93,10 +93,10 @@ namespace Test.Echo
                 Console.WriteLine("");
                 Console.WriteLine("");
                 Console.WriteLine("Server statistics:");
-                Console.WriteLine("  " + serverStats.ToString());
+                Console.WriteLine("  " + _ServerStats.ToString());
                 Console.WriteLine("");
                 Console.WriteLine("Client statistics");
-                Console.WriteLine("  " + clientStats.ToString());
+                Console.WriteLine("  " + _ClientStats.ToString());
                 Console.WriteLine("");
 
                 #endregion
@@ -115,23 +115,23 @@ namespace Test.Echo
         {
             string header = "[Client] "; 
 
-            using (WatsonWsClient client = new WatsonWsClient(hostname, port, false))
+            using (WatsonWsClient client = new WatsonWsClient(_Hostname, _Port, false))
             {
                 #region Start-Client
 
                 client.ServerConnected += (s, e) =>
                 { 
-                    Console.WriteLine(header + "connected to " + hostname + ":" + port);
+                    Console.WriteLine(header + "connected to " + _Hostname + ":" + _Port);
                 };
 
                 client.ServerDisconnected += (s, e) =>
                 {
-                    Console.WriteLine(header + "disconnected from " + hostname + ":" + port);
+                    Console.WriteLine(header + "disconnected from " + _Hostname + ":" + _Port);
                 };
 
                 client.MessageReceived += (s, e) =>
                 {
-                    clientStats.AddRecv(e.Data.Count);
+                    _ClientStats.AddRecv(e.Data.Count);
                 };
 
                 client.Logger = Logger;
@@ -142,7 +142,7 @@ namespace Test.Echo
 
                 #region Wait-for-Messages
 
-                while (clientStats.MsgRecv < serverSendMessageCount) 
+                while (_ClientStats.MsgRecv < _ServerSendMessageCount) 
                 {
                     Task.Delay(1000).Wait();
                     Console.WriteLine(header + "waiting for server messages");
@@ -155,21 +155,21 @@ namespace Test.Echo
 
                 Console.WriteLine(header + "sending messages to server");
 
-                for (int i = 0; i < clientSendMessageCount; i++)
+                for (int i = 0; i < _ClientSendMessageCount; i++)
                 {
-                    byte[] msgData = Encoding.UTF8.GetBytes(RandomString(clientMessageLength));
+                    byte[] msgData = Encoding.UTF8.GetBytes(RandomString(_ClientMessageLength));
                     await client.SendAsync(msgData);
-                    clientStats.AddSent(msgData.Length);
+                    _ClientStats.AddSent(msgData.Length);
                 }
 
-                while (clientStats.MsgRecv < (clientSendMessageCount + serverSendMessageCount))
+                while (_ClientStats.MsgRecv < (_ClientSendMessageCount + _ServerSendMessageCount))
                 {
                     Console.WriteLine(header + "waiting for server echo messages");
                     Task.Delay(1000).Wait();
                 }
 
                 Console.WriteLine(header + "finished");
-                clientIpPort = null;
+                _ClientGuid = Guid.Empty;
 
                 #endregion 
             }

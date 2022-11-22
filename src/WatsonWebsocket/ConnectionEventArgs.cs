@@ -8,14 +8,14 @@ namespace WatsonWebsocket
     /// <summary>
     /// Event arguments for when a client connects to the server.
     /// </summary>
-    public class ClientConnectedEventArgs : EventArgs
+    public class ConnectionEventArgs : EventArgs
     {
         #region Public-Members
 
         /// <summary>
-        /// The IP:port of the client.
+        /// Client metadata.
         /// </summary>
-        public string IpPort { get; } = null;
+        public ClientMetadata Client { get; } = null;
 
         /// <summary>
         /// The HttpListenerRequest from the client.  Helpful for accessing HTTP request related metadata such as the querystring.
@@ -30,9 +30,9 @@ namespace WatsonWebsocket
 
         #region Constructors-and-Factories
 
-        internal ClientConnectedEventArgs(string ipPort, HttpListenerRequest http)
+        internal ConnectionEventArgs(ClientMetadata client, HttpListenerRequest http)
         {
-            IpPort = ipPort;
+            Client = client;
             HttpRequest = http;
         }
 

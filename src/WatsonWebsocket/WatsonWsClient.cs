@@ -683,7 +683,7 @@ namespace WatsonWebsocket
                 }
             }
 
-            return new MessageReceivedEventArgs(_ServerIpPort, data, result.MessageType);
+            return new MessageReceivedEventArgs(null, data, result.MessageType);
         }
 
         private async Task<bool> MessageWriteAsync(ArraySegment<byte> data, WebSocketMessageType msgType, CancellationToken token)
