@@ -587,12 +587,12 @@ namespace WatsonWebsocket
                 Logger?.Invoke(header + "exception: " + Environment.NewLine + e.ToString());
             }
             finally
-            { 
+            {
+                _Clients.TryRemove(client.Guid, out _);
                 string ipPort = client.IpPort;
                 ClientDisconnected?.Invoke(this, new DisconnectionEventArgs(client));
                 client.Ws.Dispose();
                 Logger?.Invoke(header + "disconnected");
-                _Clients.TryRemove(client.Guid, out _);
             }
         }
          
