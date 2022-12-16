@@ -288,25 +288,13 @@ namespace WatsonWebsocket
         /// </summary>
         /// <param name="guid">Globally-unique identifier of the recipient client.</param>
         /// <param name="data">String containing data.</param>
+        /// <param name="msgType">Web socket message type.</param>
         /// <param name="token">Cancellation token allowing for termination of this request.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public Task<bool> SendAsync(Guid guid, string data, CancellationToken token = default)
+        public Task<bool> SendAsync(Guid guid, string data, WebSocketMessageType msgType = WebSocketMessageType.Text, CancellationToken token = default)
         {
             if (String.IsNullOrEmpty(data)) data = "";
-            return SendAsync(guid, Encoding.UTF8.GetBytes(data), token);
-        }
-
-        /// <summary>
-        /// Send binary data to the specified client, asynchronously.
-        /// </summary>
-        /// <param name="guid">Globally-unique identifier of the recipient client.</param>
-        /// <param name="data">Byte array containing data.</param> 
-        /// <param name="token">Cancellation token allowing for termination of this request.</param>
-        /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public Task<bool> SendAsync(Guid guid, byte[] data, CancellationToken token = default)
-        {
-            if (data == null) data = new byte[0];
-            return SendAsync(guid, new ArraySegment<byte>(data), WebSocketMessageType.Binary, token);
+            return SendAsync(guid, Encoding.UTF8.GetBytes(data), msgType, token);
         }
 
         /// <summary>
@@ -317,7 +305,7 @@ namespace WatsonWebsocket
         /// <param name="msgType">Web socket message type.</param>
         /// <param name="token">Cancellation token allowing for termination of this request.</param>
         /// <returns>Task with Boolean indicating if the message was sent successfully.</returns>
-        public Task<bool> SendAsync(Guid guid, byte[] data, WebSocketMessageType msgType, CancellationToken token = default)
+        public Task<bool> SendAsync(Guid guid, byte[] data, WebSocketMessageType msgType = WebSocketMessageType.Binary, CancellationToken token = default)
         {
             if (data == null) data = new byte[0];
             return SendAsync(guid, new ArraySegment<byte>(data), msgType, token);
