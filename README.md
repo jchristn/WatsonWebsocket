@@ -35,7 +35,7 @@ For more information on using SSL certificates, please refer to the wiki.
 - Clients now identified by ```Guid``` in ```ClientMetadata```
 - ```ListClients``` now returns full ```ClientMetadata```
 - ```Send*``` methods now take ```guid``` as opposed to ```IpPort```
-- Add targeting for .NET 7.0
+- Add targeting for .NET 7.0 and .NET Framework 4.8
 
 ## Server Example
 ```csharp

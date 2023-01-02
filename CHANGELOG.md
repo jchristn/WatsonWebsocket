@@ -8,7 +8,7 @@ v4.0.x
 - Clients now identified by ```Guid``` in ```ClientMetadata```
 - ```ListClients``` now returns full ```ClientMetadata```
 - ```Send*``` methods now take ```guid``` as opposed to ```IpPort```
-- Add targeting for .NET 7.0
+- Add targeting for .NET 7.0 and .NET Framework 4.8
 
 ## Previous Versions
 
