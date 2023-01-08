@@ -47,12 +47,12 @@ server.ClientDisconnected += ClientDisconnected;
 server.MessageReceived += MessageReceived; 
 server.Start();
 
-static void ClientConnected(object sender, ClientConnectedEventArgs args) 
+static void ClientConnected(object sender, ConnectionEventArgs args) 
 {
     Console.WriteLine("Client connected: " + args.Client.ToString());
 }
 
-static void ClientDisconnected(object sender, ClientDisconnectedEventArgs args) 
+static void ClientDisconnected(object sender, DisconnectionEventArgs args) 
 {
     Console.WriteLine("Client disconnected: " + args.Client.ToString());
 }
