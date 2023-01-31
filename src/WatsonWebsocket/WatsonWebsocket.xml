@@ -236,6 +236,7 @@
             Pre-configure websocket client options prior to connecting to the server.
             </summary>
             <returns>WatsonWsClient.</returns>
+            <exception cref="T:System.PlatformNotSupportedException"></exception>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsClient.AddCookie(System.Net.Cookie)">
             <summary>

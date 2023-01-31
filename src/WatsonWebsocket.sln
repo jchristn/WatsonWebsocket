@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Echo", "Test.Echo\Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Dispose", "Test.Dispose\Test.Dispose.csproj", "{55439F18-D443-4BC1-9372-03649699F22A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.ClientTimeout", "Test.ClientTimeout\Test.ClientTimeout.csproj", "{72C9972F-156D-4806-BE4E-9C86C97D92F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.ClientTimeout", "Test.ClientTimeout\Test.ClientTimeout.csproj", "{72C9972F-156D-4806-BE4E-9C86C97D92F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

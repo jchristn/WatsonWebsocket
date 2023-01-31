@@ -8,6 +8,8 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace WatsonWebsocket
 {
@@ -57,19 +59,24 @@ namespace WatsonWebsocket
         /// <summary>
         /// Set KeepAlive to Connection Options.
         /// </summary>
+#if NET5_0_OR_GREATER
+        [UnsupportedOSPlatform("browser")]
+#endif
         public int KeepAliveInterval
         {
             get
             {
+                if (_IsBrowser) throw new PlatformNotSupportedException();
                 return _KeepAliveIntervalSeconds;
             }
             set
             {
+                if (_IsBrowser) throw new PlatformNotSupportedException();
                 if (value < 1) throw new ArgumentException("ConnectTimeoutSeconds must be greater than zero.");
                 _KeepAliveIntervalSeconds = value;
             }
         }
-         
+
         /// <summary>
         /// Event fired when a message is received.
         /// </summary>
@@ -125,7 +132,11 @@ namespace WatsonWebsocket
         private CancellationTokenSource _TokenSource = new CancellationTokenSource();
         private CancellationToken _Token;
         private Statistics _Stats = new Statistics();
-
+#if NET5_0_OR_GREATER
+        private readonly bool _IsBrowser = RuntimeInformation.RuntimeIdentifier == "browser-wasm";
+#else
+        private readonly bool _IsBrowser = false;
+#endif
         #endregion
 
         #region Constructors-and-Factories
@@ -190,8 +201,13 @@ namespace WatsonWebsocket
         /// Pre-configure websocket client options prior to connecting to the server.
         /// </summary>
         /// <returns>WatsonWsClient.</returns>
+        /// <exception cref="PlatformNotSupportedException"></exception>
+#if NET5_0_OR_GREATER
+        [UnsupportedOSPlatform("browser")]
+#endif
         public WatsonWsClient ConfigureOptions(Action<ClientWebSocketOptions> options)
         {
+            if (_IsBrowser) throw new PlatformNotSupportedException();
             if (!Connected)
             {
                 _PreConfigureOptions = options;
@@ -203,7 +219,14 @@ namespace WatsonWebsocket
         /// <summary>
         /// Add a cookie prior to connecting to the server.
         /// </summary>
-        public void AddCookie(Cookie cookie) => _Cookies.Add(cookie);
+#if NET5_0_OR_GREATER
+        [UnsupportedOSPlatform("browser")]
+#endif
+        public void AddCookie(Cookie cookie)
+        {
+            if (_IsBrowser) throw new PlatformNotSupportedException();
+            _Cookies.Add(cookie);
+        }
 
         /// <summary>
         /// Start the client and connect to the server.
@@ -213,12 +236,15 @@ namespace WatsonWebsocket
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
-            _ClientWs.Options.Cookies = _Cookies;
-            _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
-            
-            if (_PreConfigureOptions != null)
+            if (!_IsBrowser)
             {
-                _PreConfigureOptions(_ClientWs.Options);
+                _ClientWs.Options.Cookies = _Cookies;
+                _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
+
+                if (_PreConfigureOptions != null)
+                {
+                    _PreConfigureOptions(_ClientWs.Options);
+                }
             }
 
             _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect).Wait();
@@ -233,12 +259,15 @@ namespace WatsonWebsocket
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
 
-            _ClientWs.Options.Cookies = _Cookies;
-            _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
-
-            if (_PreConfigureOptions != null)
+            if (!_IsBrowser)
             {
-                _PreConfigureOptions(_ClientWs.Options);
+                _ClientWs.Options.Cookies = _Cookies;
+                _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
+
+                if (_PreConfigureOptions != null)
+                {
+                    _PreConfigureOptions(_ClientWs.Options);
+                }
             }
 
             // Connect
@@ -269,11 +298,16 @@ namespace WatsonWebsocket
                     if (token.IsCancellationRequested) break;
                     _ClientWs = new ClientWebSocket();
 
-                    _ClientWs.Options.Cookies = _Cookies;
-                    _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
-                    if (_PreConfigureOptions != null)
+
+                    if (!_IsBrowser)
                     {
-                        _PreConfigureOptions(_ClientWs.Options);
+                        _ClientWs.Options.Cookies = _Cookies;
+                        _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
+
+                        if (_PreConfigureOptions != null)
+                        {
+                            _PreConfigureOptions(_ClientWs.Options);
+                        }
                     }
 
                     try
@@ -338,11 +372,15 @@ namespace WatsonWebsocket
                     if (token.IsCancellationRequested) break;
                     _ClientWs = new ClientWebSocket();
 
-                    _ClientWs.Options.Cookies = _Cookies;
-                    _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
-                    if (_PreConfigureOptions != null)
+                    if (!_IsBrowser)
                     {
-                        _PreConfigureOptions(_ClientWs.Options);
+                        _ClientWs.Options.Cookies = _Cookies;
+                        _ClientWs.Options.KeepAliveInterval = TimeSpan.FromSeconds(_KeepAliveIntervalSeconds);
+
+                        if (_PreConfigureOptions != null)
+                        {
+                            _PreConfigureOptions(_ClientWs.Options);
+                        }
                     }
 
                     try
@@ -405,19 +443,19 @@ namespace WatsonWebsocket
         /// <param name="closeCode">Close code.</param>
         /// <param name="reason">Close by reason.</param>
         public void Stop(WebSocketCloseStatus closeCode, string reason)
-        { 
+        {
             _ClientWs.CloseOutputAsync(closeCode, reason, _Token).Wait();
-        } 
-        
+        }
+
         /// <summary>
         /// Disconnect the client by code and reason.
         /// </summary>
         /// <param name="closeCode">Close code.</param>
         /// <param name="reason">Close by reason.</param>
         public async Task StopAsync(WebSocketCloseStatus closeCode, string reason)
-        { 
+        {
             await _ClientWs.CloseOutputAsync(closeCode, reason, _Token).ConfigureAwait(false);
-        } 
+        }
 
         /// <summary>
         /// Send text data to the server asynchronously.
@@ -707,9 +745,9 @@ namespace WatsonWebsocket
                     {
                         await _ClientWs.SendAsync(data, msgType, true, token).ConfigureAwait(false);
                     }
-                    catch 
-                    { 
-                    
+                    catch
+                    {
+
                     }
                     finally
                     {
