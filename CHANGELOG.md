@@ -9,6 +9,7 @@ v4.0.x
 - ```ListClients``` now returns full ```ClientMetadata```
 - ```Send*``` methods now take ```guid``` as opposed to ```IpPort```
 - Add targeting for .NET 7.0 and .NET Framework 4.8
+- Fix for Blazor WASM, thank you @ebarale99
 
 ## Previous Versions
 

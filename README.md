@@ -11,7 +11,7 @@ WatsonWebsocket is the EASIEST and FASTEST way to build client and server applic
 Many thanks and much appreciation to those that take the time to make this library better!  
 
 @BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX @rajeshdua123 @tersers @MacKey-255 @KRookoo1 @joreg @ilsnk 
-@xbarra @mawkish00 @jlopvet @marco-manfroni-perugiatiming @GiaNTizmO @exergist
+@xbarra @mawkish00 @jlopvet @marco-manfroni-perugiatiming @GiaNTizmO @exergist @ebarale99
 
 ## Test App
 
@@ -36,6 +36,7 @@ For more information on using SSL certificates, please refer to the wiki.
 - ```ListClients``` now returns full ```ClientMetadata```
 - ```Send*``` methods now take ```guid``` as opposed to ```IpPort```
 - Add targeting for .NET 7.0 and .NET Framework 4.8
+- Fix for Blazor WASM, thank you @ebarale99
 
 ## Server Example
 ```csharp
