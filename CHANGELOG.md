@@ -10,6 +10,7 @@ v4.0.x
 - ```Send*``` methods now take ```guid``` as opposed to ```IpPort```
 - Add targeting for .NET 7.0 and .NET Framework 4.8
 - Fix for Blazor WASM, thank you @ebarale99
+- Fix for invalid control characters, thank you @WarstekHUN
 
 ## Previous Versions
 

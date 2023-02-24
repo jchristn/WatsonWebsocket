@@ -422,11 +422,13 @@ namespace WatsonWebsocket
         }
 
         private async Task AcceptConnections(CancellationToken cancelToken)
-        { 
-            try
-            { 
-                while (!cancelToken.IsCancellationRequested)
-                {
+        {
+            bool exiting = false;
+
+            while (!cancelToken.IsCancellationRequested)
+            {
+                try
+                { 
                     if (!_Listener.IsListening)
                     {
                         Task.Delay(100).Wait();
@@ -467,22 +469,6 @@ namespace WatsonWebsocket
                         
                         continue;
                     } 
-                    else
-                    { 
-                        /*
-                        HttpListenerRequest req = ctx.Request;
-                        Console.WriteLine(Environment.NewLine + req.HttpMethod.ToString() + " " + req.RawUrl);
-                        if (req.Headers != null && req.Headers.Count > 0)
-                        {
-                            Console.WriteLine("Headers:");
-                            var items = req.Headers.AllKeys.SelectMany(req.Headers.GetValues, (k, v) => new { key = k, value = v });
-                            foreach (var item in items)
-                            {
-                                Console.WriteLine("  {0}: {1}", item.key, item.value);
-                            }
-                        } 
-                        */
-                    }
 
                     await Task.Run(() =>
                     {
@@ -504,38 +490,44 @@ namespace WatsonWebsocket
                              
                         }, token);
 
-                    }, _Token).ConfigureAwait(false); 
-                } 
-            }
-            /*
-            catch (HttpListenerException)
-            {
-                // thrown when disposed
-            }
-            */
-            catch (TaskCanceledException)
-            {
-                // thrown when disposed
-            }
-            catch (OperationCanceledException)
-            {
-                // thrown when disposed
-            }
-            catch (ObjectDisposedException)
-            {
-                // thrown when disposed
-            }
-            catch (HttpListenerException)
-            {
-                // thrown when stopped
-            }
-            catch (Exception e)
-            {
-                Logger?.Invoke(_Header + "listener exception:" + Environment.NewLine + e.ToString());
-            }
-            finally
-            {
-                ServerStopped?.Invoke(this, EventArgs.Empty);
+                    }, _Token).ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    // thrown when disposed
+                    exiting = true;
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    // thrown when disposed
+                    exiting = true;
+                    break;
+                }
+                catch (ObjectDisposedException)
+                {
+                    // thrown when disposed
+                    exiting = true;
+                    break;
+                }
+                catch (HttpListenerException)
+                {
+                    // thrown when stopped
+                    exiting = true;
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Logger?.Invoke(_Header + "listener exception:" + Environment.NewLine + e.ToString());
+                }
+                finally
+                {
+                    if (exiting)
+                    {
+                        Logger?.Invoke(_Header + "listener stopped");
+                        ServerStopped?.Invoke(this, EventArgs.Empty);
+                    }
+                }
             }
         }
 

@@ -143,7 +143,7 @@ namespace Test.Server
             _Server.ClientConnected += ClientConnected;
             _Server.ClientDisconnected += ClientDisconnected;
             _Server.MessageReceived += MessageReceived;
-            _Server.Logger = Logger;
+            _Server.Logger = Console.WriteLine;
             _Server.HttpHandler = HttpHandler;
         }
 
@@ -165,7 +165,7 @@ namespace Test.Server
             _Server.ClientConnected += ClientConnected;
             _Server.ClientDisconnected += ClientDisconnected;
             _Server.MessageReceived += MessageReceived;
-            _Server.Logger = Logger;
+            _Server.Logger = Console.WriteLine;
             _Server.HttpHandler = HttpHandler;
         }
 
@@ -176,11 +176,6 @@ namespace Test.Server
             Console.WriteLine("Server is listening: " + _Server.IsListening);
         }
 
-        static void Logger(string msg)
-        {
-            Console.WriteLine(msg);
-        }
-         
         static void ClientConnected(object sender, ConnectionEventArgs args) 
         {
             Console.WriteLine("Client " + args.Client.ToString() + " connected using URL " + args.HttpRequest.RawUrl);
