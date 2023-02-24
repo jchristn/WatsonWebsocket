@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using GetSomeInput;
@@ -42,6 +43,7 @@ namespace Test.Client
                         Console.WriteLine("  send bytes   send binary data to the server");
                         Console.WriteLine("  sync text    send text to the server and await response");
                         Console.WriteLine("  sync bytes   send binary data to the server and await response");
+                        Console.WriteLine("  cookie       add a cookie");
                         Console.WriteLine("  stats        display client statistics");
                         Console.WriteLine("  status       show if client connected");
                         Console.WriteLine("  dispose      dispose of the connection");
@@ -100,6 +102,21 @@ namespace Test.Client
                         else
                         {
                             Console.WriteLine("(null)");
+                        }
+                        break;
+
+                    case "cookie":
+                        Console.Write("Key    : ");
+                        string key = Console.ReadLine();
+                        if (!String.IsNullOrEmpty(key))
+                        {
+                            Console.Write("Value  : ");
+                            string val = Console.ReadLine();
+                            Console.Write("Path   : ");
+                            string path = Console.ReadLine();
+                            Console.Write("Domain : ");
+                            string domain = Console.ReadLine();
+                            _Client.AddCookie(new Cookie(key, val, path, domain));
                         }
                         break;
 
