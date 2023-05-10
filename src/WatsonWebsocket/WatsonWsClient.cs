@@ -137,6 +137,7 @@ namespace WatsonWebsocket
 #else
         private readonly bool _IsBrowser = false;
 #endif
+
         #endregion
 
         #region Constructors-and-Factories
@@ -610,7 +611,7 @@ namespace WatsonWebsocket
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 #endif
 
-#if NET || NETSTANDARD || NETCOREAPP
+#if NET || NETSTANDARD2_1_OR_GREATER || NETCOREAPP
             if (_ClientWs.State == WebSocketState.Open)
             {
                 _ClientWs.Options.RemoteCertificateValidationCallback +=
