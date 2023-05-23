@@ -177,7 +177,7 @@ namespace Test.Client
             _Client.AddCookie(new System.Net.Cookie("foo", "bar", "/", "localhost"));
 
             // await _Client.StartAsync();
-            _Client.Start();
+            _Client.StartWithTimeoutAsync(30).Wait();
             Console.WriteLine("Client connected: " + _Client.Connected);
         }
 

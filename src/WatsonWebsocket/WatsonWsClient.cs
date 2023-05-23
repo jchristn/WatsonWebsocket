@@ -625,7 +625,7 @@ namespace WatsonWebsocket
 
         private void AfterConnect(Task task)
         {
-            if (task.IsCompleted)
+            if (!task.IsFaulted && task.IsCompleted)
             {
                 if (_ClientWs.State == WebSocketState.Open)
                 {
@@ -686,6 +686,7 @@ namespace WatsonWebsocket
 
             ServerDisconnected?.Invoke(this, EventArgs.Empty);
         }
+
         private async Task<MessageReceivedEventArgs> MessageReadAsync(byte[] buffer)
         {
             // Do not catch exceptions, let them get caught by the data reader to destroy the connection
