@@ -39,7 +39,7 @@
             Metadata for the client, managed by the developer (you).
             </summary>
         </member>
-        <member name="M:WatsonWebsocket.ClientMetadata.#ctor(System.Net.HttpListenerContext,System.Net.WebSockets.WebSocket,System.Net.WebSockets.WebSocketContext,System.Threading.CancellationTokenSource)">
+        <member name="M:WatsonWebsocket.ClientMetadata.#ctor(System.Net.HttpListenerContext,System.Net.WebSockets.WebSocket,System.Net.WebSockets.WebSocketContext,System.Threading.CancellationTokenSource,System.Guid)">
             <summary>
             Instantiate.
             </summary>
@@ -47,6 +47,7 @@
             <param name="ws">Websocket.</param>
             <param name="wsContext">Websocket context.</param>
             <param name="tokenSource">Token source.</param>
+            <param name="guid">Desired GUID to identify this client.</param>
         </member>
         <member name="M:WatsonWebsocket.ClientMetadata.ToString">
             <summary>
@@ -205,12 +206,17 @@
             Method to invoke when sending a log message.
             </summary>
         </member>
+        <member name="P:WatsonWebsocket.WatsonWsClient.GuidHeader">
+            <summary>
+            Header used by client to indicate which GUID should be assigned.
+            </summary>
+        </member>
         <member name="P:WatsonWebsocket.WatsonWsClient.Stats">
             <summary>
             Statistics.
             </summary>
         </member>
-        <member name="M:WatsonWebsocket.WatsonWsClient.#ctor(System.String,System.Int32,System.Boolean)">
+        <member name="M:WatsonWebsocket.WatsonWsClient.#ctor(System.String,System.Int32,System.Boolean,System.Guid)">
             <summary>
             Initializes the Watson websocket client.
             Be sure to call 'Start()' to start the client and connect to the server.
@@ -218,13 +224,15 @@
             <param name="serverIp">IP address of the server.</param>
             <param name="serverPort">TCP port of the server.</param>
             <param name="ssl">Enable or disable SSL.</param>
+            <param name="guid">GUID you wish the server to use to identify this client.</param>
         </member>
-        <member name="M:WatsonWebsocket.WatsonWsClient.#ctor(System.Uri)">
+        <member name="M:WatsonWebsocket.WatsonWsClient.#ctor(System.Uri,System.Guid)">
             <summary>
             Initializes the Watson websocket client.
             Be sure to call 'Start()' to start the client and connect to the server.
             </summary>
             <param name="uri">The URI of the server endpoint.</param> 
+            <param name="guid">GUID you wish the server to use to identify this client.</param>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsClient.Dispose">
             <summary>
@@ -407,6 +415,11 @@
         <member name="F:WatsonWebsocket.WatsonWsServer.HttpHandler">
             <summary>
             Method to invoke when receiving a raw (non-websocket) HTTP request.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.WatsonWsServer.GuidHeader">
+            <summary>
+            Header used by client to indicate which GUID should be assigned.
             </summary>
         </member>
         <member name="P:WatsonWebsocket.WatsonWsServer.Stats">

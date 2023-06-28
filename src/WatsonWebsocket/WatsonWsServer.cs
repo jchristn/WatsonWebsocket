@@ -92,6 +92,22 @@ namespace WatsonWebsocket
         public Action<HttpListenerContext> HttpHandler = null;
 
         /// <summary>
+        /// Header used by client to indicate which GUID should be assigned.
+        /// </summary>
+        public string GuidHeader
+        {
+            get
+            {
+                return _GuidHeader;
+            }
+            set
+            {
+                if (String.IsNullOrEmpty(value)) throw new ArgumentNullException(nameof(GuidHeader));
+                _GuidHeader = value;
+            }
+        }
+
+        /// <summary>
         /// Statistics.
         /// </summary>
         public Statistics Stats
@@ -116,6 +132,7 @@ namespace WatsonWebsocket
         private CancellationToken _Token; 
         private Task _AcceptConnectionsTask;
         private Statistics _Stats = new Statistics();
+        private string _GuidHeader = "x-guid";
 
         #endregion
 
@@ -479,9 +496,13 @@ namespace WatsonWebsocket
 
                         Task.Run(async () =>
                         {
+                            Guid guid = Guid.NewGuid();
+                            string guidStr = ctx.Request.Headers.Get(_GuidHeader);
+                            if (!String.IsNullOrEmpty(guidStr)) guid = Guid.Parse(guidStr);
+
                             WebSocketContext wsContext = await ctx.AcceptWebSocketAsync(subProtocol: null);
                             WebSocket ws = wsContext.WebSocket;
-                            ClientMetadata md = new ClientMetadata(ctx, ws, wsContext, tokenSource);
+                            ClientMetadata md = new ClientMetadata(ctx, ws, wsContext, tokenSource, guid);
                              
                             _Clients.TryAdd(md.Guid, md);
 

@@ -73,7 +73,8 @@ namespace WatsonWebsocket
         /// <param name="ws">Websocket.</param>
         /// <param name="wsContext">Websocket context.</param>
         /// <param name="tokenSource">Token source.</param>
-        public ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext, CancellationTokenSource tokenSource)
+        /// <param name="guid">Desired GUID to identify this client.</param>
+        public ClientMetadata(HttpListenerContext httpContext, WebSocket ws, WebSocketContext wsContext, CancellationTokenSource tokenSource, Guid guid = default)
         {
             HttpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
             Ws = ws ?? throw new ArgumentNullException(nameof(ws));
@@ -81,6 +82,8 @@ namespace WatsonWebsocket
             TokenSource = tokenSource ?? throw new ArgumentNullException(nameof(tokenSource));
             Ip = HttpContext.Request.RemoteEndPoint.Address.ToString();
             Port = HttpContext.Request.RemoteEndPoint.Port;
+
+            if (guid != default(Guid)) Guid = guid;
         }
 
         #endregion

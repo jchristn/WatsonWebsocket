@@ -98,6 +98,22 @@ namespace WatsonWebsocket
         public Action<string> Logger = null;
 
         /// <summary>
+        /// Header used by client to indicate which GUID should be assigned.
+        /// </summary>
+        public string GuidHeader
+        {
+            get
+            {
+                return _GuidHeader;
+            }
+            set
+            {
+                if (String.IsNullOrEmpty(value)) throw new ArgumentNullException(nameof(GuidHeader));
+                _GuidHeader = value;
+            }
+        }
+
+        /// <summary>
         /// Statistics.
         /// </summary>
         public Statistics Stats
@@ -123,6 +139,8 @@ namespace WatsonWebsocket
         private ClientWebSocket _ClientWs = null;
         private CookieContainer _Cookies = new CookieContainer();
         private Action<ClientWebSocketOptions> _PreConfigureOptions;
+        private string _GuidHeader = "x-guid";
+        private Guid _Guid = default;
 
         private event EventHandler<MessageReceivedEventArgs> _AwaitingSyncResponseEvent;
 
@@ -149,10 +167,12 @@ namespace WatsonWebsocket
         /// <param name="serverIp">IP address of the server.</param>
         /// <param name="serverPort">TCP port of the server.</param>
         /// <param name="ssl">Enable or disable SSL.</param>
+        /// <param name="guid">GUID you wish the server to use to identify this client.</param>
         public WatsonWsClient(
             string serverIp,
             int serverPort,
-            bool ssl)
+            bool ssl = false,
+            Guid guid = default)
         {
             if (String.IsNullOrEmpty(serverIp)) throw new ArgumentNullException(nameof(serverIp));
             if (serverPort < 1) throw new ArgumentOutOfRangeException(nameof(serverPort));
@@ -165,6 +185,7 @@ namespace WatsonWebsocket
             else _Url = "ws://" + _ServerIp + ":" + _ServerPort;
             _ServerUri = new Uri(_Url);
             _Token = _TokenSource.Token;
+            _Guid = guid;
 
             _ClientWs = new ClientWebSocket();
         }
@@ -174,13 +195,17 @@ namespace WatsonWebsocket
         /// Be sure to call 'Start()' to start the client and connect to the server.
         /// </summary>
         /// <param name="uri">The URI of the server endpoint.</param> 
-        public WatsonWsClient(Uri uri)
+        /// <param name="guid">GUID you wish the server to use to identify this client.</param>
+        public WatsonWsClient(
+            Uri uri,
+            Guid guid = default)
         {
             _ServerUri = uri;
             _ServerIp = uri.Host;
             _ServerPort = uri.Port;
             _ServerIpPort = uri.Host + ":" + uri.Port;
             _Token = _TokenSource.Token;
+            _Guid = guid;
 
             _ClientWs = new ClientWebSocket();
         }
@@ -248,6 +273,11 @@ namespace WatsonWebsocket
                 }
             }
 
+            if (_Guid != default(Guid))
+            {
+                _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+            }
+
             _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect).Wait();
         }
 
@@ -271,7 +301,11 @@ namespace WatsonWebsocket
                 }
             }
 
-            // Connect
+            if (_Guid != default(Guid))
+            {
+                _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+            }
+
             return _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect);
         }
 
@@ -299,7 +333,6 @@ namespace WatsonWebsocket
                     if (token.IsCancellationRequested) break;
                     _ClientWs = new ClientWebSocket();
 
-
                     if (!_IsBrowser)
                     {
                         _ClientWs.Options.Cookies = _Cookies;
@@ -309,6 +342,11 @@ namespace WatsonWebsocket
                         {
                             _PreConfigureOptions(_ClientWs.Options);
                         }
+                    }
+
+                    if (_Guid != default(Guid))
+                    {
+                        _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
                     }
 
                     try
@@ -382,6 +420,11 @@ namespace WatsonWebsocket
                         {
                             _PreConfigureOptions(_ClientWs.Options);
                         }
+                    }
+
+                    if (_Guid != default(Guid))
+                    {
+                        _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
                     }
 
                     try
