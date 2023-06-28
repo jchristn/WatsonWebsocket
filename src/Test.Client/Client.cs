@@ -16,6 +16,7 @@ namespace Test.Client
         static bool _Ssl = false;
         static bool _AcceptInvalidCertificates = true;
         static WatsonWsClient _Client = null;
+        static Guid _Guid = Guid.Parse("12345678-1234-1234-1234-123456789012");
 
         static void Main(string[] args)
         {

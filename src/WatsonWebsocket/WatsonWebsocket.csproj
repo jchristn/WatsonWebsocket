@@ -12,10 +12,14 @@
 		<RepositoryType>Github</RepositoryType>
 		<PackageLicenseUrl></PackageLicenseUrl>
 		<PackageTags>websocket message messaging frame framing web socket rpc api</PackageTags>
-		<PackageReleaseNotes>Fix for crash due to invalid control characters, thank you @WarstekHUN</PackageReleaseNotes>
+		<PackageReleaseNotes>Added ability to specify desired GUID for a client.</PackageReleaseNotes>
 		<PackageIconUrl></PackageIconUrl>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageIcon>watson.png</PackageIcon>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>C:\Code\Watson\WatsonWebsocket-4.0\WatsonWebsocket.snk</AssemblyOriginatorKeyFile>
+		<Title>WatsonWebsocket</Title>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 
@@ -72,6 +76,10 @@
 
 
 	<ItemGroup>
+		<None Include="..\..\README.md">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 		<None Include="assets\watson.png">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
