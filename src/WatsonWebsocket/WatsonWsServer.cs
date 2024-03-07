@@ -241,7 +241,7 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
-        /// Start accepting new connections.
+        /// Start the server and begin accepting new connections.
         /// </summary>
         public void Start()
         {
@@ -263,7 +263,7 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
-        /// Start accepting new connections.
+        /// Start the server and begin accepting new connections.
         /// </summary>
         /// <returns>Task.</returns>
         public Task StartAsync(CancellationToken token = default)
@@ -289,7 +289,7 @@ namespace WatsonWebsocket
         }
 
         /// <summary>
-        /// Stop accepting new connections.
+        /// Stop the server and disconnect each connection. 
         /// </summary>
         public void Stop()
         {

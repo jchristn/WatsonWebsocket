@@ -460,18 +460,18 @@
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.Start">
             <summary>
-            Start accepting new connections.
+            Start the server and begin accepting new connections.
             </summary>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.StartAsync(System.Threading.CancellationToken)">
             <summary>
-            Start accepting new connections.
+            Start the server and begin accepting new connections.
             </summary>
             <returns>Task.</returns>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.Stop">
             <summary>
-            Stop accepting new connections.
+            Stop the server and disconnect each connection. 
             </summary>
         </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.SendAsync(System.Guid,System.String,System.Net.WebSockets.WebSocketMessageType,System.Threading.CancellationToken)">

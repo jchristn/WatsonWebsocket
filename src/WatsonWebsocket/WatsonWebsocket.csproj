@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;netcoreapp3.1;net461;net48;net6.0;net7.0</TargetFrameworks>
-		<Version>4.0.11</Version>
+		<TargetFrameworks>net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
+		<Version>4.1.0</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Joel Christner</Authors>
 		<Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
-		<Copyright>(c)2023 Joel Christner</Copyright>
+		<Copyright>(c)2024 Joel Christner</Copyright>
 		<PackageProjectUrl>https://github.com/jchristn/WatsonWebsocket</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/jchristn/WatsonWebsocket</RepositoryUrl>
 		<RepositoryType>Github</RepositoryType>
 		<PackageLicenseUrl></PackageLicenseUrl>
 		<PackageTags>websocket message messaging frame framing web socket rpc api</PackageTags>
-		<PackageReleaseNotes>Added ability to specify desired GUID for a client.</PackageReleaseNotes>
+		<PackageReleaseNotes>Retarget to include net8.0.</PackageReleaseNotes>
 		<PackageIconUrl></PackageIconUrl>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageIcon>watson.png</PackageIcon>
@@ -24,23 +24,11 @@
 
 
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
-		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net452|AnyCPU'">
-		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5.0|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
@@ -48,29 +36,33 @@
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
-
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net452|AnyCPU'">
-		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5.0|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net48|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
@@ -92,7 +84,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="WatsonWebsocket.xml">
+		<None Include="WatsonWebsocket.xml">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

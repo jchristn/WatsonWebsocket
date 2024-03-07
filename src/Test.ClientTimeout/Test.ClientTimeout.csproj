@@ -2,11 +2,11 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>netstandard2.1;netcoreapp3.1;net461;net48;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\WatsonWebsocket\WatsonWebsocket.csproj" />
+		<ProjectReference Include="..\WatsonWebsocket\WatsonWebsocket.csproj" />
 	</ItemGroup>
 
 </Project>
