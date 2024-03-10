@@ -766,7 +766,14 @@ namespace WatsonWebsocket
                 }
             }
 
-            return new MessageReceivedEventArgs(null, data, result.MessageType);
+            ClientMetadata server = new ClientMetadata
+            {
+                Guid = default(Guid),
+                Ip = _ServerIp,
+                Port = _ServerPort
+            };
+
+            return new MessageReceivedEventArgs(server, data, result.MessageType);
         }
 
         private async Task<bool> MessageWriteAsync(ArraySegment<byte> data, WebSocketMessageType msgType, CancellationToken token)

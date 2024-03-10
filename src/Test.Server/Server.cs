@@ -52,9 +52,9 @@ namespace Test.Server
                         Console.WriteLine("  stop                         stop accepting new connections");
                         Console.WriteLine("  list                         list clients");
                         Console.WriteLine("  stats                        display server statistics");
-                        Console.WriteLine("  send ip:port text message    send text to client");
-                        Console.WriteLine("  send ip:port bytes message   send binary data to client");
-                        Console.WriteLine("  kill ip:port                 disconnect a client");
+                        Console.WriteLine("  send [guid] text message     send text to client");
+                        Console.WriteLine("  send [guid] bytes message    send binary data to client");
+                        Console.WriteLine("  kill [guid]                  disconnect a client");
                         break;
 
                     case "q":

@@ -15,7 +15,7 @@ namespace WatsonWebsocket
         /// <summary>
         /// Globally-unique identifier of the client.
         /// </summary>
-        public Guid Guid { get; } = Guid.NewGuid();
+        public Guid Guid { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// IP:port of the client.
@@ -31,12 +31,23 @@ namespace WatsonWebsocket
         /// <summary>
         /// IP address of the client.
         /// </summary>
-        public string Ip { get; } = null;
+        public string Ip { get; set; } = null;
 
         /// <summary>
         /// Port for the client.
         /// </summary>
-        public int Port { get; } = 0;
+        public int Port
+        {
+            get
+            {
+                return _Port;
+            }
+            set
+            {
+                if (value < 0) throw new ArgumentOutOfRangeException(nameof(Port));
+                _Port = value;
+            }
+        }
 
         /// <summary>
         /// Name for the client, managed by the developer (you).
@@ -52,6 +63,7 @@ namespace WatsonWebsocket
 
         #region Internal-Members
 
+        private int _Port = 0;
         internal HttpListenerContext HttpContext = null;
         internal WebSocket Ws = null;
         internal WebSocketContext WsContext = null;
@@ -65,6 +77,14 @@ namespace WatsonWebsocket
         #endregion
 
         #region Constructors-and-Factories
+
+        /// <summary>
+        /// Instantiate.
+        /// </summary>
+        public ClientMetadata()
+        {
+
+        }
 
         /// <summary>
         /// Instantiate.

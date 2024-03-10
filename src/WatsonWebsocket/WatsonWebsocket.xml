@@ -39,6 +39,11 @@
             Metadata for the client, managed by the developer (you).
             </summary>
         </member>
+        <member name="M:WatsonWebsocket.ClientMetadata.#ctor">
+            <summary>
+            Instantiate.
+            </summary>
+        </member>
         <member name="M:WatsonWebsocket.ClientMetadata.#ctor(System.Net.HttpListenerContext,System.Net.WebSockets.WebSocket,System.Net.WebSockets.WebSocketContext,System.Threading.CancellationTokenSource,System.Guid)">
             <summary>
             Instantiate.
