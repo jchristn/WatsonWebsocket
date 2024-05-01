@@ -412,6 +412,11 @@
             Specify the IP addresses that are allowed to connect.  If none are supplied, all IP addresses are permitted.
             </summary>
         </member>
+        <member name="P:WatsonWebsocket.WatsonWsServer.ListenerPrefixes">
+            <summary>
+            Listener prefixes.
+            </summary>
+        </member>
         <member name="F:WatsonWebsocket.WatsonWsServer.Logger">
             <summary>
             Method to invoke when sending a log message.

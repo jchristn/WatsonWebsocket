@@ -82,6 +82,17 @@ namespace WatsonWebsocket
         public List<string> PermittedIpAddresses = new List<string>();
 
         /// <summary>
+        /// Listener prefixes.
+        /// </summary>
+        public List<string> ListenerPrefixes
+        {
+            get
+            {
+                return _ListenerPrefixes;
+            }
+        }
+
+        /// <summary>
         /// Method to invoke when sending a log message.
         /// </summary>
         public Action<string> Logger = null;

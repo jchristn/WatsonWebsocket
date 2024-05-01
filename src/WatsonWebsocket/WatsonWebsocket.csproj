@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net462;net48;net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>4.1.1</Version>
+		<Version>4.1.2</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Joel Christner</Authors>
 		<Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
@@ -21,8 +21,6 @@
 		<Title>WatsonWebsocket</Title>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
-
-
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
@@ -44,8 +42,6 @@
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
 
-
-
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
@@ -65,7 +61,6 @@
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
 		<DocumentationFile>WatsonWebsocket.xml</DocumentationFile>
 	</PropertyGroup>
-
 
 	<ItemGroup>
 		<None Include="..\..\README.md">
