@@ -130,4 +130,4 @@ To configure access from other nodes outside of ```localhost```, use the followi
 
 ## Version History
 
-Please refer to CHANGELOG.md for details.
+Please refer to <a href="/CHANGELOG.md">CHANGELOG.md</a> for details.
