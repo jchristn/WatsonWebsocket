@@ -181,6 +181,15 @@ namespace Test.Server
             Console.WriteLine("Client " + args.Client.ToString() + " connected using URL " + args.HttpRequest.RawUrl);
             _LastGuid = args.Client.Guid;
 
+            if (args.HttpRequest.Headers != null && args.HttpRequest.Headers.Count > 0)
+            {
+                Console.WriteLine(args.HttpRequest.Headers.Count + " header(s) present:");
+                foreach (string key in args.HttpRequest.Headers)
+                {
+                    Console.WriteLine("| " + key + ": " + args.HttpRequest.Headers[key]);
+                }
+            }
+
             if (args.HttpRequest.Cookies != null && args.HttpRequest.Cookies.Count > 0)
             {
                 Console.WriteLine(args.HttpRequest.Cookies.Count + " cookie(s) present:");

@@ -10,6 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Collections.Specialized;
+using System.Collections.Generic;
 
 namespace WatsonWebsocket
 {
@@ -257,7 +259,8 @@ namespace WatsonWebsocket
         /// <summary>
         /// Start the client and connect to the server.
         /// </summary>
-        public void Start()
+        /// <param name="headers">Headers.</param>
+        public void Start(NameValueCollection headers = null)
         {
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
@@ -273,9 +276,15 @@ namespace WatsonWebsocket
                 }
             }
 
-            if (_Guid != default(Guid))
+            if (_Guid != default(Guid)) _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+
+            if (headers != null)
             {
-                _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+                foreach (string key in headers.Keys)
+                {
+                    if (String.IsNullOrEmpty(key)) continue;
+                    _ClientWs.Options.SetRequestHeader(key, headers[key]);
+                }
             }
 
             _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect).Wait();
@@ -284,8 +293,9 @@ namespace WatsonWebsocket
         /// <summary>
         /// Start the client and connect to the server.
         /// </summary>
+        /// <param name="headers">Headers.</param>
         /// <returns>Task.</returns>
-        public Task StartAsync()
+        public Task StartAsync(NameValueCollection headers = null)
         {
             _Stats = new Statistics();
             if (_AcceptInvalidCertificates) SetInvalidCertificateAcceptance();
@@ -301,9 +311,15 @@ namespace WatsonWebsocket
                 }
             }
 
-            if (_Guid != default(Guid))
+            if (_Guid != default(Guid)) _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+
+            if (headers != null)
             {
-                _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+                foreach (string key in headers.Keys)
+                {
+                    if (String.IsNullOrEmpty(key)) continue;
+                    _ClientWs.Options.SetRequestHeader(key, headers[key]);
+                }
             }
 
             return _ClientWs.ConnectAsync(_ServerUri, _Token).ContinueWith(AfterConnect);
@@ -313,9 +329,10 @@ namespace WatsonWebsocket
         /// Start the client and attempt to connect to the server until the timeout is reached.
         /// </summary>
         /// <param name="timeout">Timeout in seconds.</param>
+        /// <param name="headers">Headers.</param>
         /// <param name="token">Cancellation token to terminate connection attempts.</param>
         /// <returns>Boolean indicating if the connection was successful.</returns>
-        public bool StartWithTimeout(int timeout = 30, CancellationToken token = default)
+        public bool StartWithTimeout(int timeout = 30, NameValueCollection headers = null, CancellationToken token = default)
         {
             if (timeout < 1) throw new ArgumentException("Timeout must be greater than zero seconds.");
 
@@ -344,9 +361,15 @@ namespace WatsonWebsocket
                         }
                     }
 
-                    if (_Guid != default(Guid))
+                    if (_Guid != default(Guid)) _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+
+                    if (headers != null)
                     {
-                        _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+                        foreach (string key in headers.Keys)
+                        {
+                            if (String.IsNullOrEmpty(key)) continue;
+                            _ClientWs.Options.SetRequestHeader(key, headers[key]);
+                        }
                     }
 
                     try
@@ -391,9 +414,10 @@ namespace WatsonWebsocket
         /// Start the client and attempt to connect to the server until the timeout is reached.
         /// </summary>
         /// <param name="timeout">Timeout in seconds.</param>
+        /// <param name="headers">Headers.</param>
         /// <param name="token">Cancellation token to terminate connection attempts.</param>
         /// <returns>Task returning Boolean indicating if the connection was successful.</returns>
-        public async Task<bool> StartWithTimeoutAsync(int timeout = 30, CancellationToken token = default)
+        public async Task<bool> StartWithTimeoutAsync(int timeout = 30, NameValueCollection headers = null, CancellationToken token = default)
         {
             if (timeout < 1) throw new ArgumentException("Timeout must be greater than zero seconds.");
 
@@ -422,9 +446,15 @@ namespace WatsonWebsocket
                         }
                     }
 
-                    if (_Guid != default(Guid))
+                    if (_Guid != default(Guid)) _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+
+                    if (headers != null)
                     {
-                        _ClientWs.Options.SetRequestHeader(_GuidHeader, _Guid.ToString());
+                        foreach (string key in headers.Keys)
+                        {
+                            if (String.IsNullOrEmpty(key)) continue;
+                            _ClientWs.Options.SetRequestHeader(key, headers[key]);
+                        }
                     }
 
                     try

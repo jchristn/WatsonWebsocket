@@ -12,7 +12,7 @@ Many thanks and much appreciation to those that take the time to make this libra
 
 @BryanCrotaz @FodderMK @caozero @Danatobob @Data33 @AK5nowman @jjxtra @MartyIX @rajeshdua123 
 @tersers @MacKey-255 @KRookoo1 @joreg @ilsnk @xbarra @mawkish00 @jlopvet @marco-manfroni-perugiatiming 
-@GiaNTizmO @exergist @ebarale99 @WarstekHUN @Rubidium37 @codengine
+@GiaNTizmO @exergist @ebarale99 @WarstekHUN @Rubidium37 @codengine @berkut0
 
 ## Test App
 

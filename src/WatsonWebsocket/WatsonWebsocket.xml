@@ -256,30 +256,34 @@
             Add a cookie prior to connecting to the server.
             </summary>
         </member>
-        <member name="M:WatsonWebsocket.WatsonWsClient.Start">
+        <member name="M:WatsonWebsocket.WatsonWsClient.Start(System.Collections.Specialized.NameValueCollection)">
             <summary>
             Start the client and connect to the server.
             </summary>
+            <param name="headers">Headers.</param>
         </member>
-        <member name="M:WatsonWebsocket.WatsonWsClient.StartAsync">
+        <member name="M:WatsonWebsocket.WatsonWsClient.StartAsync(System.Collections.Specialized.NameValueCollection)">
             <summary>
             Start the client and connect to the server.
             </summary>
+            <param name="headers">Headers.</param>
             <returns>Task.</returns>
         </member>
-        <member name="M:WatsonWebsocket.WatsonWsClient.StartWithTimeout(System.Int32,System.Threading.CancellationToken)">
+        <member name="M:WatsonWebsocket.WatsonWsClient.StartWithTimeout(System.Int32,System.Collections.Specialized.NameValueCollection,System.Threading.CancellationToken)">
             <summary>
             Start the client and attempt to connect to the server until the timeout is reached.
             </summary>
             <param name="timeout">Timeout in seconds.</param>
+            <param name="headers">Headers.</param>
             <param name="token">Cancellation token to terminate connection attempts.</param>
             <returns>Boolean indicating if the connection was successful.</returns>
         </member>
-        <member name="M:WatsonWebsocket.WatsonWsClient.StartWithTimeoutAsync(System.Int32,System.Threading.CancellationToken)">
+        <member name="M:WatsonWebsocket.WatsonWsClient.StartWithTimeoutAsync(System.Int32,System.Collections.Specialized.NameValueCollection,System.Threading.CancellationToken)">
             <summary>
             Start the client and attempt to connect to the server until the timeout is reached.
             </summary>
             <param name="timeout">Timeout in seconds.</param>
+            <param name="headers">Headers.</param>
             <param name="token">Cancellation token to terminate connection attempts.</param>
             <returns>Task returning Boolean indicating if the connection was successful.</returns>
         </member>
