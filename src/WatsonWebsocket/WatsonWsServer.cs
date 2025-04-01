@@ -390,10 +390,22 @@ namespace WatsonWebsocket
             {
                 lock (client)
                 {
-                    // lock because CloseOutputAsync can fail with InvalidOperationAsync with overlapping operations
-                    client.Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait();
-                    client.TokenSource.Cancel();
-                    client.Ws.Dispose();
+                    try
+                    {
+                        // Only attempt to close if it's in a state where closing is valid
+                        if (client.Ws.State == WebSocketState.Open || client.Ws.State == WebSocketState.CloseReceived)
+                        {
+                            client.Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", client.TokenSource.Token).Wait(1000);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    finally
+                    {
+                        client.TokenSource.Cancel();
+                        client.Ws.Dispose();
+                    }
                 }
             }
         }
