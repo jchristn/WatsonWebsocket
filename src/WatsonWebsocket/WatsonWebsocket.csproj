@@ -16,8 +16,6 @@
 		<PackageIconUrl></PackageIconUrl>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageIcon>watson.png</PackageIcon>
-		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>C:\Code\Watson\WatsonWebsocket-4.0\WatsonWebsocket.snk</AssemblyOriginatorKeyFile>
 		<Title>WatsonWebsocket</Title>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<IncludeSymbols>True</IncludeSymbols>
