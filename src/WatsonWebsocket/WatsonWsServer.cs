@@ -239,6 +239,16 @@ namespace WatsonWebsocket
             _Token = _TokenSource.Token;
         }
 
+        /// <summary>
+        /// Initializes the Watson websocket server.  
+        /// Be sure to call 'Start()' to start the server.
+        /// </summary>
+        /// <param name="settings">Websocket settings.</param>
+        public WatsonWsServer(WebsocketSettings settings) : this(settings?.Hostnames, settings?.Port ?? 0, settings?.Ssl ?? false)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+        }
+
         #endregion
 
         #region Public-Methods

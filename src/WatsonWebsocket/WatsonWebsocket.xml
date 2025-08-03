@@ -467,6 +467,13 @@
             </summary>
             <param name="uri">The URI on which you wish to listen, i.e. http://localhost:9090.</param>
         </member>
+        <member name="M:WatsonWebsocket.WatsonWsServer.#ctor(WatsonWebsocket.WebsocketSettings)">
+            <summary>
+            Initializes the Watson websocket server.  
+            Be sure to call 'Start()' to start the server.
+            </summary>
+            <param name="settings">Websocket settings.</param>
+        </member>
         <member name="M:WatsonWebsocket.WatsonWsServer.Dispose">
             <summary>
             Tear down the server and dispose of background workers.
@@ -548,6 +555,31 @@
             Tear down the server and dispose of background workers.
             </summary>
             <param name="disposing">Disposing.</param>
+        </member>
+        <member name="T:WatsonWebsocket.WebsocketSettings">
+            <summary>
+            Websocket settings.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.WebsocketSettings.Hostnames">
+            <summary>
+            Hostnames on which to listen.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.WebsocketSettings.Port">
+            <summary>
+            Port on which to listen.
+            </summary>
+        </member>
+        <member name="P:WatsonWebsocket.WebsocketSettings.Ssl">
+            <summary>
+            Boolean indicating whether or not SSL should be used.
+            </summary>
+        </member>
+        <member name="M:WatsonWebsocket.WebsocketSettings.#ctor">
+            <summary>
+            Websocket settings.
+            </summary>
         </member>
     </members>
 </doc>
