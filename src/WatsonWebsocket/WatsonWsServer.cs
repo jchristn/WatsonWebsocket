@@ -607,7 +607,8 @@ namespace WatsonWebsocket
 
                         if (msg.Data != null)
                         {
-                            Task unawaited = Task.Run(() => MessageReceived?.Invoke(this, msg), client.TokenSource.Token);
+                            // for recv callback order guarantee
+                            MessageReceived?.Invoke(this, msg);
                         }
                         else
                         {
