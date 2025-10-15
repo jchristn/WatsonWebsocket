@@ -546,27 +546,27 @@ namespace WatsonWebsocket
 
                     }, _Token).ConfigureAwait(false);
                 }
-                catch (TaskCanceledException)
+                catch (TaskCanceledException tce)
                 {
-                    // thrown when disposed
+                    Logger?.Invoke(_Header + "task canceled exception: " + tce.Message);
                     exiting = true;
                     break;
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException oce)
                 {
-                    // thrown when disposed
+                    Logger?.Invoke(_Header + "operation canceled exception: " + oce.Message);
                     exiting = true;
                     break;
                 }
-                catch (ObjectDisposedException)
+                catch (ObjectDisposedException ode)
                 {
-                    // thrown when disposed
+                    Logger?.Invoke(_Header + "object disposed exception: " + ode.Message);
                     exiting = true;
                     break;
                 }
-                catch (HttpListenerException)
+                catch (HttpListenerException hle)
                 {
-                    // thrown when stopped
+                    Logger?.Invoke(_Header + "HTTP listener exception: " + hle.Message);
                     exiting = true;
                     break;
                 }
