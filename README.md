@@ -1,4 +1,4 @@
-![alt tag](https://github.com/jchristn/watsonwebsocket/blob/master/assets/watson.ico)
+![alt tag](https://github.com/jchristn/watsonwebsocket/blob/main/assets/watson.ico)
 
 # Watson Websocket
 
