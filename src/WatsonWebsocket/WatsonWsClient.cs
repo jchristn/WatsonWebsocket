@@ -775,7 +775,8 @@ namespace WatsonWebsocket
                 ArraySegment<byte> bufferSegment = new ArraySegment<byte>(buffer);
 
                 if (_ClientWs.State == WebSocketState.CloseReceived
-                    || _ClientWs.State == WebSocketState.Closed)
+                    || _ClientWs.State == WebSocketState.Closed
+                    || _ClientWs.State == WebSocketState.CloseSent)
                 {
                     throw new WebSocketException("Websocket close received");
                 }

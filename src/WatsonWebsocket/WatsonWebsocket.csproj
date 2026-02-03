@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net6.0;net8.0</TargetFrameworks>
-		<Version>4.1.7</Version>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net462;net48;net8.0;net10.0</TargetFrameworks>
+		<Version>4.1.8</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Joel Christner</Authors>
 		<Description>WatsonWebsocket is the EASIEST and FASTEST way to build client and server applications that rely on messaging using websockets.  It's.  Really.  Easy.</Description>
-		<Copyright>(c)2025 Joel Christner</Copyright>
+		<Copyright>(c)2026 Joel Christner</Copyright>
 		<PackageProjectUrl>https://github.com/jchristn/WatsonWebsocket</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/jchristn/WatsonWebsocket</RepositoryUrl>
 		<RepositoryType>Github</RepositoryType>
