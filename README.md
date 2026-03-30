@@ -1,3 +1,8 @@
+# NOTICE
+
+This repository is being deprecated due to being directly integrated into [Watson Webserver](https://github.com/dotnet/watsonwebserver)<br />
+
+
 ![alt tag](https://github.com/jchristn/watsonwebsocket/blob/main/assets/watson.ico)
 
 # Watson Websocket
